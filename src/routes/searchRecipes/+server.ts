@@ -75,6 +75,9 @@ export const GET: RequestHandler = async ({ url }) => {
 		return ingredientSearchResponse;
 	}
 
+	const recipesData = await ingredientSearchResponse.json();
+	const { recipeIds } = _extractRecipeIds(recipesData);
+
 	return new Response(JSON.stringify(ingredientSearchResponse), {
 		status: 200
 	});
