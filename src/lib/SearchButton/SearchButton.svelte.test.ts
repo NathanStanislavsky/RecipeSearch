@@ -1,13 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach} from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import SearchButton from './SearchButton.svelte';
 import '@testing-library/jest-dom/vitest';
 
-describe('SearchButton', () => {
-    it('should render a button with text "Search"', () => {
-        render(SearchButton);
+describe('SearchForm', () => {
+    let button: HTMLElement;
 
-        expect(screen.getByRole('button')).toBeInTheDocument();
-        expect(screen.getByRole('button')).toHaveTextContent('Search');
+    beforeEach(() => {
+        render(SearchButton);
+        button = screen.getByRole('button');
+    });
+
+    it('should render a button with text "Search"', () => {
+        expect(button).toBeInTheDocument();
+        expect(button).toHaveTextContent('Search');
     });
 });
