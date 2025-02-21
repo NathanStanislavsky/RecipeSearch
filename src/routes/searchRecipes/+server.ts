@@ -2,30 +2,24 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { RAPIDAPI_KEY } from '$env/static/private';
 
 export const _parseIngredients = (url: URL): string | Response => {
-    const ingredients = url.searchParams.get('ingredients');
-    if (!ingredients) {
-        return new Response(
-            JSON.stringify({ error: 'Missing required parameter: ingredients' }),
-            { status: 400 }
-        );
-    }
-    return ingredients;
+	const ingredients = url.searchParams.get('ingredients');
+	if (!ingredients) {
+		return new Response(JSON.stringify({ error: 'Missing required parameter: ingredients' }), {
+			status: 400
+		});
+	}
+	return ingredients;
 };
 
-export const GET: RequestHandler = async ({ url }) => {
-    const ingredientsOrResponse = _parseIngredients(url);
-    if (ingredientsOrResponse instanceof Response) {
-        return ingredientsOrResponse;
-    }
-    const ingredients = ingredientsOrResponse;
-
-    // Construct the external API URL
+export const _constructApiUrl = (ingredients: string): URL => {
 	const apiUrl = new URL(
 		'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients'
 	);
 	apiUrl.searchParams.append('ingredients', ingredients);
+	return apiUrl;
+};
 
-	// Make the fetch call with the RapidAPI headers
+export const _fetchRecipeByIngredients = async (apiUrl: URL): Promise<Response> => {
 	const ingredientSearchResponse = await fetch(apiUrl.toString(), {
 		method: 'GET',
 		headers: {
@@ -38,7 +32,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		const errorText = await ingredientSearchResponse.text();
 		return new Response(
 			JSON.stringify({
-				error: 'Failed to fetch from RapidAPI',
+				error: 'Failed to fetch recipes by ingredients from RapidAPI',
 				status: ingredientSearchResponse.status,
 				message: errorText
 			}),
@@ -46,8 +40,24 @@ export const GET: RequestHandler = async ({ url }) => {
 		);
 	}
 
-    return new Response(
-        JSON.stringify({ message: `Received ingredients: ${ingredients}` }),
-        { status: 200 }
-    );
+	return ingredientSearchResponse;
+};
+
+export const GET: RequestHandler = async ({ url }) => {
+	const ingredientsOrResponse = _parseIngredients(url);
+	if (ingredientsOrResponse instanceof Response) {
+		return ingredientsOrResponse;
+	}
+	const ingredients = ingredientsOrResponse;
+
+	const recipeByIngredientsUrl = _constructApiUrl(ingredients);
+
+	const ingredientSearchResponse = await _fetchRecipeByIngredients(recipeByIngredientsUrl);
+	if (ingredientSearchResponse instanceof Response) {
+		return ingredientSearchResponse;
+	}
+
+	return new Response(JSON.stringify({ message: `Received ingredients: ${ingredients}` }), {
+		status: 200
+	});
 };

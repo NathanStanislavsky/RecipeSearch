@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { _parseIngredients } from './+server';
+import { _parseIngredients, _fetchRecipeByIngredients, _constructApiUrl } from './+server';
 import { GET } from './+server';
 
 const createTestURL = (urlString: string) => new URL(urlString);
@@ -24,6 +24,57 @@ describe('parseIngredients function', () => {
 	});
 });
 
+describe('_constructApiUrl', () => {
+	it('should construct a valid API URL with ingredients', () => {
+		const ingredients = 'apples,bananas';
+		const expectedUrl = new URL(
+			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients'
+		);
+		expectedUrl.searchParams.append('ingredients', ingredients);
+
+		const result = _constructApiUrl(ingredients);
+		expect(result.toString()).toBe(expectedUrl.toString());
+	});
+});
+
+describe('_fetchRecipeByIngredients', () => {
+	it('should return a successful response for a valid URL', async () => {
+		const apiUrl = new URL(
+			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients?ingredients=apples,bananas'
+		);
+
+		global.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({ recipes: ["apple pie", "banana pie"] })
+		});
+
+		const response = await _fetchRecipeByIngredients(apiUrl);
+		expect(response.ok).toBe(true);
+		expect(await response.json()).toEqual({ recipes: ["apple pie", "banana pie"] });
+	});
+
+	it('should return an error response for a failed fetch', async () => {
+		const apiUrl = new URL(
+			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients?ingredients=apples,bananas'
+		);
+
+		global.fetch = vi.fn().mockResolvedValue({
+			ok: false,
+			status: 500,
+			text: async () => 'Internal Server Error'
+		});
+
+		const response = await _fetchRecipeByIngredients(apiUrl);
+		expect(response.ok).toBe(false);
+		expect(await response.json()).toEqual({
+			error: 'Failed to fetch recipes by ingredients from RapidAPI',
+			status: 500,
+			message: 'Internal Server Error'
+		});
+	});
+});
+
+
 describe('GET handler', () => {
 	it('should return error response if external API call fails', async () => {
 		vi.spyOn(global, 'fetch').mockResolvedValueOnce(
@@ -37,7 +88,7 @@ describe('GET handler', () => {
 
 		const json = await response.json();
 		expect(json).toEqual({
-			error: 'Failed to fetch from RapidAPI',
+			error: 'Failed to fetch recipes by ingredients from RapidAPI',
 			status: 500,
 			message: 'External API error'
 		});
