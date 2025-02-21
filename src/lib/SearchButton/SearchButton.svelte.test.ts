@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/svelte';
 import SearchButton from './SearchButton.svelte';
 import '@testing-library/jest-dom/vitest';
 
-describe('SearchForm', () => {
+describe('SearchButton Component', () => {
     let button: HTMLElement;
     let onClickMock: ReturnType<typeof vi.fn>;
 
