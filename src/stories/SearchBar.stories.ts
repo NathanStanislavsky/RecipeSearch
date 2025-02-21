@@ -7,9 +7,9 @@ const meta = {
   component: SearchBar,
   tags: ['autodocs'],
   argTypes: {
-    value: {
+    ingredients: {
       control: 'text',
-      description: 'Current value of the search input'
+      description: 'Current ingredients in the search input'
     },
     placeholder: {
       control: 'text',
@@ -17,7 +17,7 @@ const meta = {
     }
   },
   args: {
-    value: '',
+    ingredients: '',
     placeholder: 'Potatoes, carrots, beef...'
   }
 } satisfies Meta<SearchBar>;
@@ -28,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 // Default state: empty input with placeholder
 export const Default: Story = {
   args: {
-    value: '',
+    ingredients: '',
     placeholder: 'Potatoes, carrots, beef...'
   }
 };
@@ -36,7 +36,7 @@ export const Default: Story = {
 // Focused state: simulate user focusing on the input
 export const Focused: Story = {
   args: {
-    value: '',
+    ingredients: '',
     placeholder: 'Potatoes, carrots, beef...'
   },
   play: async ({ canvasElement }) => {
@@ -47,10 +47,10 @@ export const Focused: Story = {
   }
 };
 
-// Filled state: input shows a prefilled value
+// Filled state: input shows prefilled ingredients
 export const Filled: Story = {
   args: {
-    value: 'Carrots',
+    ingredients: 'Carrots',
     placeholder: 'Potatoes, carrots, beef...'
   },
   play: async ({ canvasElement }) => {
