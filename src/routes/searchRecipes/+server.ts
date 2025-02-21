@@ -44,14 +44,21 @@ export const _fetchRecipeByIngredients = async (apiUrl: URL): Promise<Response> 
 };
 
 export function _extractRecipeIds(recipesData: any[]): {
-	recipeIds?: number[];
-	errorResponse?: Response;
+    recipeIds?: number[];
+    errorResponse?: Response;
 } {
-	const recipeIds = recipesData
-		.map((recipe: any) => recipe.id)
-		.filter((id) => id !== undefined && id !== null);
+    const recipeIds = recipesData
+        .map((recipe: any) => recipe.id)
+        .filter((id) => id !== undefined && id !== null);
 
-	return { recipeIds };
+    if (recipeIds.length === 0) {
+        const response = new Response(
+            JSON.stringify({ error: 'No recipes found for the provided ingredients' }),
+            { status: 404 }
+        );
+        return { errorResponse: response };
+    }
+    return { recipeIds };
 }
 
 export const GET: RequestHandler = async ({ url }) => {
