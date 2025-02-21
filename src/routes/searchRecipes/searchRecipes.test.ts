@@ -1,18 +1,24 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { GET } from './+server';
+import { describe, it, expect } from 'vitest';
+import { _parseIngredients } from './+server';
 
-const createRequestEvent = (urlString: string) => ({ url: new URL(urlString) });
+const createTestURL = (urlString: string) => new URL(urlString);
 
-describe('GET searchRecipes/+server.ts', () => {
-	afterEach(() => {
-		vi.resetAllMocks();
-	});
+describe('parseIngredients function', () => {
+    it('should return a 400 error response if ingredients parameter is missing', async () => {
+        const url = createTestURL('http://localhost/api/getRecipe');
+        const response = _parseIngredients(url);
 
-	it('should return 400 error if ingredient parameters were missing', async () => {
-		const response = await GET(createRequestEvent('http://localhost/getRecipe'));
-		expect(response.status).toBe(400);
+        expect(response).toBeInstanceOf(Response);
+        expect(response.status).toBe(400);
 
-		const json = await response.json();
-		expect(json).toEqual({ error: 'Missing required parameter: ingredients' });
-	});
+        const json = await response.json();
+        expect(json).toEqual({ error: 'Missing required parameter: ingredients' });
+    });
+
+    it('should return the ingredients string when provided', () => {
+        const url = createTestURL('http://localhost/api/getRecipe?ingredients=tomato,cheese');
+        const result = _parseIngredients(url);
+        
+        expect(result).toBe('tomato,cheese');
+    });
 });
