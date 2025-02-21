@@ -57,7 +57,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		return ingredientSearchResponse;
 	}
 
-	return new Response(JSON.stringify({ message: `Received ingredients: ${ingredients}` }), {
+	return new Response(JSON.stringify(ingredientSearchResponse), {
 		status: 200
 	});
 };
