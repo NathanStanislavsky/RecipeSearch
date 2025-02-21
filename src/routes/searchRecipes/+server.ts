@@ -43,6 +43,17 @@ export const _fetchRecipeByIngredients = async (apiUrl: URL): Promise<Response> 
 	return ingredientSearchResponse;
 };
 
+export function _extractRecipeIds(recipesData: any[]): {
+	recipeIds?: number[];
+	errorResponse?: Response;
+} {
+	const recipeIds = recipesData
+		.map((recipe: any) => recipe.id)
+		.filter((id) => id !== undefined && id !== null);
+
+	return { recipeIds };
+}
+
 export const GET: RequestHandler = async ({ url }) => {
 	const ingredientsOrResponse = _parseIngredients(url);
 	if (ingredientsOrResponse instanceof Response) {
