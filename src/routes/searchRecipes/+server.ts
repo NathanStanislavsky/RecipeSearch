@@ -19,6 +19,33 @@ export const GET: RequestHandler = async ({ url }) => {
     }
     const ingredients = ingredientsOrResponse;
 
+    // Construct the external API URL
+	const apiUrl = new URL(
+		'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients'
+	);
+	apiUrl.searchParams.append('ingredients', ingredients);
+
+	// Make the fetch call with the RapidAPI headers
+	const ingredientSearchResponse = await fetch(apiUrl.toString(), {
+		method: 'GET',
+		headers: {
+			'x-rapidapi-key': RAPIDAPI_KEY,
+			'x-rapidapi-host': 'spoonacular-recipe-food-nutrition-v1.p.rapidapi.com'
+		} as HeadersInit
+	});
+
+	if (!ingredientSearchResponse.ok) {
+		const errorText = await ingredientSearchResponse.text();
+		return new Response(
+			JSON.stringify({
+				error: 'Failed to fetch from RapidAPI',
+				status: ingredientSearchResponse.status,
+				message: errorText
+			}),
+			{ status: ingredientSearchResponse.status }
+		);
+	}
+
     return new Response(
         JSON.stringify({ message: `Received ingredients: ${ingredients}` }),
         { status: 200 }
