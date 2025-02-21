@@ -1,83 +1,117 @@
-import { describe, it, expect, vi } from 'vitest';
-import { _parseIngredients, _fetchRecipeByIngredients, _constructApiUrl } from './+server';
-import { GET } from './+server';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { _parseIngredients, _fetchRecipeByIngredients, _constructApiUrl } from './+server.js';
+import { GET } from './+server.js';
 
 const createTestURL = (urlString: string) => new URL(urlString);
 
-describe('parseIngredients function', () => {
-	it('should return a 400 error response if ingredients parameter is missing', async () => {
-		const url = createTestURL('http://localhost/api/getRecipe');
-		const response = _parseIngredients(url);
+describe('_parseIngredients', () => {
+	describe('when ingredients parameter is missing', () => {
+		it('returns 400 error if ingredients are missing', async () => {
+			const url = createTestURL('http://localhost/api/getRecipe');
+			const response = _parseIngredients(url);
 
-		expect(response).toBeInstanceOf(Response);
-		expect(response.status).toBe(400);
+			expect((response as Response).status).toBe(400);
+			expect(response).toBeInstanceOf(Response);
 
-		const json = await response.json();
-		expect(json).toEqual({ error: 'Missing required parameter: ingredients' });
+			const json = await (response as Response).json();
+			expect(json).toEqual({ error: 'Missing required parameter: ingredients' });
+		});
 	});
 
-	it('should return the ingredients string when provided', () => {
-		const url = createTestURL('http://localhost/api/getRecipe?ingredients=tomato,cheese');
-		const result = _parseIngredients(url);
+	describe('when ingredients parameter exists', () => {
+		it('returns raw ingredients string', () => {
+			const url = createTestURL('http://localhost/api/getRecipe?ingredients=tomato,cheese');
+			const result = _parseIngredients(url);
 
-		expect(result).toBe('tomato,cheese');
+			expect(result).toBe('tomato,cheese');
+		});
 	});
 });
 
 describe('_constructApiUrl', () => {
-	it('should construct a valid API URL with ingredients', () => {
-		const ingredients = 'apples,bananas';
-		const expectedUrl = new URL(
-			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients'
-		);
-		expectedUrl.searchParams.append('ingredients', ingredients);
+	const BASE_URL =
+		'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients';
 
+	it('constructs URL with default parameters when only ingredients provided', () => {
+		const result = _constructApiUrl('apples,bananas');
+		const params = new URLSearchParams(result.search);
+
+		expect(result.origin + result.pathname).toBe(BASE_URL);
+		expect(params.get('ingredients')).toBe('apples,bananas');
+	});
+
+	it('URL-encodes special characters in ingredients', () => {
+		const ingredients = 'chicken breast,red pepper & onion';
 		const result = _constructApiUrl(ingredients);
-		expect(result.toString()).toBe(expectedUrl.toString());
+		expect(result.searchParams.get('ingredients')).toBe(ingredients);
 	});
 });
 
 describe('_fetchRecipeByIngredients', () => {
-	it('should return a successful response for a valid URL', async () => {
-		const apiUrl = new URL(
-			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients?ingredients=apples,bananas'
-		);
+	const TEST_URL = new URL(
+		'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients?ingredients=apples,bananas'
+	);
 
-		global.fetch = vi.fn().mockResolvedValue({
-			ok: true,
-			json: async () => ({ recipes: ["apple pie", "banana pie"] })
-		});
-
-		const response = await _fetchRecipeByIngredients(apiUrl);
-		expect(response.ok).toBe(true);
-		expect(await response.json()).toEqual({ recipes: ["apple pie", "banana pie"] });
+	beforeEach(() => {
+		vi.clearAllMocks();
+		global.fetch = vi.fn();
 	});
 
-	it('should return an error response for a failed fetch', async () => {
-		const apiUrl = new URL(
-			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients?ingredients=apples,bananas'
-		);
+	describe('when API responds successfully', () => {
+		it('should return a successful response for a valid URL', async () => {
+			const mockData = {
+				recipes: ['apple pie', 'banana pie']
+			};
 
-		global.fetch = vi.fn().mockResolvedValue({
-			ok: false,
-			status: 500,
-			text: async () => 'Internal Server Error'
+			global.fetch = vi.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({ mockData })
+			});
+
+			const response = await _fetchRecipeByIngredients(TEST_URL);
+			expect(response.ok).toBe(true);
+			expect(await response.json()).toEqual({ mockData });
 		});
+	});
 
-		const response = await _fetchRecipeByIngredients(apiUrl);
-		expect(response.ok).toBe(false);
-		expect(await response.json()).toEqual({
-			error: 'Failed to fetch recipes by ingredients from RapidAPI',
-			status: 500,
-			message: 'Internal Server Error'
+	describe('when API returns error status', () => {
+		it('should return an error response for a failed fetch', async () => {
+			global.fetch = vi.fn().mockResolvedValue({
+				ok: false,
+				status: 500,
+				text: async () => 'Internal Server Error'
+			});
+
+			const response = await _fetchRecipeByIngredients(TEST_URL);
+			expect(response.ok).toBe(false);
+			expect(await response.json()).toEqual({
+				error: 'Failed to fetch recipes by ingredients from RapidAPI',
+				status: 500,
+				message: 'Internal Server Error'
+			});
 		});
 	});
 });
 
+function mockRequestEvent(urlString: string): any {
+	return {
+		url: new URL(urlString),
+		fetch: global.fetch,
+		params: {},
+		request: new Request(urlString),
+		locals: {},
+		cookies: {
+			get: vi.fn(),
+			set: vi.fn(),
+			delete: vi.fn()
+		},
+		platform: undefined
+	};
+}
 
-describe('GET handler', () => {
+describe('GET handler integration tests', () => {
 	it('should return 400 if ingredients are missing', async () => {
-		const response = await GET({ url: createTestURL('http://localhost/api/getRecipe') });
+		const response = await GET(mockRequestEvent('http://localhost/api/getRecipe'));
 		expect(response.status).toBe(400);
 		const json = await response.json();
 		expect(json).toEqual({ error: 'Missing required parameter: ingredients' });
@@ -88,9 +122,9 @@ describe('GET handler', () => {
 			new Response('External API error', { status: 500 })
 		);
 
-		const response = await GET({
-			url: createTestURL('http://localhost/api/getRecipe?ingredients=tomato,cheese')
-		});
+		const response = await GET(
+			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
+		);
 		expect(response.status).toBe(500);
 		const json = await response.json();
 		expect(json).toEqual({
@@ -110,9 +144,9 @@ describe('GET handler', () => {
 			new Response(JSON.stringify(mockRecipes), { status: 200 })
 		);
 
-		const response = await GET({
-			url: createTestURL('http://localhost/api/getRecipe?ingredients=tomato,cheese')
-		});
+		const response = await GET(
+			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
+		);
 		expect(response.status).toBe(200);
 		const json = await response.json();
 		expect(json).toEqual(mockRecipes);
