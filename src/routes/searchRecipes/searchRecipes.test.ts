@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { _parseIngredients, _fetchRecipeByIngredients, _constructApiUrl } from './+server.js';
+import { _parseIngredients, _fetchRecipeByIngredients, _constructApiUrl, _extractRecipeIds } from './+server.js';
 import { GET } from './+server.js';
 
 const createTestURL = (urlString: string) => new URL(urlString);
@@ -90,6 +90,21 @@ describe('_fetchRecipeByIngredients', () => {
 				message: 'Internal Server Error'
 			});
 		});
+	});
+});
+
+describe('extractRecipeIds', () => {
+	it('should extract recipe IDs from valid recipes data', () => {
+		const sampleData = [
+			{ id: 101, title: 'Recipe One' },
+			{ id: 202, title: 'Recipe Two' },
+			{ id: 303, title: 'Recipe Three' }
+		];
+
+		const result = _extractRecipeIds(sampleData);
+
+		expect(result.recipeIds).toEqual([101, 202, 303]);
+		expect(result.errorResponse).toBeUndefined();
 	});
 });
 
