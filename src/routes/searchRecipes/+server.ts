@@ -61,6 +61,22 @@ export function _extractRecipeIds(recipesData: any[]): {
     return { recipeIds };
 }
 
+export function _parseIDs(url: URL): Response | string {
+	const ids = url.searchParams.get('ids');
+  
+	if (!ids) {
+	  return new Response(
+		JSON.stringify({ error: 'Missing required parameter: ids' }),
+		{
+		  status: 400,
+		  headers: { 'Content-Type': 'application/json' }
+		}
+	  );
+	}
+  
+	return ids;
+  }
+
 export const GET: RequestHandler = async ({ url }) => {
 	const ingredientsOrResponse = _parseIngredients(url);
 	if (ingredientsOrResponse instanceof Response) {
