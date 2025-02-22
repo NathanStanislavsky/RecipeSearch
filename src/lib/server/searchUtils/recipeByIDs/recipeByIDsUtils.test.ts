@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-	extractRecipeIds,
-    parseIDs
-} from './recipeByIDsUtils.ts';
+import { extractRecipeIds, parseIDs } from './recipeByIDsUtils.ts';
 
 const createTestURL = (urlString: string) => new URL(urlString);
 
@@ -65,7 +62,9 @@ describe('_parseIds', () => {
 		it('returns raw Ids string', () => {
 			const mockIDs = '123,456,789';
 
-			const url = createTestURL(`http://localhost/api/getRecipe?ids=${encodeURIComponent(mockIDs)}`);
+			const url = createTestURL(
+				`http://localhost/api/getRecipe?ids=${encodeURIComponent(mockIDs)}`
+			);
 			expect(parseIDs(url)).toBe(mockIDs);
 		});
 	});

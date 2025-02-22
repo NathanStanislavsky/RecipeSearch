@@ -10,7 +10,6 @@ import {
 	constructApiUrl
 } from '$lib/server/searchUtils/recipeByIngredients/recipeByIngredientsUtils.js';
 
-
 export const GET: RequestHandler = async ({ url }) => {
 	const ingredientsOrResponse = parseIngredients(url);
 	if (ingredientsOrResponse instanceof Response) {

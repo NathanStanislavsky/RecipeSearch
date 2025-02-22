@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
 	parseIngredients,
 	fetchRecipeByIngredients,
-	constructApiUrl,
+	constructApiUrl
 } from './recipeByIngredientsUtils.ts';
 
 const createTestURL = (urlString: string) => new URL(urlString);
