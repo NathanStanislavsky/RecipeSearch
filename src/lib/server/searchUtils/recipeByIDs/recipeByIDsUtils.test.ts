@@ -2,7 +2,8 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import {
 	extractRecipeIds,
 	constructBulkApiURL,
-	fetchBulkRecipeInformation
+	fetchBulkRecipeInformation,
+	filterInformationBulkReponse
 } from './recipeByIDsUtils.ts';
 
 function createMockResponse(
@@ -120,6 +121,58 @@ describe('recipeByIDsUtils', () => {
 				status: 500,
 				message: errorText
 			});
+		});
+	});
+
+	describe('filter information bulk response', () => {
+		it('should filter detailed recipes and return a new JSON response with only specific fields', async () => {
+			const detailedRecipes = [
+				{
+					id: 1,
+					image: 'image1.jpg',
+					title: 'Recipe 1',
+					readyInMinutes: 30,
+					servings: 4,
+					sourceUrl: 'http://recipe1.com',
+					extraField: 'ignore'
+				},
+				{
+					id: 2,
+					image: 'image2.jpg',
+					title: 'Recipe 2',
+					readyInMinutes: 45,
+					servings: 2,
+					sourceUrl: 'http://recipe2.com',
+					extraField: 'ignore'
+				}
+			];
+			const bulkResponse = new Response(JSON.stringify(detailedRecipes), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			});
+
+			const response = await filterInformationBulkReponse(bulkResponse);
+
+			expect(response.status).toBe(200);
+			const json = await response.json();
+			expect(json).toEqual([
+				{
+					id: 1,
+					image: 'image1.jpg',
+					title: 'Recipe 1',
+					readyInMinutes: 30,
+					servings: 4,
+					sourceUrl: 'http://recipe1.com'
+				},
+				{
+					id: 2,
+					image: 'image2.jpg',
+					title: 'Recipe 2',
+					readyInMinutes: 45,
+					servings: 2,
+					sourceUrl: 'http://recipe2.com'
+				}
+			]);
 		});
 	});
 });
