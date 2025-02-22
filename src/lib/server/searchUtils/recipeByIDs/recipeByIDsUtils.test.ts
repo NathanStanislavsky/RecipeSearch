@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { extractRecipeIds, constructBulkApiURL } from './recipeByIDsUtils.ts';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { extractRecipeIds, constructBulkApiURL, fetchBulkRecipeInformation } from './recipeByIDsUtils.ts';
 
 async function expectErrorResponse(
 	response: Response | undefined,
@@ -66,5 +66,31 @@ describe('constructBulkApiURL', () => {
 				error: 'Missing or empty required parameter: ids'
 			});
 		});
+	});
+});
+
+describe('fetchBulkRecipeInformation', () => {
+	const testUrl = new URL('https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk?ids=123,456,789');
+	const mockFetch = vi.spyOn(global, 'fetch');
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it('should return a successful response when API returns 200', async () => {
+		const mockResponseData = [{ id: 123, title: 'Recipe One' }];
+		const mockResponse = new Response(JSON.stringify(mockResponseData), {
+			status: 200,
+			headers: { 'Content-Type': 'application/json' }
+		});
+
+		mockFetch.mockResolvedValueOnce(mockResponse);
+
+		const result = await fetchBulkRecipeInformation(testUrl);
+		expect(result.ok).toBe(true);
+		expect(result.status).toBe(200);
+
+		const json = await result.json();
+		expect(json).toEqual(mockResponseData);
 	});
 });
