@@ -15,3 +15,12 @@ export function extractRecipeIds(recipesData: any[]): {
 	}
 	return { recipeIds };
 }
+
+export function constructBulkApiURL(recipeIds: number[]): Response | URL {
+  const bulkUrl = new URL(
+    'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk'
+  );
+  bulkUrl.searchParams.append('ids', recipeIds.join(','));
+
+  return bulkUrl;
+}
