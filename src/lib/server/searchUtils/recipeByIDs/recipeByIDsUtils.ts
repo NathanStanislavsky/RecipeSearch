@@ -80,8 +80,5 @@ export async function filterInformationBulkReponse(bulkResponse: Response): Prom
 		sourceUrl: recipe.sourceUrl
 	}));
 
-	return new Response(JSON.stringify(filteredRecipes), {
-		status: 200,
-		headers: { 'Content-Type': 'application/json' }
-	});
+	return createJSONResponse(filteredRecipes, 200);
 }
