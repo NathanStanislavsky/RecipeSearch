@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractRecipeIds, parseIDs } from './recipeByIDsUtils.ts';
-
-const createTestURL = (urlString: string) => new URL(urlString);
+import { extractRecipeIds } from './recipeByIDsUtils.ts';
 
 describe('extractRecipeIds', () => {
 	it('should extract recipe IDs from valid recipes data', () => {
@@ -41,31 +39,5 @@ describe('extractRecipeIds', () => {
 			const json = await result.errorResponse.json();
 			expect(json).toEqual({ error: 'No recipes found for the provided ingredients' });
 		}
-	});
-});
-
-describe('_parseIds', () => {
-	describe('when IDs parameter is missing', () => {
-		it('returns 400 error if IDs are missing', async () => {
-			const url = createTestURL('http://localhost/api/getRecipe');
-			const response = parseIDs(url) as Response;
-
-			expect(response.status).toBe(400);
-			expect(response.headers.get('Content-Type')).toBe('application/json');
-
-			const json = await response.json();
-			expect(json).toEqual({ error: 'Missing required parameter: ids' });
-		});
-	});
-
-	describe('when IDs parameter exists', () => {
-		it('returns raw Ids string', () => {
-			const mockIDs = '123,456,789';
-
-			const url = createTestURL(
-				`http://localhost/api/getRecipe?ids=${encodeURIComponent(mockIDs)}`
-			);
-			expect(parseIDs(url)).toBe(mockIDs);
-		});
 	});
 });

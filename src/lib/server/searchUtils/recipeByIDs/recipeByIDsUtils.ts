@@ -15,16 +15,3 @@ export function extractRecipeIds(recipesData: any[]): {
 	}
 	return { recipeIds };
 }
-
-export function parseIDs(url: URL): Response | string {
-	const ids = url.searchParams.get('ids');
-
-	if (!ids) {
-		return new Response(JSON.stringify({ error: 'Missing required parameter: ids' }), {
-			status: 400,
-			headers: { 'Content-Type': 'application/json' }
-		});
-	}
-
-	return ids;
-}
