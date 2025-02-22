@@ -17,7 +17,7 @@ export function extractRecipeIds(recipesData: any[]): {
 }
 
 export function constructBulkApiURL(recipeIds: number[]): Response | URL {
-  if (recipeIds.length === 0) {
+  if (!recipeIds || recipeIds.length === 0) {
     return new Response(
       JSON.stringify({ error: 'Missing or empty required parameter: ids' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
