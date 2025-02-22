@@ -1,6 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { extractRecipeIds, constructBulkApiURL } from './recipeByIDsUtils.ts';
 
+async function expectErrorResponse(
+	response: Response | undefined,
+	status: number,
+	expectedJson: object
+) {
+	expect(response).toBeDefined();
+	if (response) {
+		expect(response.status).toBe(status);
+		const json = await response.json();
+		expect(json).toStrictEqual(expectedJson);
+	}
+}
+
 describe('extractRecipeIds', () => {
 	it('should extract recipe IDs from valid recipes data', () => {
 		const sampleData = [
@@ -15,63 +28,43 @@ describe('extractRecipeIds', () => {
 		expect(result.errorResponse).toBeUndefined();
 	});
 
-	it('should return an error response when recipesData is empty', async () => {
-		const sampleData: any[] = [];
-
-		const result = extractRecipeIds(sampleData);
-
-		expect(result.errorResponse).toBeDefined();
-		if (result.errorResponse) {
-			expect(result.errorResponse.status).toBe(404);
-			const json = await result.errorResponse.json();
-			expect(json).toEqual({ error: 'No recipes found for the provided ingredients' });
+	describe.each([
+		{ caseName: 'when recipesData is empty', sampleData: [] },
+		{
+			caseName: 'when recipesData has no valid IDs',
+			sampleData: [{ name: 'No ID Recipe' }, { name: 'Another Recipe' }]
 		}
-	});
-
-	it('should return an error response when recipesData has no valid ids', async () => {
-		const sampleData = [{ name: 'No ID Recipe' }, { name: 'Another Recipe' }];
-
-		const result = extractRecipeIds(sampleData);
-
-		expect(result.errorResponse).toBeDefined();
-		if (result.errorResponse) {
-			expect(result.errorResponse.status).toBe(404);
-			const json = await result.errorResponse.json();
-			expect(json).toEqual({ error: 'No recipes found for the provided ingredients' });
-		}
+	])('$caseName', ({ sampleData }) => {
+		it('should return an error response', async () => {
+			const result = extractRecipeIds(sampleData);
+			await expectErrorResponse(result.errorResponse, 404, {
+				error: 'No recipes found for the provided ingredients'
+			});
+		});
 	});
 });
 
 describe('constructBulkApiURL', () => {
-    const BASE_URL =
-        'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk';
+	const BASE_URL =
+		'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk';
 
-    it('should construct a valid bulk API URL when valid recipe IDs are provided', () => {
-        const recipeIds = [123, 456, 789];
-        const result = constructBulkApiURL(recipeIds);
+	it('should construct a valid bulk API URL when valid recipe IDs are provided', () => {
+		const recipeIds = [123, 456, 789];
+		const result = constructBulkApiURL(recipeIds);
 
-        expect(result).toBeInstanceOf(URL);
+		expect(result).toBeInstanceOf(URL);
+		expect(decodeURIComponent(result.toString())).toBe(`${BASE_URL}?ids=123,456,789`);
+	});
 
-        expect(decodeURIComponent(result.toString())).toBe(`${BASE_URL}?ids=123,456,789`);
-    });
-
-    it('should return a 400 Response when recipeIds array is empty', async () => {
-        const result = constructBulkApiURL([]);
-
-        expect(result).toBeInstanceOf(Response);
-        expect((result as Response).status).toBe(400);
-
-        const json = await (result as Response).json();
-        expect(json).toStrictEqual({ error: 'Missing or empty required parameter: ids' });
-    });
-
-    it('should return a 400 Response when recipeIds is null or undefined', async () => {
-        const result = constructBulkApiURL(null as unknown as number[]);
-
-        expect(result).toBeInstanceOf(Response);
-        expect((result as Response).status).toBe(400);
-
-        const json = await (result as Response).json();
-        expect(json).toStrictEqual({ error: 'Missing or empty required parameter: ids' });
-    });
+	describe.each([
+		{ caseName: 'when recipeIds array is empty', recipeIds: [] },
+		{ caseName: 'when recipeIds is null', recipeIds: null as unknown as number[] }
+	])('$caseName', ({ recipeIds }) => {
+		it('should return a 400 Response', async () => {
+			const result = constructBulkApiURL(recipeIds);
+			await expectErrorResponse(result as Response, 400, {
+				error: 'Missing or empty required parameter: ids'
+			});
+		});
+	});
 });
