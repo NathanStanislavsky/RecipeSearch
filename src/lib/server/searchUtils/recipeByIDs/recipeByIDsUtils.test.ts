@@ -54,4 +54,14 @@ describe('constructBulkApiURL', () => {
 
         expect(decodeURIComponent(result.toString())).toBe(`${BASE_URL}?ids=123,456,789`);
     });
+
+    it('should return a 400 Response when recipeIds array is empty', async () => {
+        const result = constructBulkApiURL([]);
+
+        expect(result).toBeInstanceOf(Response);
+        expect((result as Response).status).toBe(400);
+
+        const json = await (result as Response).json();
+        expect(json).toStrictEqual({ error: 'Missing or empty required parameter: ids' });
+    });
 });
