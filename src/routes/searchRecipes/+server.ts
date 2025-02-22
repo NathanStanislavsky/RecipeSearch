@@ -30,8 +30,18 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	// 4. Extract recipe IDs from the fetched recipes
 	const recipesData = await ingredientSearchResponse.json();
-	const { errorResponse } = extractRecipeIds(recipesData);
+	const { recipeIds, errorResponse } = extractRecipeIds(recipesData);
 	if (errorResponse) {
 		return errorResponse;
+	}
+
+	// 5. Construct the bulk API URL using the extracted recipe IDs
+	const bulkApiUrlResponse = constructBulkApiURL(recipeIds!);
+	const bulkApiUrl = bulkApiUrlResponse as URL;
+
+	// 6. Fetch detailed recipe information using the bulk API URL
+	const bulkResponse = await fetchBulkRecipeInformation(bulkApiUrl);
+	if (!bulkResponse.ok) {
+		return bulkResponse;
 	}
 };
