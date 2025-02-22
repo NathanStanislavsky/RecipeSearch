@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractRecipeIds } from './recipeByIDsUtils.ts';
+import { extractRecipeIds, constructBulkApiURL } from './recipeByIDsUtils.ts';
 
 describe('extractRecipeIds', () => {
 	it('should extract recipe IDs from valid recipes data', () => {
@@ -40,4 +40,18 @@ describe('extractRecipeIds', () => {
 			expect(json).toEqual({ error: 'No recipes found for the provided ingredients' });
 		}
 	});
+});
+
+describe('constructBulkApiURL', () => {
+    const BASE_URL =
+        'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk';
+
+    it('should construct a valid bulk API URL when valid recipe IDs are provided', () => {
+        const recipeIds = [123, 456, 789];
+        const result = constructBulkApiURL(recipeIds);
+
+        expect(result).toBeInstanceOf(URL);
+
+        expect(decodeURIComponent(result.toString())).toBe(`${BASE_URL}?ids=123,456,789`);
+    });
 });
