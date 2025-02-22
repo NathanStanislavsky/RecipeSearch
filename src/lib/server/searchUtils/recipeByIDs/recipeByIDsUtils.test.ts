@@ -93,4 +93,20 @@ describe('fetchBulkRecipeInformation', () => {
 		const json = await result.json();
 		expect(json).toEqual(mockResponseData);
 	});
+
+	it('should return error response if bulk recipe call fails', async () => {
+		vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+			new Response('Bulk API error', { status: 500 })
+		);
+	
+		const response = await fetchBulkRecipeInformation(testUrl);
+	
+		expect(response.status).toBe(500);
+		const json = await response.json();
+		expect(json).toEqual({
+			error: 'Failed to fetch detailed recipe information',
+			status: 500,
+			message: 'Bulk API error'
+		});
+	});
 });
