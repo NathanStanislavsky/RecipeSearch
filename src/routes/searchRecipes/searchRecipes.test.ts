@@ -99,4 +99,70 @@ describe('GET handler integration tests', () => {
 			message: errorText
 		});
 	});
+
+	it('should return 200 with filtered recipes if API calls succeed', async () => {
+		const mockIngredientsRecipes = [
+			{ id: 1, title: 'Tomato Soup', image: 'tomato_soup.jpg' },
+			{ id: 2, title: 'Tomato Salad', image: 'tomato_salad.jpg' }
+		];
+
+		const mockDetailedRecipes = [
+			{
+				id: 1,
+				image: 'tomato_soup.jpg',
+				title: 'Tomato Soup',
+				readyInMinutes: 30,
+				servings: 4,
+				sourceUrl: 'http://recipe1.com',
+				extraField: 'ignore'
+			},
+			{
+				id: 2,
+				image: 'tomato_salad.jpg',
+				title: 'Tomato Salad',
+				readyInMinutes: 20,
+				servings: 2,
+				sourceUrl: 'http://recipe2.com',
+				extraField: 'ignore'
+			}
+		];
+
+		vi.spyOn(global, 'fetch')
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify(mockIngredientsRecipes), {
+					status: 200,
+					headers: { 'Content-Type': 'application/json' }
+				})
+			)
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify(mockDetailedRecipes), {
+					status: 200,
+					headers: { 'Content-Type': 'application/json' }
+				})
+			);
+
+		const response = await GET(
+			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
+		);
+		expect(response.status).toBe(200);
+		const json = await response.json();
+		expect(json).toEqual([
+			{
+				id: 1,
+				image: 'tomato_soup.jpg',
+				title: 'Tomato Soup',
+				readyInMinutes: 30,
+				servings: 4,
+				sourceUrl: 'http://recipe1.com'
+			},
+			{
+				id: 2,
+				image: 'tomato_salad.jpg',
+				title: 'Tomato Salad',
+				readyInMinutes: 20,
+				servings: 2,
+				sourceUrl: 'http://recipe2.com'
+			}
+		]);
+	});
 });
