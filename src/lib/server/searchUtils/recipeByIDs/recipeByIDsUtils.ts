@@ -63,3 +63,21 @@ export async function fetchBulkRecipeInformation(url: URL): Promise<Response> {
 
 	return response;
 }
+
+export async function filterInformationBulkReponse(bulkResponse: Response): Promise<Response> {
+	const detailedRecipes = await bulkResponse.json();
+
+	const filteredRecipes = detailedRecipes.map((recipe: any) => ({
+		id: recipe.id,
+		image: recipe.image,
+		title: recipe.title,
+		readyInMinutes: recipe.readyInMinutes,
+		servings: recipe.servings,
+		sourceUrl: recipe.sourceUrl
+	}));
+
+	return new Response(JSON.stringify(filteredRecipes), {
+		status: 200,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}
