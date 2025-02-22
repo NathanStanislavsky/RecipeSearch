@@ -44,4 +44,8 @@ export const GET: RequestHandler = async ({ url }) => {
 	if (!bulkResponse.ok) {
 		return bulkResponse;
 	}
+
+	// 7. Filter the detailed recipe information
+	const finalResponse = await filterInformationBulkReponse(bulkResponse);
+	return finalResponse;
 };
