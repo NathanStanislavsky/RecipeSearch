@@ -64,4 +64,14 @@ describe('constructBulkApiURL', () => {
         const json = await (result as Response).json();
         expect(json).toStrictEqual({ error: 'Missing or empty required parameter: ids' });
     });
+
+    it('should return a 400 Response when recipeIds is null or undefined', async () => {
+        const result = constructBulkApiURL(null as unknown as number[]);
+
+        expect(result).toBeInstanceOf(Response);
+        expect((result as Response).status).toBe(400);
+
+        const json = await (result as Response).json();
+        expect(json).toStrictEqual({ error: 'Missing or empty required parameter: ids' });
+    });
 });
