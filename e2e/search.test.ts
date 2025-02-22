@@ -12,7 +12,7 @@ const clickSearchButton = async (page) => {
 };
 
 const searchTest = async (page, searchTerm) => {
-	await page.goto('http://localhost:5173/');
+	await page.goto('/');
 	await fillSearchInput(page, searchTerm);
 	await clickSearchButton(page);
 	await expect(page.locator('input[placeholder="Potatoes, carrots, beef..."]')).toHaveValue(
