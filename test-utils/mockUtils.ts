@@ -8,7 +8,7 @@ export function createMockResponse(
 	return new Response(JSON.stringify(body), { status, headers });
 }
 
-export async function assertErrorResponse(
+export async function assertResponse(
 	response: Response | undefined,
 	status: number,
 	expected: object

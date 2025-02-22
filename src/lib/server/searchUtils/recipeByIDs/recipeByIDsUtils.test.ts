@@ -6,7 +6,7 @@ import {
 	filterInformationBulkReponse
 } from './recipeByIDsUtils.ts';
 
-import { createMockResponse, assertErrorResponse } from './test-utils/mockUtils.ts';
+import { createMockResponse, assertResponse } from './test-utils/mockUtils.ts';
 
 describe('recipeByIDsUtils', () => {
 	describe('extractRecipeIds', () => {
@@ -27,7 +27,7 @@ describe('recipeByIDsUtils', () => {
 		])('when %s', (_, sampleData) => {
 			it('returns an error response', async () => {
 				const result = extractRecipeIds(sampleData);
-				await assertErrorResponse(result.errorResponse, 404, {
+				await assertResponse(result.errorResponse, 404, {
 					error: 'No recipes found for the provided ingredients'
 				});
 			});
@@ -51,7 +51,7 @@ describe('recipeByIDsUtils', () => {
 		])('when %s', (_, recipeIds) => {
 			it('returns a 400 error Response', async () => {
 				const result = constructBulkApiURL(recipeIds);
-				await assertErrorResponse(result as Response, 400, {
+				await assertResponse(result as Response, 400, {
 					error: 'Missing or empty required parameter: ids'
 				});
 			});

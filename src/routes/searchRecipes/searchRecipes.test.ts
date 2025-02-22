@@ -1,7 +1,11 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, vi, afterEach } from 'vitest';
 import { GET } from './+server.js';
 
-import { mockRequestEvent } from './test-utils/mockUtils.ts';
+import {
+	mockRequestEvent,
+	assertResponse,
+	createMockResponse
+} from './test-utils/mockUtils.ts';
 
 describe('GET handler integration tests', () => {
 	afterEach(() => {
@@ -10,45 +14,36 @@ describe('GET handler integration tests', () => {
 
 	it('should return 400 if ingredients are missing', async () => {
 		const response = await GET(mockRequestEvent('http://localhost/api/getRecipe'));
-		expect(response.status).toBe(400);
-		const json = await response.json();
-		expect(json).toEqual({ error: 'Missing required parameter: ingredients' });
+
+		assertResponse(response, 400, { error: 'Missing required parameter: ingredients' });
 	});
 
 	it('should return 500 if external API call fails on ingredients search', async () => {
-		vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-			new Response('External API error', { status: 500 })
-		);
+		vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse('External API error', 500));
 
 		const response = await GET(
 			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
 		);
-		expect(response.status).toBe(500);
-		const json = await response.json();
-		expect(json).toEqual({
+
+		assertResponse(response, 500, {
 			error: 'Failed to fetch recipes by ingredients from RapidAPI',
-			status: 500,
-			message: 'External API error'
+			message: '"External API error"',
+			status: 500
 		});
 	});
 
 	it('should return 404 if no valid recipe IDs are found', async () => {
 		const mockRecipes = [{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }];
 
-		vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-			new Response(JSON.stringify(mockRecipes), {
-				status: 200,
-				headers: { 'Content-Type': 'application/json' }
-			})
-		);
+		vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse(mockRecipes, 200));
 
 		const response = await GET(
 			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
 		);
 
-		expect(response.status).toBe(404);
-		const json = await response.json();
-		expect(json).toEqual({ error: 'No recipes found for the provided ingredients' });
+		await assertResponse(response, 404, {
+			error: 'No recipes found for the provided ingredients'
+		});
 	});
 
 	it('should return error response if fetching bulk recipe details fails', async () => {
@@ -56,16 +51,10 @@ describe('GET handler integration tests', () => {
 			{ id: 1, title: 'Tomato Soup', image: 'tomato_soup.jpg' },
 			{ id: 2, title: 'Tomato Salad', image: 'tomato_salad.jpg' }
 		];
-
 		const errorText = 'Bulk API error';
 
 		vi.spyOn(global, 'fetch')
-			.mockResolvedValueOnce(
-				new Response(JSON.stringify(mockIngredientsRecipes), {
-					status: 200,
-					headers: { 'Content-Type': 'application/json' }
-				})
-			)
+			.mockResolvedValueOnce(createMockResponse(mockIngredientsRecipes, 200))
 			.mockResolvedValueOnce(
 				new Response(errorText, {
 					status: 500,
@@ -77,9 +66,7 @@ describe('GET handler integration tests', () => {
 			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
 		);
 
-		expect(response.status).toBe(500);
-		const json = await response.json();
-		expect(json).toEqual({
+		await assertResponse(response, 500, {
 			error: 'Failed to fetch detailed recipe information',
 			status: 500,
 			message: errorText
@@ -114,25 +101,14 @@ describe('GET handler integration tests', () => {
 		];
 
 		vi.spyOn(global, 'fetch')
-			.mockResolvedValueOnce(
-				new Response(JSON.stringify(mockIngredientsRecipes), {
-					status: 200,
-					headers: { 'Content-Type': 'application/json' }
-				})
-			)
-			.mockResolvedValueOnce(
-				new Response(JSON.stringify(mockDetailedRecipes), {
-					status: 200,
-					headers: { 'Content-Type': 'application/json' }
-				})
-			);
+			.mockResolvedValueOnce(createMockResponse(mockIngredientsRecipes, 200))
+			.mockResolvedValueOnce(createMockResponse(mockDetailedRecipes, 200));
 
 		const response = await GET(
 			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
 		);
-		expect(response.status).toBe(200);
-		const json = await response.json();
-		expect(json).toEqual([
+
+		assertResponse(response, 200, [
 			{
 				id: 1,
 				image: 'tomato_soup.jpg',
