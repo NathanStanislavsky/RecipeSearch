@@ -43,6 +43,18 @@ export const fetchBulkRecipeInformation = async (url: URL): Promise<Response> =>
 			'Content-Type': 'application/json'
 		}
 	});
-	
+
+	if (!response.ok) {
+		const errorMessage = await response.text();
+		return new Response(
+			JSON.stringify({
+				error: 'Failed to fetch detailed recipe information',
+				status: response.status,
+				message: errorMessage
+			}),
+			{ status: response.status, headers: { 'Content-Type': 'application/json' } }
+		);
+	}
+
 	return response;
 };
