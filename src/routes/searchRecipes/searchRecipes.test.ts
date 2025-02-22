@@ -49,13 +49,12 @@ describe('GET handler integration tests', () => {
 	it('should return 404 if no valid recipe IDs are found', async () => {
 		const mockRecipes = [{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }];
 
-		vi.spyOn(global, 'fetch')
-			.mockResolvedValueOnce(
-				new Response(JSON.stringify(mockRecipes), {
-					status: 200,
-					headers: { 'Content-Type': 'application/json' }
-				})
-			);
+		vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+			new Response(JSON.stringify(mockRecipes), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			})
+		);
 
 		const response = await GET(
 			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
@@ -64,5 +63,40 @@ describe('GET handler integration tests', () => {
 		expect(response.status).toBe(404);
 		const json = await response.json();
 		expect(json).toEqual({ error: 'No recipes found for the provided ingredients' });
+	});
+
+	it('should return error response if fetching bulk recipe details fails', async () => {
+		const mockIngredientsRecipes = [
+			{ id: 1, title: 'Tomato Soup', image: 'tomato_soup.jpg' },
+			{ id: 2, title: 'Tomato Salad', image: 'tomato_salad.jpg' }
+		];
+
+		const errorText = 'Bulk API error';
+
+		vi.spyOn(global, 'fetch')
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify(mockIngredientsRecipes), {
+					status: 200,
+					headers: { 'Content-Type': 'application/json' }
+				})
+			)
+			.mockResolvedValueOnce(
+				new Response(errorText, {
+					status: 500,
+					headers: { 'Content-Type': 'text/plain' }
+				})
+			);
+
+		const response = await GET(
+			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
+		);
+
+		expect(response.status).toBe(500);
+		const json = await response.json();
+		expect(json).toEqual({
+			error: 'Failed to fetch detailed recipe information',
+			status: 500,
+			message: errorText
+		});
 	});
 });
