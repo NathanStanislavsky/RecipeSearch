@@ -1,112 +1,125 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { extractRecipeIds, constructBulkApiURL, fetchBulkRecipeInformation } from './recipeByIDsUtils.ts';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import {
+	extractRecipeIds,
+	constructBulkApiURL,
+	fetchBulkRecipeInformation
+} from './recipeByIDsUtils.ts';
 
-async function expectErrorResponse(
+function createMockResponse(
+	body: unknown,
+	status: number,
+	headers = { 'Content-Type': 'application/json' }
+): Response {
+	return new Response(JSON.stringify(body), { status, headers });
+}
+
+async function assertErrorResponse(
 	response: Response | undefined,
 	status: number,
-	expectedJson: object
+	expected: object
 ) {
 	expect(response).toBeDefined();
 	if (response) {
 		expect(response.status).toBe(status);
 		const json = await response.json();
-		expect(json).toStrictEqual(expectedJson);
+		expect(json).toStrictEqual(expected);
 	}
 }
 
-describe('extractRecipeIds', () => {
-	it('should extract recipe IDs from valid recipes data', () => {
-		const sampleData = [
-			{ id: 101, title: 'Recipe One' },
-			{ id: 202, title: 'Recipe Two' },
-			{ id: 303, title: 'Recipe Three' }
-		];
-
-		const result = extractRecipeIds(sampleData);
-
-		expect(result.recipeIds).toEqual([101, 202, 303]);
-		expect(result.errorResponse).toBeUndefined();
-	});
-
-	describe.each([
-		{ caseName: 'when recipesData is empty', sampleData: [] },
-		{
-			caseName: 'when recipesData has no valid IDs',
-			sampleData: [{ name: 'No ID Recipe' }, { name: 'Another Recipe' }]
-		}
-	])('$caseName', ({ sampleData }) => {
-		it('should return an error response', async () => {
+describe('recipeByIDsUtils', () => {
+	describe('extractRecipeIds', () => {
+		it('extracts recipe IDs from valid data', () => {
+			const sampleData = [
+				{ id: 101, title: 'Recipe One' },
+				{ id: 202, title: 'Recipe Two' },
+				{ id: 303, title: 'Recipe Three' }
+			];
 			const result = extractRecipeIds(sampleData);
-			await expectErrorResponse(result.errorResponse, 404, {
-				error: 'No recipes found for the provided ingredients'
+			expect(result.recipeIds).toEqual([101, 202, 303]);
+			expect(result.errorResponse).toBeUndefined();
+		});
+
+		describe.each([
+			['empty recipesData', []],
+			['data with no valid IDs', [{ name: 'No ID Recipe' }, { name: 'Another Recipe' }]]
+		])('when %s', (_, sampleData) => {
+			it('returns an error response', async () => {
+				const result = extractRecipeIds(sampleData);
+				await assertErrorResponse(result.errorResponse, 404, {
+					error: 'No recipes found for the provided ingredients'
+				});
 			});
 		});
 	});
-});
 
-describe('constructBulkApiURL', () => {
-	const BASE_URL =
-		'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk';
+	describe('constructBulkApiURL', () => {
+		const BASE_URL =
+			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk';
 
-	it('should construct a valid bulk API URL when valid recipe IDs are provided', () => {
-		const recipeIds = [123, 456, 789];
-		const result = constructBulkApiURL(recipeIds);
-
-		expect(result).toBeInstanceOf(URL);
-		expect(decodeURIComponent(result.toString())).toBe(`${BASE_URL}?ids=123,456,789`);
-	});
-
-	describe.each([
-		{ caseName: 'when recipeIds array is empty', recipeIds: [] },
-		{ caseName: 'when recipeIds is null', recipeIds: null as unknown as number[] }
-	])('$caseName', ({ recipeIds }) => {
-		it('should return a 400 Response', async () => {
+		it('constructs a valid bulk API URL with valid IDs', () => {
+			const recipeIds = [123, 456, 789];
 			const result = constructBulkApiURL(recipeIds);
-			await expectErrorResponse(result as Response, 400, {
-				error: 'Missing or empty required parameter: ids'
+			expect(result).toBeInstanceOf(URL);
+			expect(decodeURIComponent(result.toString())).toBe(`${BASE_URL}?ids=123,456,789`);
+		});
+
+		describe.each([
+			['an empty recipeIds array', []],
+			['a null recipeIds', null as unknown as number[]]
+		])('when %s', (_, recipeIds) => {
+			it('returns a 400 error Response', async () => {
+				const result = constructBulkApiURL(recipeIds);
+				await assertErrorResponse(result as Response, 400, {
+					error: 'Missing or empty required parameter: ids'
+				});
 			});
 		});
 	});
-});
 
-describe('fetchBulkRecipeInformation', () => {
-	const testUrl = new URL('https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk?ids=123,456,789');
-	const mockFetch = vi.spyOn(global, 'fetch');
+	describe('fetchBulkRecipeInformation', () => {
+		const testUrl = new URL(
+			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk?ids=123,456,789'
+		);
+		let mockFetch: ReturnType<typeof vi.spyOn>;
 
-	afterEach(() => {
-		vi.restoreAllMocks();
-	});
-
-	it('should return a successful response when API returns 200', async () => {
-		const mockResponseData = [{ id: 123, title: 'Recipe One' }];
-		const mockResponse = new Response(JSON.stringify(mockResponseData), {
-			status: 200,
-			headers: { 'Content-Type': 'application/json' }
+		beforeEach(() => {
+			mockFetch = vi.spyOn(global, 'fetch');
+		});
+		afterEach(() => {
+			vi.restoreAllMocks();
 		});
 
-		mockFetch.mockResolvedValueOnce(mockResponse);
+		it('returns a successful response when API returns 200', async () => {
+			const mockData = [{ id: 123, title: 'Recipe One' }];
+			const mockResponse = createMockResponse(mockData, 200);
+			mockFetch.mockResolvedValueOnce(mockResponse);
 
-		const result = await fetchBulkRecipeInformation(testUrl);
-		expect(result.ok).toBe(true);
-		expect(result.status).toBe(200);
+			const response = await fetchBulkRecipeInformation(testUrl);
+			expect(response.ok).toBe(true);
+			expect(response.status).toBe(200);
 
-		const json = await result.json();
-		expect(json).toEqual(mockResponseData);
-	});
+			const json = await response.json();
+			expect(json).toEqual(mockData);
+		});
 
-	it('should return error response if bulk recipe call fails', async () => {
-		vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-			new Response('Bulk API error', { status: 500 })
-		);
-	
-		const response = await fetchBulkRecipeInformation(testUrl);
-	
-		expect(response.status).toBe(500);
-		const json = await response.json();
-		expect(json).toEqual({
-			error: 'Failed to fetch detailed recipe information',
-			status: 500,
-			message: 'Bulk API error'
+		it('returns error response when bulk API call fails', async () => {
+			// Simulate a failing fetch call with plain text error message.
+			const errorText = 'Bulk API error';
+			const failingResponse = new Response(errorText, {
+				status: 500,
+				headers: { 'Content-Type': 'text/plain' }
+			});
+			mockFetch.mockResolvedValueOnce(failingResponse);
+
+			const response = await fetchBulkRecipeInformation(testUrl);
+			expect(response.status).toBe(500);
+
+			const json = await response.json();
+			expect(json).toEqual({
+				error: 'Failed to fetch detailed recipe information',
+				status: 500,
+				message: errorText
+			});
 		});
 	});
 });
