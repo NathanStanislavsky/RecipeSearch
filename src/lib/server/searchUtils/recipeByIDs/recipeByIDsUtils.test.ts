@@ -6,26 +6,7 @@ import {
 	filterInformationBulkReponse
 } from './recipeByIDsUtils.ts';
 
-function createMockResponse(
-	body: unknown,
-	status: number,
-	headers = { 'Content-Type': 'application/json' }
-): Response {
-	return new Response(JSON.stringify(body), { status, headers });
-}
-
-async function assertErrorResponse(
-	response: Response | undefined,
-	status: number,
-	expected: object
-) {
-	expect(response).toBeDefined();
-	if (response) {
-		expect(response.status).toBe(status);
-		const json = await response.json();
-		expect(json).toStrictEqual(expected);
-	}
-}
+import { createMockResponse, assertErrorResponse } from './test-utils/mockUtils.ts';
 
 describe('recipeByIDsUtils', () => {
 	describe('extractRecipeIds', () => {

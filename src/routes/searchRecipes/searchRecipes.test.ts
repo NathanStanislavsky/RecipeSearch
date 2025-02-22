@@ -1,21 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GET } from './+server.js';
 
-function mockRequestEvent(urlString: string): any {
-	return {
-		url: new URL(urlString),
-		fetch: global.fetch,
-		params: {},
-		request: new Request(urlString),
-		locals: {},
-		cookies: {
-			get: vi.fn(),
-			set: vi.fn(),
-			delete: vi.fn()
-		},
-		platform: undefined
-	};
-}
+import { mockRequestEvent } from './test-utils/mockUtils.ts';
 
 describe('GET handler integration tests', () => {
 	afterEach(() => {
