@@ -125,7 +125,9 @@ describe('recipeByIDsUtils', () => {
 	});
 
 	describe('filter information bulk response', () => {
-		it('should filter detailed recipes and return a new JSON response with only specific fields', async () => {
+		let bulkResponse: Response;
+	
+		describe('when bulkResponse is successful', () => {
 			const detailedRecipes = [
 				{
 					id: 1,
@@ -146,16 +148,8 @@ describe('recipeByIDsUtils', () => {
 					extraField: 'ignore'
 				}
 			];
-			const bulkResponse = new Response(JSON.stringify(detailedRecipes), {
-				status: 200,
-				headers: { 'Content-Type': 'application/json' }
-			});
-
-			const response = await filterInformationBulkReponse(bulkResponse);
-
-			expect(response.status).toBe(200);
-			const json = await response.json();
-			expect(json).toEqual([
+	
+			const expectedFiltered = [
 				{
 					id: 1,
 					image: 'image1.jpg',
@@ -172,21 +166,36 @@ describe('recipeByIDsUtils', () => {
 					servings: 2,
 					sourceUrl: 'http://recipe2.com'
 				}
-			]);
-		});
-
-		it('should return the original error response if bulkResponse is not ok', async () => {
-			const errorMessage = 'Bulk API error';
-			const bulkResponse = new Response(errorMessage, {
-				status: 500,
-				headers: { 'Content-Type': 'text/plain' }
+			];
+	
+			beforeEach(() => {
+				bulkResponse = createMockResponse(detailedRecipes, 200);
 			});
-
-			const response = await filterInformationBulkReponse(bulkResponse);
-
-			expect(response.status).toBe(500);
-			const text = await response.text();
-			expect(text).toBe(errorMessage);
+	
+			it('should filter detailed recipes and return a new JSON response with only specific fields', async () => {
+				const response = await filterInformationBulkReponse(bulkResponse);
+				expect(response.status).toBe(200);
+				const json = await response.json();
+				expect(json).toEqual(expectedFiltered);
+			});
+		});
+	
+		describe('when bulkResponse is an error', () => {
+			const errorMessage = 'Bulk API error';
+	
+			beforeEach(() => {
+				bulkResponse = new Response(errorMessage, {
+					status: 500,
+					headers: { 'Content-Type': 'text/plain' }
+				});
+			});
+	
+			it('should return the original error response if bulkResponse is not ok', async () => {
+				const response = await filterInformationBulkReponse(bulkResponse);
+				expect(response.status).toBe(500);
+				const text = await response.text();
+				expect(text).toBe(errorMessage);
+			});
 		});
 	});
 });
