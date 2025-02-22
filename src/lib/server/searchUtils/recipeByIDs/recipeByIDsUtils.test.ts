@@ -174,5 +174,19 @@ describe('recipeByIDsUtils', () => {
 				}
 			]);
 		});
+
+		it('should return the original error response if bulkResponse is not ok', async () => {
+			const errorMessage = 'Bulk API error';
+			const bulkResponse = new Response(errorMessage, {
+				status: 500,
+				headers: { 'Content-Type': 'text/plain' }
+			});
+
+			const response = await filterInformationBulkReponse(bulkResponse);
+
+			expect(response.status).toBe(500);
+			const text = await response.text();
+			expect(text).toBe(errorMessage);
+		});
 	});
 });
