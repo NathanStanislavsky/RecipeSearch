@@ -1,4 +1,4 @@
-export function _extractRecipeIds(recipesData: any[]): {
+export function extractRecipeIds(recipesData: any[]): {
     recipeIds?: number[];
     errorResponse?: Response;
 } {
@@ -16,7 +16,7 @@ export function _extractRecipeIds(recipesData: any[]): {
     return { recipeIds };
 }
 
-export function _parseIDs(url: URL): Response | string {
+export function parseIDs(url: URL): Response | string {
 	const ids = url.searchParams.get('ids');
   
 	if (!ids) {

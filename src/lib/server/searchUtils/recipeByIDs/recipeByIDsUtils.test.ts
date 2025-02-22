@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
-	_extractRecipeIds,
-    _parseIDs
-} from './recipeByIDsUtils';
+	extractRecipeIds,
+    parseIDs
+} from './recipeByIDsUtils.ts';
 
 const createTestURL = (urlString: string) => new URL(urlString);
 
@@ -14,7 +14,7 @@ describe('extractRecipeIds', () => {
 			{ id: 303, title: 'Recipe Three' }
 		];
 
-		const result = _extractRecipeIds(sampleData);
+		const result = extractRecipeIds(sampleData);
 
 		expect(result.recipeIds).toEqual([101, 202, 303]);
 		expect(result.errorResponse).toBeUndefined();
@@ -23,7 +23,7 @@ describe('extractRecipeIds', () => {
 	it('should return an error response when recipesData is empty', async () => {
 		const sampleData: any[] = [];
 
-		const result = _extractRecipeIds(sampleData);
+		const result = extractRecipeIds(sampleData);
 
 		expect(result.errorResponse).toBeDefined();
 		if (result.errorResponse) {
@@ -36,7 +36,7 @@ describe('extractRecipeIds', () => {
 	it('should return an error response when recipesData has no valid ids', async () => {
 		const sampleData = [{ name: 'No ID Recipe' }, { name: 'Another Recipe' }];
 
-		const result = _extractRecipeIds(sampleData);
+		const result = extractRecipeIds(sampleData);
 
 		expect(result.errorResponse).toBeDefined();
 		if (result.errorResponse) {
@@ -51,7 +51,7 @@ describe('_parseIds', () => {
 	describe('when IDs parameter is missing', () => {
 		it('returns 400 error if IDs are missing', async () => {
 			const url = createTestURL('http://localhost/api/getRecipe');
-			const response = _parseIDs(url) as Response;
+			const response = parseIDs(url) as Response;
 
 			expect(response.status).toBe(400);
 			expect(response.headers.get('Content-Type')).toBe('application/json');
@@ -66,7 +66,7 @@ describe('_parseIds', () => {
 			const mockIDs = '123,456,789';
 
 			const url = createTestURL(`http://localhost/api/getRecipe?ids=${encodeURIComponent(mockIDs)}`);
-			expect(_parseIDs(url)).toBe(mockIDs);
+			expect(parseIDs(url)).toBe(mockIDs);
 		});
 	});
 });

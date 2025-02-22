@@ -1,6 +1,6 @@
 import { RAPIDAPI_KEY } from '$env/static/private';
 
-export const _parseIngredients = (url: URL): string | Response => {
+export const parseIngredients = (url: URL): string | Response => {
 	const ingredients = url.searchParams.get('ingredients');
 	if (!ingredients) {
 		return new Response(JSON.stringify({ error: 'Missing required parameter: ingredients' }), {
@@ -10,7 +10,7 @@ export const _parseIngredients = (url: URL): string | Response => {
 	return ingredients;
 };
 
-export const _constructApiUrl = (ingredients: string): URL => {
+export const constructApiUrl = (ingredients: string): URL => {
 	const apiUrl = new URL(
 		'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients'
 	);
@@ -18,7 +18,7 @@ export const _constructApiUrl = (ingredients: string): URL => {
 	return apiUrl;
 };
 
-export const _fetchRecipeByIngredients = async (apiUrl: URL): Promise<Response> => {
+export const fetchRecipeByIngredients = async (apiUrl: URL): Promise<Response> => {
 	const ingredientSearchResponse = await fetch(apiUrl.toString(), {
 		method: 'GET',
 		headers: {

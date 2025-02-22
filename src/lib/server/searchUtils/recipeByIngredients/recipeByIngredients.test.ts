@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-	_parseIngredients,
-	_fetchRecipeByIngredients,
-	_constructApiUrl,
+	parseIngredients,
+	fetchRecipeByIngredients,
+	constructApiUrl,
 } from './recipeByIngredientsUtils.ts';
 
 const createTestURL = (urlString: string) => new URL(urlString);
@@ -11,7 +11,7 @@ describe('_parseIngredients', () => {
 	describe('when ingredients parameter is missing', () => {
 		it('returns 400 error if ingredients are missing', async () => {
 			const url = createTestURL('http://localhost/api/getRecipe');
-			const response = _parseIngredients(url);
+			const response = parseIngredients(url);
 
 			expect((response as Response).status).toBe(400);
 			expect(response).toBeInstanceOf(Response);
@@ -24,7 +24,7 @@ describe('_parseIngredients', () => {
 	describe('when ingredients parameter exists', () => {
 		it('returns raw ingredients string', () => {
 			const url = createTestURL('http://localhost/api/getRecipe?ingredients=tomato,cheese');
-			const result = _parseIngredients(url);
+			const result = parseIngredients(url);
 
 			expect(result).toBe('tomato,cheese');
 		});
@@ -36,7 +36,7 @@ describe('_constructApiUrl', () => {
 		'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients';
 
 	it('constructs URL with default parameters when only ingredients provided', () => {
-		const result = _constructApiUrl('apples,bananas');
+		const result = constructApiUrl('apples,bananas');
 		const params = new URLSearchParams(result.search);
 
 		expect(result.origin + result.pathname).toBe(BASE_URL);
@@ -45,7 +45,7 @@ describe('_constructApiUrl', () => {
 
 	it('URL-encodes special characters in ingredients', () => {
 		const ingredients = 'chicken breast,red pepper & onion';
-		const result = _constructApiUrl(ingredients);
+		const result = constructApiUrl(ingredients);
 		expect(result.searchParams.get('ingredients')).toBe(ingredients);
 	});
 });
@@ -71,7 +71,7 @@ describe('_fetchRecipeByIngredients', () => {
 				json: async () => ({ mockData })
 			});
 
-			const response = await _fetchRecipeByIngredients(TEST_URL);
+			const response = await fetchRecipeByIngredients(TEST_URL);
 			expect(response.ok).toBe(true);
 			expect(await response.json()).toEqual({ mockData });
 		});
@@ -85,7 +85,7 @@ describe('_fetchRecipeByIngredients', () => {
 				text: async () => 'Internal Server Error'
 			});
 
-			const response = await _fetchRecipeByIngredients(TEST_URL);
+			const response = await fetchRecipeByIngredients(TEST_URL);
 			expect(response.ok).toBe(false);
 			expect(await response.json()).toEqual({
 				error: 'Failed to fetch recipes by ingredients from RapidAPI',
