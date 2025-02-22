@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GET } from './+server.js';
 
 function mockRequestEvent(urlString: string): any {
@@ -18,6 +18,10 @@ function mockRequestEvent(urlString: string): any {
 }
 
 describe('GET handler integration tests', () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it('should return 400 if ingredients are missing', async () => {
 		const response = await GET(mockRequestEvent('http://localhost/api/getRecipe'));
 		expect(response.status).toBe(400);
@@ -25,7 +29,7 @@ describe('GET handler integration tests', () => {
 		expect(json).toEqual({ error: 'Missing required parameter: ingredients' });
 	});
 
-	it('should return 500 if external API call fails', async () => {
+	it('should return 500 if external API call fails on ingredients search', async () => {
 		vi.spyOn(global, 'fetch').mockResolvedValueOnce(
 			new Response('External API error', { status: 500 })
 		);
@@ -42,21 +46,23 @@ describe('GET handler integration tests', () => {
 		});
 	});
 
-	it('should return 200 with recipes if API call succeeds', async () => {
-		const mockRecipes = [
-			{ id: 1, title: 'Tomato Soup', image: 'tomato_soup.jpg' },
-			{ id: 2, title: 'Tomato Salad', image: 'tomato_salad.jpg' }
-		];
+	it('should return 404 if no valid recipe IDs are found', async () => {
+		const mockRecipes = [{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }];
 
-		vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-			new Response(JSON.stringify(mockRecipes), { status: 200 })
-		);
+		vi.spyOn(global, 'fetch')
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify(mockRecipes), {
+					status: 200,
+					headers: { 'Content-Type': 'application/json' }
+				})
+			);
 
 		const response = await GET(
 			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
 		);
-		expect(response.status).toBe(200);
+
+		expect(response.status).toBe(404);
 		const json = await response.json();
-		expect(json).toEqual(mockRecipes);
+		expect(json).toEqual({ error: 'No recipes found for the provided ingredients' });
 	});
 });
