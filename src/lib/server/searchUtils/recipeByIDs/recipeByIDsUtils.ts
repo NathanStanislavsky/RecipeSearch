@@ -1,29 +1,34 @@
 import { RAPIDAPI_KEY } from '$env/static/private';
 
-export function extractRecipeIds(recipesData: any[]): {
+interface ExtractRecipeIdsResult {
 	recipeIds?: number[];
 	errorResponse?: Response;
-} {
-	const recipeIds = recipesData
-		.map((recipe: any) => recipe.id)
-		.filter((id) => id !== undefined && id !== null);
+}
+
+function createJSONResponse(body: object, status: number): Response {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}
+
+export function extractRecipeIds(recipesData: any[]): ExtractRecipeIdsResult {
+	const recipeIds = recipesData.map((recipe) => recipe.id).filter((id) => id != null); // null or undefined check
 
 	if (recipeIds.length === 0) {
-		const response = new Response(
-			JSON.stringify({ error: 'No recipes found for the provided ingredients' }),
-			{ status: 404 }
-		);
-		return { errorResponse: response };
+		return {
+			errorResponse: createJSONResponse(
+				{ error: 'No recipes found for the provided ingredients' },
+				404
+			)
+		};
 	}
 	return { recipeIds };
 }
 
 export function constructBulkApiURL(recipeIds: number[]): Response | URL {
-	if (!recipeIds || recipeIds.length === 0) {
-		return new Response(JSON.stringify({ error: 'Missing or empty required parameter: ids' }), {
-			status: 400,
-			headers: { 'Content-Type': 'application/json' }
-		});
+	if (!recipeIds?.length) {
+		return createJSONResponse({ error: 'Missing or empty required parameter: ids' }, 400);
 	}
 
 	const bulkUrl = new URL(
@@ -34,7 +39,7 @@ export function constructBulkApiURL(recipeIds: number[]): Response | URL {
 	return bulkUrl;
 }
 
-export const fetchBulkRecipeInformation = async (url: URL): Promise<Response> => {
+export async function fetchBulkRecipeInformation(url: URL): Promise<Response> {
 	const response = await fetch(url.toString(), {
 		method: 'GET',
 		headers: {
@@ -46,15 +51,15 @@ export const fetchBulkRecipeInformation = async (url: URL): Promise<Response> =>
 
 	if (!response.ok) {
 		const errorMessage = await response.text();
-		return new Response(
-			JSON.stringify({
+		return createJSONResponse(
+			{
 				error: 'Failed to fetch detailed recipe information',
 				status: response.status,
 				message: errorMessage
-			}),
-			{ status: response.status, headers: { 'Content-Type': 'application/json' } }
+			},
+			response.status
 		);
 	}
 
 	return response;
-};
+}
