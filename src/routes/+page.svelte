@@ -6,6 +6,10 @@
 
 	async function searchRecipes() {
 		try {
+			if (!ingredients) {
+				console.error('No ingredients provided');
+				return;
+			}
 			const response = await fetch(`/searchRecipes?ingredients=${ingredients}`);
 			const data = await response.json();
 			console.log(data);
