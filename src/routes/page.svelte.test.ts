@@ -34,4 +34,19 @@ describe('Page Integration Tests', () => {
 
 		expect(global.fetch).toHaveBeenCalledWith('/searchRecipes?ingredients=chicken');
 	});
+
+	it('logs an error and does not call fetch when no ingredients are provided', async () => {
+		const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		global.fetch = vi.fn();
+
+		render(Page);
+
+		const button = screen.getByRole('button', { name: /search/i });
+		await fireEvent.click(button);
+
+		expect(consoleErrorSpy).toHaveBeenCalledWith('No ingredients provided');
+
+		expect(global.fetch).not.toHaveBeenCalled();
+	});
 });
