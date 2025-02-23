@@ -1,7 +1,6 @@
 <script>
 	export let ingredients = '';
 	export let placeholder = 'Potatoes, carrots, beef...';
-	export let onInput = () => {};
 </script>
 
 <input
@@ -9,5 +8,4 @@
 	type="text"
 	bind:value={ingredients}
 	{placeholder}
-	on:input={onInput}
 />
