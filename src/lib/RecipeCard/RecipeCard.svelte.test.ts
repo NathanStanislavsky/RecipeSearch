@@ -22,7 +22,8 @@ describe('RecipeCard', () => {
   it('renders the recipe card with all elements', () => {
     expect(screen.getByRole('img')).toHaveAttribute('src', recipe.image);
     expect(screen.getByText(recipe.title)).toBeInTheDocument();
-    expect(screen.getByText(`Ready in ${recipe.readyInMinutes} minutes`)).toBeInTheDocument();
+    expect(screen.getByText('Ready in')).toBeInTheDocument();
+    expect(screen.getByText(`${recipe.readyInMinutes} minutes`)).toBeInTheDocument();
     expect(screen.getByText(`${recipe.servings} servings`)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view recipe/i })).toHaveAttribute('href', recipe.sourceUrl);
   });
