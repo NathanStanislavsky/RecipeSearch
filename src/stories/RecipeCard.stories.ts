@@ -14,11 +14,12 @@ const meta = {
 	},
 	args: {
 		recipe: {
-			image: "https://img.spoonacular.com/recipes/987-556x370.jpg",
-			title: "Sea Bass and Cucumbers in Champagne Sauce",
+			image: 'https://img.spoonacular.com/recipes/987-556x370.jpg',
+			title: 'Sea Bass and Cucumbers in Champagne Sauce',
 			readyInMinutes: 15,
 			servings: 4,
-			sourceUrl: "http://www.myrecipes.com/recipe/sea-bass-cucumbers-champagne-sauce-10000000640888/"
+			sourceUrl:
+				'http://www.myrecipes.com/recipe/sea-bass-cucumbers-champagne-sauce-10000000640888/'
 		}
 	}
 } satisfies Meta<RecipeCard>;
@@ -30,11 +31,12 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
 	args: {
 		recipe: {
-			image: "https://img.spoonacular.com/recipes/987-556x370.jpg",
-			title: "Sea Bass and Cucumbers in Champagne Sauce",
+			image: 'https://img.spoonacular.com/recipes/987-556x370.jpg',
+			title: 'Sea Bass and Cucumbers in Champagne Sauce',
 			readyInMinutes: 15,
 			servings: 4,
-			sourceUrl: "http://www.myrecipes.com/recipe/sea-bass-cucumbers-champagne-sauce-10000000640888/"
+			sourceUrl:
+				'http://www.myrecipes.com/recipe/sea-bass-cucumbers-champagne-sauce-10000000640888/'
 		}
 	}
 };
@@ -43,11 +45,12 @@ export const Default: Story = {
 export const Interactive: Story = {
 	args: {
 		recipe: {
-			image: "https://img.spoonacular.com/recipes/987-556x370.jpg",
-			title: "Sea Bass and Cucumbers in Champagne Sauce",
+			image: 'https://img.spoonacular.com/recipes/987-556x370.jpg',
+			title: 'Sea Bass and Cucumbers in Champagne Sauce',
 			readyInMinutes: 15,
 			servings: 4,
-			sourceUrl: "http://www.myrecipes.com/recipe/sea-bass-cucumbers-champagne-sauce-10000000640888/"
+			sourceUrl:
+				'http://www.myrecipes.com/recipe/sea-bass-cucumbers-champagne-sauce-10000000640888/'
 		}
 	},
 	play: async ({ canvasElement }) => {

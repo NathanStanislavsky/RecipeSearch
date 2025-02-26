@@ -27,7 +27,7 @@ describe('RecipeCardParent', () => {
 		const recipeHeadings = screen.getAllByRole('heading', { level: 2 });
 
 		expect(recipeHeadings).toHaveLength(mockRecipes.length);
-    
+
 		mockRecipes.forEach((recipe) => {
 			expect(screen.getByText(recipe.title)).toBeInTheDocument();
 		});
