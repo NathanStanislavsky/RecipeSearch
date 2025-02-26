@@ -107,7 +107,7 @@ describe('recipeByIDsUtils', () => {
 
 	describe('filter information bulk response', () => {
 		let bulkResponse: Response;
-	
+
 		describe('when bulkResponse is successful', () => {
 			const detailedRecipes = [
 				{
@@ -129,7 +129,7 @@ describe('recipeByIDsUtils', () => {
 					extraField: 'ignore'
 				}
 			];
-	
+
 			const expectedFiltered = [
 				{
 					id: 1,
@@ -148,11 +148,11 @@ describe('recipeByIDsUtils', () => {
 					sourceUrl: 'http://recipe2.com'
 				}
 			];
-	
+
 			beforeEach(() => {
 				bulkResponse = createMockResponse(detailedRecipes, 200);
 			});
-	
+
 			it('should filter detailed recipes and return a new JSON response with only specific fields', async () => {
 				const response = await filterInformationBulkReponse(bulkResponse);
 				expect(response.status).toBe(200);
@@ -160,17 +160,17 @@ describe('recipeByIDsUtils', () => {
 				expect(json).toEqual(expectedFiltered);
 			});
 		});
-	
+
 		describe('when bulkResponse is an error', () => {
 			const errorMessage = 'Bulk API error';
-	
+
 			beforeEach(() => {
 				bulkResponse = new Response(errorMessage, {
 					status: 500,
 					headers: { 'Content-Type': 'text/plain' }
 				});
 			});
-	
+
 			it('should return the original error response if bulkResponse is not ok', async () => {
 				const response = await filterInformationBulkReponse(bulkResponse);
 				expect(response.status).toBe(500);

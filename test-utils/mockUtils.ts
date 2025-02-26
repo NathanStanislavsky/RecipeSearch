@@ -1,4 +1,4 @@
-import { expect, vi} from 'vitest';
+import { expect, vi } from 'vitest';
 
 export function createMockResponse(
 	body: unknown,
