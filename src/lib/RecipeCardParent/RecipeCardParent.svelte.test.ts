@@ -21,10 +21,15 @@ const mockRecipes = [
 ];
 
 describe('RecipeCardParent', () => {
-	it('renders two recipe cards', () => {
+	it('renders two recipe cards with correct titles', () => {
 		render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
-		expect(screen.getByText('Chili Stuffed Potatoes')).toBeInTheDocument();
-		expect(screen.getByText('Veggie Pasta')).toBeInTheDocument();
+		const recipeHeadings = screen.getAllByRole('heading', { level: 2 });
+
+		expect(recipeHeadings).toHaveLength(mockRecipes.length);
+    
+		mockRecipes.forEach((recipe) => {
+			expect(screen.getByText(recipe.title)).toBeInTheDocument();
+		});
 	});
 });
