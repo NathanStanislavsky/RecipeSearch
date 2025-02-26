@@ -11,15 +11,21 @@ const clickSearchButton = async (page) => {
 	await searchButton.click();
 };
 
-const searchTest = async (page, searchTerm) => {
+test('Search functionality: verify results and recipe link navigation', async ({ page }) => {
 	await page.goto('/');
+	const searchTerm = 'Carrots';
+
 	await fillSearchInput(page, searchTerm);
 	await clickSearchButton(page);
-	await expect(page.locator('input[placeholder="Potatoes, carrots, beef..."]')).toHaveValue(
-		searchTerm
-	);
-};
 
-test('Search functionality on the page with Carrots', async ({ page }) => {
-	await searchTest(page, 'Carrots');
+	const resultsContainer = page.locator('div.w-full.max-w-4xl.px-4');
+	await expect(resultsContainer).toBeVisible();
+
+	const firstResultLink = resultsContainer.locator('a').first();
+	await expect(firstResultLink).toBeVisible();
+
+	const href = await firstResultLink.getAttribute('href');
+	expect(href).toBeTruthy();
+
+	await expect(href).toContain("https://www.acedarspoon.com/4-ingredient-carrot-raisin-salad/");
 });
