@@ -1,4 +1,4 @@
-<div class="flex h-full items-center justify-center">
+<div class="flex items-center justify-center">
 	<div class="w-full max-w-md rounded-md bg-white p-6 shadow-md">
 		<h1 class="mb-6 text-center text-2xl font-bold">Login</h1>
 		<form class="space-y-4">
