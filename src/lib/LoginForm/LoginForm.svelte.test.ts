@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/svelte';
 import LoginForm from './LoginForm.svelte';
-import userEvent from '@testing-library/user-event';
+import { userEvent } from '@storybook/test';
 
 describe('LoginForm', () => {
 	it('renders the email, password fields, and login button', () => {

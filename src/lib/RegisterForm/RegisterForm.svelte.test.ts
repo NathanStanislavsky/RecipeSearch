@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
+import { userEvent } from '@storybook/test';
 
 describe('register form', () => {
 	it('renders register form with all required inputs and submit button', () => {
@@ -20,11 +21,11 @@ describe('register form', () => {
 		const emailInput = getByLabelText(/email/i);
 		const passwordInput = getByLabelText(/password/i);
 
-		const loginButton = getByRole('button', { name: /login/i });
+		const registerButton = getByRole('button', { name: /register/i });
 
 		// Setup the user event instance
 		const user = userEvent.setup();
-		await user.click(loginButton);
+		await user.click(registerButton);
 
         expect(usernameInput).toBeInvalid();
 		expect(emailInput).toBeInvalid();
