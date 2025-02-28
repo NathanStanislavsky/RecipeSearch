@@ -1,34 +1,26 @@
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { describe, beforeEach, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { userEvent } from '@storybook/test';
 
-describe('register form', () => {
-	it('renders register form with all required inputs and submit button', () => {
-		const { getByLabelText, getByRole } = render(RegisterForm);
+describe('RegisterForm Component', () => {
+  beforeEach(() => {
+    render(RegisterForm);
+  });
 
-		expect(getByLabelText(/username/i)).toBeInTheDocument();
-		expect(getByLabelText(/email/i)).toBeInTheDocument();
-		expect(getByLabelText(/password/i)).toBeInTheDocument();
-        
-		expect(getByRole('button', { name: /Register/i })).toBeInTheDocument();
-	});
+  it('renders all required inputs and the submit button', () => {
+    expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+  });
 
-    it('does not allow submission if one or more fields are empty', async () => {
-		const { getByLabelText, getByRole } = render(RegisterForm);
+  it('does not allow submission if fields are empty', async () => {
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /register/i }));
 
-        const usernameInput = getByLabelText(/username/i);
-		const emailInput = getByLabelText(/email/i);
-		const passwordInput = getByLabelText(/password/i);
-
-		const registerButton = getByRole('button', { name: /register/i });
-
-		// Setup the user event instance
-		const user = userEvent.setup();
-		await user.click(registerButton);
-
-        expect(usernameInput).toBeInvalid();
-		expect(emailInput).toBeInvalid();
-		expect(passwordInput).toBeInvalid();
-	});
+    expect(screen.getByLabelText(/username/i)).toBeInvalid();
+    expect(screen.getByLabelText(/email/i)).toBeInvalid();
+    expect(screen.getByLabelText(/password/i)).toBeInvalid();
+  });
 });
