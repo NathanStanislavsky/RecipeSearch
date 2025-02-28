@@ -5,7 +5,7 @@ import { expect, within, waitFor } from '@storybook/test';
 const meta = {
 	title: 'Components/LoginForm',
 	component: LoginForm,
-	tags: ['autodocs'],
+	tags: ['autodocs']
 } satisfies Meta<LoginForm>;
 
 export default meta;
