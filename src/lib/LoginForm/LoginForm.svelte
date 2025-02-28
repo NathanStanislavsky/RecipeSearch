@@ -8,6 +8,7 @@
 					type="email"
 					id="email"
 					name="email"
+                    required
 					class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
 					placeholder="Enter an email"
 				/>
@@ -18,6 +19,7 @@
 					type="password"
 					id="password"
 					name="password"
+                    required
 					class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
 					placeholder="Enter a password"
 				/>
