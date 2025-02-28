@@ -1,27 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import LoginForm from './LoginForm.svelte';
-import { userEvent } from '@testing-library/user-event';
-
+import userEvent from '@testing-library/user-event';
 
 describe('LoginForm', () => {
+	const renderLoginForm = () => render(LoginForm);
+
 	it('renders the email, password fields, and login button', () => {
-		const { getByLabelText, getByRole } = render(LoginForm);
+		const { getByLabelText, getByRole } = renderLoginForm();
 		expect(getByLabelText(/email/i)).toBeInTheDocument();
 		expect(getByLabelText(/password/i)).toBeInTheDocument();
 		expect(getByRole('button', { name: /login/i })).toBeInTheDocument();
 	});
 
-    it("does not allow submission if one or more fields are empty", async () => {
-        render(LoginForm);
-    
-        const emailInput = screen.getByLabelText(/email/i);
-        const passwordInput = screen.getByLabelText(/password/i);
-        const loginButton = screen.getByRole("button", { name: /Login/i });
-    
-        await userEvent.click(loginButton);
-    
-        expect(emailInput).toBeInvalid();
-        expect(passwordInput).toBeInvalid();
-    });
+	it('does not allow submission if one or more fields are empty', async () => {
+		const { getByLabelText, getByRole } = renderLoginForm();
+		const emailInput = getByLabelText(/email/i);
+		const passwordInput = getByLabelText(/password/i);
+		const loginButton = getByRole('button', { name: /login/i });
+
+		// Setup the user event instance
+		const user = userEvent.setup();
+		await user.click(loginButton);
+
+		expect(emailInput).toBeInvalid();
+		expect(passwordInput).toBeInvalid();
+	});
 });
