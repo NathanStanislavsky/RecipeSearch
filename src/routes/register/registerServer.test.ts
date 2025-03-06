@@ -58,4 +58,27 @@ describe('POST /register endpoint', () => {
 		expect(response.status).toBe(409);
 		expect(data).toHaveProperty('message', 'Email already registered');
 	});
+
+	it('should return a 500 error when an exception is thrown', async () => {
+		vi.spyOn(selectModule, 'getUserByEmail').mockImplementation(() => {
+			throw new Error('Simulated DB error');
+		});
+
+		const reqBody = JSON.stringify({
+			email: 'error@example.com',
+			password: 'password',
+			name: 'Error'
+		});
+
+		const request = new Request('http://localhost/register', {
+			method: 'POST',
+			body: reqBody
+		});
+
+		const response = await POST({ request });
+		const data = await response.json();
+
+		expect(response.status).toBe(500);
+		expect(data).toHaveProperty('message', 'Internal Server Error');
+	});
 });
