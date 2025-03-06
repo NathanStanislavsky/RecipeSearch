@@ -6,6 +6,15 @@ export async function POST({ request }) {
 	// Parse the request body
 	const { email, password, name } = await request.json();
 
+    // Check if a user with the given email already exists.
+    const existingUser = await getUserByEmail(email);
+    if (existingUser) {
+        return new Response(
+            JSON.stringify({ message: 'Email already registered' }),
+            { status: 409 }
+        );
+    }
+
 	// Hash the password using bcrypt with 10 salt rounds.
 	const hashedPassword = await bcrypt.hash(password, 10);
 
