@@ -2,44 +2,42 @@ import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '../../queries/select';
 import { createUser } from '../../queries/insert';
 
+// Helper to create a JSON response with a given status
+const jsonResponse = (data: unknown, status = 200) =>
+    new Response(JSON.stringify(data), { status });
+
 export async function POST({ request }) {
     try {
         // Parse the request body
         const { email, password, name } = await request.json();
 
-        // Check if a user with the given email already exists.
+        // Check if a user with the given email already exists
         const existingUser = await getUserByEmail(email);
         if (existingUser) {
-            return new Response(
-                JSON.stringify({ message: 'Email already registered' }),
-                { status: 409 }
-            );
+            return jsonResponse({ message: 'Email already registered' }, 409);
         }
 
-        // Hash the password using bcrypt with 10 salt rounds.
+        // Hash the password using bcrypt with 10 salt rounds
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create the new user with the hashed password.
-        // The createUser function is expected to return the created user.
+        // Create the new user with the hashed password
         const newUser = await createUser({
             email,
             name,
-            password: hashedPassword,
+            password: hashedPassword
         });
 
-        // Return a 201 response with a success message and the new user's id.
-        return new Response(
-            JSON.stringify({
+        // Return a 201 response with a success message and the new user's id
+        return jsonResponse(
+            {
                 message: 'User registered successfully',
-                userId: newUser.id,
-            }),
-            { status: 201 }
+                userId: newUser.id
+            },
+            201
         );
     } catch (error) {
         console.error('Registration error:', error);
-        return new Response(
-            JSON.stringify({ message: 'Internal Server Error' }),
-            { status: 500 }
-        );
+        return jsonResponse({ message: 'Internal Server Error' }, 500);
     }
 }
+
