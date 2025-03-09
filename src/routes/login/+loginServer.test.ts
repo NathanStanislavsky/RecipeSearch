@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import { POST } from './+server.ts';
+import { POST } from './+server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import * as selectModule from '../../queries/select.ts';
-import { assertResponse } from '../../../test-utils/mockUtils.ts';
+import * as selectModule from '../../queries/select';
+import { assertResponse } from '../../../test-utils/mockUtils';
 
 describe('/login endpoint', () => {
   beforeAll(() => {
@@ -40,5 +40,18 @@ describe('/login endpoint', () => {
       userId: fakeUser.id,
       email: fakeUser.email,
     });
+  });
+
+  it('if email or password were not in request then return 400 error', async () => {
+    const reqBody = JSON.stringify({});
+  
+    const request = new Request('https://localhost/login', {
+      method: 'POST',
+      body: reqBody,
+    });
+  
+    const response = await POST({ request });
+  
+    await assertResponse(response, 400, { message: 'Email and password required' });
   });
 });
