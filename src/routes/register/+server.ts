@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
-import { getUserByEmail } from '../../queries/select.ts';
-import { createUser } from '../../queries/insert.ts';
+import { getUserByEmail } from '../../queries/select';
+import { createUser } from '../../queries/insert';
 
 // Helper to create a JSON response with a given status
 const jsonResponse = (data: unknown, status = 200) =>
