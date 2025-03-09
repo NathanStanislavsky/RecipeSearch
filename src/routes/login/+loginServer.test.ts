@@ -71,4 +71,29 @@ describe('/login endpoint', () => {
 		const response = await POST({ request });
 		await assertResponse(response, 401, { message: 'Invalid credentials' });
 	});
+
+    it('if password does not match user in database then return 401 error', async () => {
+        const passwordHash = await bcrypt.hash('correct-password', 10);
+		const fakeUser = {
+			id: 1,
+			email: 'test@example.com',
+			passwordHash
+		};
+
+		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
+
+		const reqBody = JSON.stringify({
+			email: 'test@example.com',
+			password: 'wrong-password'
+		});
+
+		const request = new Request('http://localhost/login', {
+			method: 'POST',
+			body: reqBody
+		});
+
+		const response = await POST({ request });
+		
+		await assertResponse(response, 401, { message: 'Invalid credentials' });
+    });
 });
