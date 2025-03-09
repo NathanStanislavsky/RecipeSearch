@@ -1,6 +1,7 @@
 import type { RequestHandler } from './$types';
 import { getUserByEmail } from '../../queries/select';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 const jsonResponse = (data: object, status: number, headers: HeadersInit = {}) =>
 	new Response(JSON.stringify(data), {
@@ -22,6 +23,12 @@ export const POST: RequestHandler = async ({ request }: { request: Request }) =>
 		const user = await getUserByEmail(email);
 
 		if (!user) {
+			return jsonResponse({ message: 'Invalid credentials' }, 401);
+		}
+
+		const passwordMatches = await bcrypt.compare(password, user.passwordHash);
+        
+		if (!passwordMatches) {
 			return jsonResponse({ message: 'Invalid credentials' }, 401);
 		}
 
