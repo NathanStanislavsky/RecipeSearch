@@ -1,10 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import bcrypt from 'bcryptjs';
-import { POST } from './+server';
-import * as selectModule from '../../queries/select';
-import * as insertModule from '../../queries/insert';
+import { POST } from './+server.ts';
+import * as selectModule from '../../queries/select.ts';
+import * as insertModule from '../../queries/insert.ts';
 
 describe('POST /register endpoint', () => {
+	beforeAll(() => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+	});
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});

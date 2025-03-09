@@ -1,6 +1,15 @@
-import type { RequestHandler } from "./$types";
-import { getUserByEmail } from '../../queries/select';
+import type { RequestHandler } from "./$types.ts";
+import { getUserByEmail } from '../../queries/select.ts';
 import jwt from "jsonwebtoken";
+
+const jsonResponse = (data: object, status: number, headers: HeadersInit = {}) =>
+    new Response(JSON.stringify(data), {
+      status,
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+    });
 
 export const POST: RequestHandler = async ({
   request,
@@ -31,8 +40,6 @@ export const POST: RequestHandler = async ({
     });
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ error: "login failed" }), {
-      status: 500,
-    });
+    return jsonResponse({ message: "login failed" }, 500);
   }
 };

@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import { POST } from './+server';
+import { POST } from './+server.ts';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import * as selectModule from '../../queries/select';
+import * as selectModule from '../../queries/select.ts';
+import { assertResponse } from '../../../test-utils/mockUtils.ts';
 
 describe('/login endpoint', () => {
   beforeAll(() => {
@@ -30,13 +31,10 @@ describe('/login endpoint', () => {
     });
 
     const response = await POST({ request });
-    expect(response.status).toBe(200);
+    const expected = { success: true, token: expect.any(String) };
 
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('token');
+    const data = await assertResponse(response, 200, expected);
 
-    // Verify that the token was signed with the correct secret
     const decodedToken = jwt.verify(data.token, process.env.JWT_SECRET);
     expect(decodedToken).toMatchObject({
       userId: fakeUser.id,
