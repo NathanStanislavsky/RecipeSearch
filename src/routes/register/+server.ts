@@ -1,15 +1,22 @@
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '../../queries/select';
 import { createUser } from '../../queries/insert';
+import { jsonResponse } from '../../utils/responseUtil';
 
-// Helper to create a JSON response with a given status
-const jsonResponse = (data: unknown, status = 200) =>
-    new Response(JSON.stringify(data), { status });
+const validateRegisterPayload = (payload: any) => {
+    const { email, password, name } = payload;
+    if (!email || !password || !name) {
+      throw new Error('Missing required fields');
+    }
+    return { email, password, name };
+  };
 
 export async function POST({ request }) {
     try {
         // Parse the request body
         const { email, password, name } = await request.json();
+
+        validateRegisterPayload({ email, password, name });
 
         // Check if a user with the given email already exists
         const existingUser = await getUserByEmail(email);

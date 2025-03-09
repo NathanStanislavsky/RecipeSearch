@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { POST } from './+server';
 import * as selectModule from '../../queries/select';
 import * as insertModule from '../../queries/insert';
+import { createTestRequest } from '../../../test-utils/createTestRequest';
 
 describe('POST /register endpoint', () => {
 	beforeAll(() => {
@@ -21,16 +22,13 @@ describe('POST /register endpoint', () => {
 
 		const mockPasswordHash = vi.spyOn(bcrypt, 'hash').mockResolvedValue('hashedPassword');
 
-		const reqBody = JSON.stringify({
+		const reqPayload = {
 			email: 'test@example.com',
 			password: 'password',
 			name: 'Test'
-		});
+		};
 
-		const request = new Request('http://localhost/register', {
-			method: 'POST',
-			body: reqBody
-		});
+		const request = createTestRequest('http://localhost/register', 'POST', reqPayload);
 
 		const response = await POST({ request });
 		const data = await response.json();
@@ -45,16 +43,13 @@ describe('POST /register endpoint', () => {
 		const existingUser = { id: 123, email: 'test@example.com' };
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(existingUser);
 
-		const reqBody = JSON.stringify({
+		const reqPayload = {
 			email: 'test@example.com',
 			password: 'password',
 			name: 'Test'
-		});
+		};
 
-		const request = new Request('http://localhost/register', {
-			method: 'POST',
-			body: reqBody
-		});
+		const request = createTestRequest('http://localhost/register', 'POST', reqPayload);
 
 		const response = await POST({ request });
 		const data = await response.json();
@@ -68,16 +63,13 @@ describe('POST /register endpoint', () => {
 			throw new Error('Simulated DB error');
 		});
 
-		const reqBody = JSON.stringify({
+		const reqPayload = {
 			email: 'error@example.com',
 			password: 'password',
 			name: 'Error'
-		});
+		};
 
-		const request = new Request('http://localhost/register', {
-			method: 'POST',
-			body: reqBody
-		});
+		const request = createTestRequest('http://localhost/register', 'POST', reqPayload);
 
 		const response = await POST({ request });
 		const data = await response.json();

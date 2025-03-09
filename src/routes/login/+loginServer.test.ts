@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import * as selectModule from '../../queries/select';
 import { assertResponse } from '../../../test-utils/mockUtils';
+import { createTestRequest } from '../../../test-utils/createTestRequest';
 
 describe('/login endpoint', () => {
 	beforeAll(() => {
@@ -20,15 +21,12 @@ describe('/login endpoint', () => {
 
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
-		const reqBody = JSON.stringify({
+		const reqPayload = {
 			email: 'test@example.com',
 			password: 'correct-password'
-		});
+		};
 
-		const request = new Request('http://localhost/login', {
-			method: 'POST',
-			body: reqBody
-		});
+		const request = createTestRequest('http://localhost/login', 'POST', reqPayload);
 
 		const response = await POST({ request });
 		const expected = { success: true, token: expect.any(String) };
@@ -43,12 +41,9 @@ describe('/login endpoint', () => {
 	});
 
 	it('if email or password were not in request then return 400 error', async () => {
-		const reqBody = JSON.stringify({});
+		const reqPayload = {};
 
-		const request = new Request('https://localhost/login', {
-			method: 'POST',
-			body: reqBody
-		});
+		const request = createTestRequest('http://localhost/login', 'POST', reqPayload);
 
 		const response = await POST({ request });
 
@@ -58,22 +53,19 @@ describe('/login endpoint', () => {
 	it('if email does not match user in database then return 401 error', async () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
 
-		const reqBody = JSON.stringify({
+		const reqPayload = {
 			email: 'test@example.com',
 			password: 'correct-password'
-		});
+		};
 
-		const request = new Request('http://localhost/login', {
-			method: 'POST',
-			body: reqBody
-		});
+		const request = createTestRequest('http://localhost/login', 'POST', reqPayload);
 
 		const response = await POST({ request });
 		await assertResponse(response, 401, { message: 'Invalid credentials' });
 	});
 
-    it('if password does not match user in database then return 401 error', async () => {
-        const passwordHash = await bcrypt.hash('correct-password', 10);
+	it('if password does not match user in database then return 401 error', async () => {
+		const passwordHash = await bcrypt.hash('correct-password', 10);
 		const fakeUser = {
 			id: 1,
 			email: 'test@example.com',
@@ -82,18 +74,15 @@ describe('/login endpoint', () => {
 
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
-		const reqBody = JSON.stringify({
+		const reqPayload = {
 			email: 'test@example.com',
 			password: 'wrong-password'
-		});
+		};
 
-		const request = new Request('http://localhost/login', {
-			method: 'POST',
-			body: reqBody
-		});
+		const request = createTestRequest('http://localhost/login', 'POST', reqPayload);
 
 		const response = await POST({ request });
 		
 		await assertResponse(response, 401, { message: 'Invalid credentials' });
-    });
+	});
 });
