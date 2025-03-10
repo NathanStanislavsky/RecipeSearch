@@ -3,6 +3,29 @@ import userEvent from '@testing-library/user-event';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+// Helper: Renders the register form and returns key elements.
+function setup() {
+	render(RegisterForm);
+	const nameInput = screen.getByLabelText(/username/i);
+	const emailInput = screen.getByLabelText(/email/i);
+	const passwordInput = screen.getByLabelText(/password/i);
+	const registerButton = screen.getByRole('button', { name: /register/i });
+	return { nameInput, emailInput, passwordInput, registerButton };
+}
+
+// Helper: Mocks the global fetch response.
+function mockFetchResponse(responseData: object, status: number, additionalHeaders = {}) {
+	(global.fetch as jest.Mock).mockResolvedValueOnce(
+		new Response(JSON.stringify(responseData), {
+			status,
+			headers: {
+				'Content-Type': 'application/json',
+				...additionalHeaders
+			}
+		})
+	);
+}
+
 describe('RegisterForm Integration', () => {
 	beforeEach(() => {
 		global.fetch = vi.fn();
@@ -13,27 +36,10 @@ describe('RegisterForm Integration', () => {
 	});
 
 	it('handles successful registration', async () => {
-		(global.fetch as jest.Mock).mockResolvedValueOnce(
-			new Response(
-				JSON.stringify({
-					message: 'User registered successfully',
-					userId: 1
-				}),
-				{
-					status: 201,
-					headers: {
-						'Content-Type': 'application/json'
-					}
-				}
-			)
-		);
+		const fakeResponse = { message: 'User registered successfully', userId: 1 };
+		mockFetchResponse(fakeResponse, 201);
 
-		render(RegisterForm);
-
-		const nameInput = screen.getByLabelText(/username/i);
-		const emailInput = screen.getByLabelText(/email/i);
-		const passwordInput = screen.getByLabelText(/password/i);
-		const registerButton = screen.getByRole('button', { name: /register/i });
+		const { nameInput, emailInput, passwordInput, registerButton } = setup();
 
 		await userEvent.type(nameInput, 'TestUser');
 		await userEvent.type(emailInput, 'test@example.com');
@@ -46,19 +52,9 @@ describe('RegisterForm Integration', () => {
 	});
 
 	it('handles duplicate email error', async () => {
-		(global.fetch as jest.Mock).mockResolvedValueOnce(
-			new Response(JSON.stringify({ message: 'Email already registered' }), {
-				status: 409,
-				headers: { 'Content-Type': 'application/json' }
-			})
-		);
+		mockFetchResponse({ message: 'Email already registered' }, 409);
 
-		render(RegisterForm);
-
-		const nameInput = screen.getByLabelText(/username/i);
-		const emailInput = screen.getByLabelText(/email/i);
-		const passwordInput = screen.getByLabelText(/password/i);
-		const registerButton = screen.getByRole('button', { name: /register/i });
+		const { nameInput, emailInput, passwordInput, registerButton } = setup();
 
 		await userEvent.type(nameInput, 'TestUser');
 		await userEvent.type(emailInput, 'test@example.com');
@@ -71,19 +67,9 @@ describe('RegisterForm Integration', () => {
 	});
 
 	it('handles server errors gracefully', async () => {
-		(global.fetch as jest.Mock).mockResolvedValueOnce(
-			new Response(JSON.stringify({ message: 'Internal Server Error' }), {
-				status: 500,
-				headers: { 'Content-Type': 'application/json' }
-			})
-		);
+		mockFetchResponse({ message: 'Internal Server Error' }, 500);
 
-		render(RegisterForm);
-
-		const nameInput = screen.getByLabelText(/username/i);
-		const emailInput = screen.getByLabelText(/email/i);
-		const passwordInput = screen.getByLabelText(/password/i);
-		const registerButton = screen.getByRole('button', { name: /register/i });
+		const { nameInput, emailInput, passwordInput, registerButton } = setup();
 
 		await userEvent.type(nameInput, 'TestUser');
 		await userEvent.type(emailInput, 'test@example.com');
