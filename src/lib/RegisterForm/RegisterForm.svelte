@@ -22,6 +22,8 @@
 			const data = await res.json();
 
 			message = data.message;
+
+			window.location.href = '/login';
 		} catch (error) {
 			console.error(error);
 			message = 'Internal Server Error';

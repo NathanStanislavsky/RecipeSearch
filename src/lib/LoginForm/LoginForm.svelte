@@ -20,6 +20,7 @@
 			const data = await res.json();
 			if (res.ok) {
 				message = 'welcome';
+				window.location.href = '/';
 			} else if (res.status === 401) {
 				message = 'invalid credentials';
 			} else {

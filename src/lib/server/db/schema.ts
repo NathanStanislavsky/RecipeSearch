@@ -28,3 +28,5 @@ export const favorites = pgTable('favorites', {
 	userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
 	recipeId: integer('recipe_id').references(() => recipes.id, { onDelete: 'cascade' })
 });
+
+export const schema = { users, recipes, favorites };
