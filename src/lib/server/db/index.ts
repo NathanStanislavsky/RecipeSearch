@@ -21,13 +21,5 @@ const pool = new Pool({
 	}
 });
 
-// Test the connection before exporting
-pool.query('SELECT NOW()', (err, res) => {
-	if (err) {
-		console.error('Database connection error:', err.message);
-	} else {
-		console.log('Successfully connected to database:', res.rows[0].now);
-	}
-});
-
 export const db = drizzle(pool, { schema });
+export { pool };
