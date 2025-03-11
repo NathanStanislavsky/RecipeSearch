@@ -18,7 +18,7 @@ export const POST: RequestHandler = async ({ request }: { request: Request }) =>
 			return jsonResponse({ message: 'Invalid credentials' }, 401);
 		}
 
-		const passwordMatches = await bcrypt.compare(password, user.passwordHash);
+		const passwordMatches = await bcrypt.compare(password, user.password);
 
 		if (!passwordMatches) {
 			return jsonResponse({ message: 'Invalid credentials' }, 401);
