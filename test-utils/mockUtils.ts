@@ -12,12 +12,13 @@ export async function assertResponse(
 	response: Response | undefined,
 	status: number,
 	expected: object
-) {
+): Promise<any> {
 	expect(response).toBeDefined();
 	if (response) {
 		expect(response.status).toBe(status);
 		const json = await response.json();
 		expect(json).toStrictEqual(expected);
+		return json;
 	}
 }
 

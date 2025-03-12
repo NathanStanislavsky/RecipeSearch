@@ -59,6 +59,7 @@
 		"@tailwindcss/vite": "^4.0.0",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/svelte": "^5.2.4",
+		"@types/jsonwebtoken": "^9.0.9",
 		"drizzle-kit": "^0.30.2",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
@@ -81,6 +82,10 @@
 	},
 	"dependencies": {
 		"@neondatabase/serverless": "^0.10.4",
-		"drizzle-orm": "^0.38.4"
+		"bcryptjs": "^3.0.2",
+		"dotenv": "^16.4.7",
+		"drizzle-orm": "^0.38.4",
+		"jsonwebtoken": "^9.0.2",
+		"pg": "^8.13.3"
 	}
 }
