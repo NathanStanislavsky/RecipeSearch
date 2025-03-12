@@ -37,4 +37,57 @@ describe('hooks.server', () => {
 		expect(response).toEqual({ status: 200 });
 		expect(verifySpy).toHaveBeenCalledWith(token, process.env.JWT_SECRET);
 	});
+
+	it('redirects to /login when accessing a protected route without a token', async () => {
+		const event: any = {
+			cookies: {
+				get: vi.fn().mockReturnValue(undefined)
+			},
+			// Protected route since it starts with /search
+			url: new URL('http://localhost/search'),
+			locals: {}
+		};
+
+		await expect(handle({ event, resolve: dummyResolve })).rejects.toMatchObject({
+			status: 303,
+			location: '/login'
+		});
+	});
+
+	it('redirects to /login when accessing a protected route with an invalid token', async () => {
+		const token = 'invalid-token';
+		const event: any = {
+			cookies: {
+				get: vi.fn().mockReturnValue(token)
+			},
+			// Protected route since it starts with /search
+			url: new URL('http://localhost/search'),
+			locals: {}
+		};
+
+		// Simulate jwt.verify throwing an error for an invalid token
+		const verifySpy = vi.spyOn(jwt, 'verify').mockImplementation(() => {
+			throw new Error('Invalid token');
+		});
+
+		await expect(handle({ event, resolve: dummyResolve })).rejects.toMatchObject({
+			status: 303,
+			location: '/login'
+		});
+		expect(verifySpy).toHaveBeenCalledWith(token, process.env.JWT_SECRET);
+	});
+
+	it('does not redirect for non-protected routes even if no token is provided', async () => {
+		const event: any = {
+			cookies: {
+				get: vi.fn().mockReturnValue(undefined)
+			},
+			// Non-protected route
+			url: new URL('http://localhost/not-protected'),
+			locals: {}
+		};
+
+		const response = await handle({ event, resolve: dummyResolve });
+		expect(response).toEqual({ status: 200 });
+	});
 });
