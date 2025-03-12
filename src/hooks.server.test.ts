@@ -2,6 +2,18 @@ import { describe, beforeAll, afterAll, afterEach, it, expect, vi } from 'vitest
 import { handle } from './hooks.server';
 import jwt from 'jsonwebtoken';
 
+const BASE_URL = 'http://localhost';
+
+function createEvent(token: string | undefined, path: string) {
+	return {
+		cookies: {
+			get: vi.fn().mockReturnValue(token)
+		},
+		url: new URL(`${BASE_URL}${path}`),
+		locals: {}
+	};
+}
+
 describe('hooks.server', () => {
 	beforeAll(() => {
 		process.env.JWT_SECRET = 'test-secret';
@@ -21,13 +33,7 @@ describe('hooks.server', () => {
 		const validPayload = { id: 1, email: 'user@example.com', name: 'Test User' };
 		const token = 'valid-token';
 
-		const event: any = {
-			cookies: {
-				get: vi.fn().mockReturnValue(token)
-			},
-			url: new URL('http://localhost/some-route'),
-			locals: {}
-		};
+		const event: any = createEvent(token, '/some-route');
 
 		const verifySpy = vi.spyOn(jwt, 'verify').mockReturnValue(validPayload as any);
 
@@ -39,15 +45,8 @@ describe('hooks.server', () => {
 	});
 
 	it('redirects to /login when accessing a protected route without a token', async () => {
-		const event: any = {
-			cookies: {
-				get: vi.fn().mockReturnValue(undefined)
-			},
-			// Protected route since it starts with /search
-			url: new URL('http://localhost/search'),
-			locals: {}
-		};
-
+		// Create an event for a protected route (/search) with no token
+		const event: any = createEvent(undefined, '/search');
 		await expect(handle({ event, resolve: dummyResolve })).rejects.toMatchObject({
 			status: 303,
 			location: '/login'
@@ -56,14 +55,7 @@ describe('hooks.server', () => {
 
 	it('redirects to /login when accessing a protected route with an invalid token', async () => {
 		const token = 'invalid-token';
-		const event: any = {
-			cookies: {
-				get: vi.fn().mockReturnValue(token)
-			},
-			// Protected route since it starts with /search
-			url: new URL('http://localhost/search'),
-			locals: {}
-		};
+		const event: any = createEvent(token, '/search');
 
 		// Simulate jwt.verify throwing an error for an invalid token
 		const verifySpy = vi.spyOn(jwt, 'verify').mockImplementation(() => {
@@ -78,15 +70,7 @@ describe('hooks.server', () => {
 	});
 
 	it('does not redirect for non-protected routes even if no token is provided', async () => {
-		const event: any = {
-			cookies: {
-				get: vi.fn().mockReturnValue(undefined)
-			},
-			// Non-protected route
-			url: new URL('http://localhost/not-protected'),
-			locals: {}
-		};
-
+		const event: any = createEvent(undefined, '/not-protected');
 		const response = await handle({ event, resolve: dummyResolve });
 		expect(response).toEqual({ status: 200 });
 	});
