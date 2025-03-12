@@ -19,5 +19,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	// If the request is targeting a protected route and there's no user, redirect to login.
+	if (event.url.pathname.startsWith('/search') && !event.locals.user) {
+		throw redirect(303, '/login');
+	}
+
 	return await resolve(event);
 };
