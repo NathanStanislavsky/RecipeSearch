@@ -29,7 +29,7 @@ describe('/login endpoint', () => {
 		return {
 			id: 1,
 			email: defaultEmail,
-			passwordHash
+			password: passwordHash
 		};
 	};
 
