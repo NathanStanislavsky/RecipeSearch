@@ -41,7 +41,7 @@ test.describe('Search functionality', () => {
 			2000
 		);
 
-		await page.goto('/');
+		await page.goto('/search');
 		const searchTerm = 'Carrots';
 
 		await fillSearchInput(page, searchTerm);
@@ -70,7 +70,7 @@ test.describe('Search functionality', () => {
 		// Simulate an API response with no results.
 		await simulateApiResponse(page, []);
 
-		await page.goto('/');
+		await page.goto('/search');
 		const searchTerm = 'NonExistentIngredient';
 		await fillSearchInput(page, searchTerm);
 		await clickSearchButton(page);

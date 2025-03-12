@@ -20,7 +20,7 @@
 			const data = await res.json();
 			if (res.ok) {
 				message = 'welcome';
-				window.location.href = '/';
+				window.location.href = '/search';
 			} else if (res.status === 401) {
 				message = 'invalid credentials';
 			} else {

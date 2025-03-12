@@ -32,7 +32,7 @@ test.describe('authentication flow', () => {
 		await loginUser(page, uniqueEmail, password);
 
 		// Assert that user is on the main page
-		expect(page.url()).toContain('/');
+		expect(page.url()).toContain('/search');
 		// Verify that the header is present
 		await expect(page.locator('h1')).toHaveText('What is in your fridge?');
 	});
