@@ -17,6 +17,7 @@ describe('Page Integration Tests', () => {
 
 	beforeEach(() => {
 		fetchSpy = vi.spyOn(global, 'fetch');
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
 	afterEach(() => {

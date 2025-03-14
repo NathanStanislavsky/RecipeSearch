@@ -1,4 +1,4 @@
-import { describe, beforeAll, afterAll, afterEach, it, expect, vi } from 'vitest';
+import { describe, beforeAll, afterAll, afterEach, it, expect, vi, beforeEach } from 'vitest';
 import { handle } from './hooks.server';
 import jwt from 'jsonwebtoken';
 
@@ -18,6 +18,11 @@ describe('hooks.server', () => {
 	beforeAll(() => {
 		process.env.JWT_SECRET = 'test-secret';
 	});
+
+	beforeEach(() => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+	});
+
 
 	afterAll(() => {
 		delete process.env.JWT_SECRET;

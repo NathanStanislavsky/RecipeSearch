@@ -29,6 +29,17 @@ function mockFetchResponse(responseData: object, status: number, additionalHeade
 describe('RegisterForm Integration', () => {
 	beforeEach(() => {
 		global.fetch = vi.fn();
+
+		Object.defineProperty(window, 'location', {
+			configurable: true,
+			writable: true,
+			value: {
+			  href: '',
+			  assign: vi.fn(),
+			  replace: vi.fn(),
+			  reload: vi.fn()
+			}
+		  });
 	});
 
 	afterEach(() => {
