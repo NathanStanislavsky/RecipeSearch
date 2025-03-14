@@ -1,4 +1,22 @@
 import { test, expect, Page } from '@playwright/test';
+import { pool } from '$lib/server/db/index.ts';
+
+async function registerUser(page: Page, name: string, email: string, password: string) {
+	await page.goto('/register');
+	await page.fill('input[name="name"]', name);
+	await page.fill('input[name="email"]', email);
+	await page.fill('input[name="password"]', password);
+	await page.click('button[type="submit"]');
+	await page.waitForNavigation();
+}
+
+async function loginUser(page: Page, email: string, password: string) {
+	await page.goto('/login');
+	await page.fill('input[name="email"]', email);
+	await page.fill('input[name="password"]', password);
+	await page.click('button[type="submit"]');
+	await page.waitForNavigation();
+}
 
 const fillSearchInput = async (page: Page, value: string) => {
 	const searchInput = page.locator('input[placeholder="Potatoes, carrots, beef..."]');
@@ -25,7 +43,23 @@ async function simulateApiResponse(page: Page, responseBody: any, delayMs: numbe
 }
 
 test.describe('Search functionality', () => {
+	let uniqueEmail: string;
+
+	test.afterEach(async () => {
+		if (uniqueEmail) {
+			await pool.query('DELETE FROM users WHERE email = $1', [uniqueEmail]);
+			uniqueEmail = '';
+		}
+	});
+
 	test('verify loading and results with recipe link navigation', async ({ page }) => {
+		uniqueEmail = `test-2@example.com`;
+		const password = 'password123';
+		const name = 'testUser';
+
+		await registerUser(page, name, uniqueEmail, password);
+		await loginUser(page, uniqueEmail, password);
+
 		// Simulate a delayed API response with one valid recipe.
 		await simulateApiResponse(
 			page,
@@ -67,6 +101,13 @@ test.describe('Search functionality', () => {
 	});
 
 	test('show "No results" when search returns empty', async ({ page }) => {
+		uniqueEmail = `test-1@example.com`;
+		const password = 'password123';
+		const name = 'testUser';
+
+		await registerUser(page, name, uniqueEmail, password);
+		await loginUser(page, uniqueEmail, password);
+
 		// Simulate an API response with no results.
 		await simulateApiResponse(page, []);
 
