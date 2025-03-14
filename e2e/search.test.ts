@@ -1,22 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { pool } from '$lib/server/db/index.ts';
-
-async function registerUser(page: Page, name: string, email: string, password: string) {
-	await page.goto('/register');
-	await page.fill('input[name="name"]', name);
-	await page.fill('input[name="email"]', email);
-	await page.fill('input[name="password"]', password);
-	await page.click('button[type="submit"]');
-	await page.waitForNavigation();
-}
-
-async function loginUser(page: Page, email: string, password: string) {
-	await page.goto('/login');
-	await page.fill('input[name="email"]', email);
-	await page.fill('input[name="password"]', password);
-	await page.click('button[type="submit"]');
-	await page.waitForNavigation();
-}
+import { registerUser, loginUser } from "../test-utils/authenticatione2e"
 
 const fillSearchInput = async (page: Page, value: string) => {
 	const searchInput = page.locator('input[placeholder="Potatoes, carrots, beef..."]');
