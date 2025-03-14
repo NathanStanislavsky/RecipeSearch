@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { pool } from '$lib/server/db/index.ts';
-import { registerUser, loginUser } from "../test-utils/authenticatione2e"
+import { registerUser, loginUser } from '../test-utils/authenticatione2e';
 
 test.describe('authentication flow', () => {
 	// Declare the uniqueEmail variable outside the test so it can be used in cleanup

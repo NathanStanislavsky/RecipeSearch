@@ -5,7 +5,7 @@
 
 	async function handleSubmit(event) {
 		event.preventDefault();
-		
+
 		if (!event.target.checkValidity()) {
 			return;
 		}

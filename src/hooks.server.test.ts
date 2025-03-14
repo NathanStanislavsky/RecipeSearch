@@ -23,7 +23,6 @@ describe('hooks.server', () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
-
 	afterAll(() => {
 		delete process.env.JWT_SECRET;
 	});

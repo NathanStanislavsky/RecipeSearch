@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { pool } from '$lib/server/db/index.ts';
-import { registerUser, loginUser } from "../test-utils/authenticatione2e"
+import { registerUser, loginUser } from '../test-utils/authenticatione2e';
 
 const fillSearchInput = async (page: Page, value: string) => {
 	const searchInput = page.locator('input[placeholder="Potatoes, carrots, beef..."]');

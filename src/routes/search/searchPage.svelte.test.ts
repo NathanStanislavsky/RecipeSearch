@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
-import Page from './+page.svelte'
+import Page from './+page.svelte';
 
 describe('/+page.svelte Rendering', () => {
 	it('renders the h1 with correct text', () => {

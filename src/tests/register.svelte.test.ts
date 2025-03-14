@@ -34,12 +34,12 @@ describe('RegisterForm Integration', () => {
 			configurable: true,
 			writable: true,
 			value: {
-			  href: '',
-			  assign: vi.fn(),
-			  replace: vi.fn(),
-			  reload: vi.fn()
+				href: '',
+				assign: vi.fn(),
+				replace: vi.fn(),
+				reload: vi.fn()
 			}
-		  });
+		});
 	});
 
 	afterEach(() => {
