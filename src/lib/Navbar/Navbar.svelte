@@ -3,7 +3,9 @@
 	export let user = $page.data?.user;
 </script>
 
-<nav class="fixed top-0 left-0 right-0 z-50 flex h-16 items-center border-b border-gray-200 bg-white px-6 font-serif">
+<nav
+	class="fixed top-0 right-0 left-0 z-50 flex h-16 items-center border-b border-gray-200 bg-white px-6 font-serif"
+>
 	<!-- Left Column -->
 	<div class="flex-1">
 		{#if !user}
@@ -21,11 +23,9 @@
 	</div>
 
 	<!-- Right Column -->
-	<div class="flex-1 flex justify-end items-center">
+	<div class="flex flex-1 items-center justify-end">
 		{#if !user}
-			<a href="/login" class="text-gray-700 hover:text-gray-900">
-				Sign in
-			</a>
+			<a href="/login" class="text-gray-700 hover:text-gray-900"> Sign in </a>
 		{/if}
 	</div>
 </nav>

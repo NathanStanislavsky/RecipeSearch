@@ -73,11 +73,13 @@ test.describe('Complete user journey', () => {
 		await searchHelper.verifyLoadingState();
 
 		// Verify recipe link is correct
-		await searchHelper.verifyRecipeLink('https://www.acedarspoon.com/4-ingredient-carrot-raisin-salad/');
+		await searchHelper.verifyRecipeLink(
+			'https://www.acedarspoon.com/4-ingredient-carrot-raisin-salad/'
+		);
 	});
 
 	test('complete journey with no search results', async ({ page }) => {
-        await completeRegistrationAndLogin(page);
+		await completeRegistrationAndLogin(page);
 
 		// Set up empty API response
 		await searchHelper.simulateApiResponse([]);
