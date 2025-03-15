@@ -1,9 +1,3 @@
-<script>
-	import Navbar from '$lib/Navbar/Navbar.svelte';
-</script>
-
-<Navbar />
-
 <main
 	class="flex min-h-screen flex-col items-start justify-center bg-cover bg-center p-8"
 	style="background-image: url('https://m.media-amazon.com/images/I/71VgmMSxYWL.jpg')"
