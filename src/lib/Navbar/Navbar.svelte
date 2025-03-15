@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	export let user = $page.data?.user;
-	
+
 	$: currentPath = $page.url?.pathname || '';
 </script>
 
@@ -10,7 +10,7 @@
 >
 	<!-- Left Column -->
 	<div class="flex-1">
-		{#if !user && currentPath !== '/register' && currentPath !== '/login'}
+		{#if !user && currentPath !== '/register' && currentPath !== '/login' && currentPath !== '/search'}
 			<a href="/register">
 				<button class="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50">
 					Register
@@ -26,7 +26,7 @@
 
 	<!-- Right Column -->
 	<div class="flex flex-1 items-center justify-end">
-		{#if !user && currentPath !== '/register' && currentPath !== '/login'}
+		{#if !user && currentPath !== '/register' && currentPath !== '/login' && currentPath !== '/search'}
 			<a href="/login" class="text-gray-700 hover:text-gray-900">Sign in</a>
 		{/if}
 	</div>
