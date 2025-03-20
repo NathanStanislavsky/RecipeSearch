@@ -1,8 +1,24 @@
-<script>
+<script lang="ts">
 	import { page } from '$app/stores';
-	export let user = $page.data?.user;
+	import { goto } from '$app/navigation';
+	export let user = $page?.data?.user;
+	$: currentPath = $page?.url?.pathname || '';
 
-	$: currentPath = $page.url?.pathname || '';
+	async function handleLogout() {
+		try {
+			const response = await fetch('/logout', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+			if (response.ok) {
+				window.location.href = '/';
+			}
+		} catch (error) {
+			console.error('Logout error:', error);
+		}
+	}
 </script>
 
 <nav
@@ -26,7 +42,14 @@
 
 	<!-- Right Column -->
 	<div class="flex flex-1 items-center justify-end">
-		{#if !user && currentPath !== '/register' && currentPath !== '/login' && currentPath !== '/search'}
+		{#if user}
+			<button
+				on:click={handleLogout}
+				class="ml-4 rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+			>
+				Logout
+			</button>
+		{:else if currentPath !== '/register' && currentPath !== '/login' && currentPath !== '/search'}
 			<a href="/login" class="text-gray-700 hover:text-gray-900">Sign in</a>
 		{/if}
 	</div>
