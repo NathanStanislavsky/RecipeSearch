@@ -35,7 +35,7 @@
 	}
 </script>
 
-<div class="flex min-h-screen flex-col items-center bg-green-100 pt-20 font-serif">
+<div class="flex min-h-screen flex-col items-center bg-slate-100 pt-20 font-serif">
 	<div class="mb-10 w-full max-w-4xl text-center">
 		<h1 class="mb-4 text-4xl">What is in your fridge?</h1>
 		<SearchBar bind:ingredients />
