@@ -1,9 +1,10 @@
 import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '$env/static/private';
 
 function verifyToken(token: string) {
-	return jwt.verify(token, process.env.JWT_SECRET!) as unknown as {
+	return jwt.verify(token, JWT_SECRET) as unknown as {
 		id: number;
 		email: string;
 		name: string;

@@ -1,6 +1,11 @@
-import { describe, beforeAll, afterAll, afterEach, it, expect, vi, beforeEach } from 'vitest';
+import { describe, afterEach, it, expect, vi, beforeEach } from 'vitest';
 import { handle } from './hooks.server';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '$env/static/private';
+
+vi.mock('$env/static/private', () => ({
+	JWT_SECRET: 'test-secret'
+}));
 
 const BASE_URL = 'http://localhost';
 
@@ -15,16 +20,8 @@ function createEvent(token: string | undefined, path: string) {
 }
 
 describe('hooks.server', () => {
-	beforeAll(() => {
-		process.env.JWT_SECRET = 'test-secret';
-	});
-
 	beforeEach(() => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
-	});
-
-	afterAll(() => {
-		delete process.env.JWT_SECRET;
 	});
 
 	afterEach(() => {
@@ -45,7 +42,8 @@ describe('hooks.server', () => {
 		expect(event.locals.user).toEqual(validPayload);
 		expect(dummyResolve).toHaveBeenCalledWith(event);
 		expect(response).toEqual({ status: 200 });
-		expect(verifySpy).toHaveBeenCalledWith(token, process.env.JWT_SECRET);
+		// Use the imported JWT_SECRET instead of process.env.JWT_SECRET
+		expect(verifySpy).toHaveBeenCalledWith(token, JWT_SECRET);
 	});
 
 	it('redirects to /login when accessing a protected route without a token', async () => {
@@ -70,7 +68,7 @@ describe('hooks.server', () => {
 			status: 303,
 			location: '/login'
 		});
-		expect(verifySpy).toHaveBeenCalledWith(token, process.env.JWT_SECRET);
+		expect(verifySpy).toHaveBeenCalledWith(token, JWT_SECRET);
 	});
 
 	it('does not redirect for non-protected routes even if no token is provided', async () => {
