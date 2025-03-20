@@ -23,7 +23,9 @@
 
 			message = data.message;
 
-			window.location.href = '/login';
+			if (res.ok) {
+				window.location.href = '/login';
+			}
 		} catch (error) {
 			console.error(error);
 			message = 'Internal Server Error';

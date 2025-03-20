@@ -17,7 +17,7 @@
 				},
 				body: JSON.stringify({ email, password })
 			});
-			const data = await res.json();
+			
 			if (res.ok) {
 				message = 'welcome';
 				window.location.href = '/search';
