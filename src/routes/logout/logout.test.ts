@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DELETE } from './+server';
+import { POST } from './+server';
 
 describe('logout endpoint', () => {
 	beforeEach(() => {
@@ -11,7 +11,7 @@ describe('logout endpoint', () => {
 			delete: vi.fn()
 		};
 
-		await expect(DELETE({ cookies })).rejects.toMatchObject({
+		await expect(POST({ cookies })).rejects.toMatchObject({
 			status: 302,
 			location: '/'
 		});
