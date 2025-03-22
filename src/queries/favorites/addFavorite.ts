@@ -2,7 +2,7 @@ import { db } from '$lib/server/db/index.ts';
 import { recipes, favorites } from '$lib/server/db/schema.ts';
 import { eq } from 'drizzle-orm';
 
-async function addFavorite(
+export async function addFavorite(
 	userId: number,
 	recipeData: {
 		id: number;
