@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { getUserByEmail } from '../../queries/select';
+import { getUserByEmail } from '../../queries/user/select';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { jsonResponse } from '../../utils/responseUtil';

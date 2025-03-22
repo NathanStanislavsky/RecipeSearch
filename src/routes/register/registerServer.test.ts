@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import bcrypt from 'bcryptjs';
 import { POST } from './+server';
-import * as selectModule from '../../queries/select';
-import * as insertModule from '../../queries/insert';
+import * as selectModule from '../../queries/user/select';
+import * as insertModule from '../../queries/user/insert';
 import { createTestRequest } from '../../../test-utils/createTestRequest';
 
 describe('POST /register endpoint', () => {

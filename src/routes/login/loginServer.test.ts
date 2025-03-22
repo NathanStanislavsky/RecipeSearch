@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { POST } from './+server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import * as selectModule from '../../queries/select';
+import * as selectModule from '../../queries/user/select';
 import { assertResponse } from '../../../test-utils/mockUtils';
 import { createTestRequest } from '../../../test-utils/createTestRequest';
 
