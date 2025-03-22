@@ -15,6 +15,7 @@ export const constructApiUrl = (ingredients: string): URL => {
 		'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/findByIngredients'
 	);
 	apiUrl.searchParams.append('ingredients', ingredients);
+	apiUrl.searchParams.append('number', '100')
 	return apiUrl;
 };
 
