@@ -81,6 +81,8 @@
 		"vitest": "^3.0.0"
 	},
 	"dependencies": {
+		"@iconify-icons/mdi": "^1.2.48",
+		"@iconify/svelte": "^4.2.0",
 		"@neondatabase/serverless": "^0.10.4",
 		"bcryptjs": "^3.0.2",
 		"dotenv": "^16.4.7",
