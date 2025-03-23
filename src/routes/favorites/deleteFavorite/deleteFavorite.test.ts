@@ -1,18 +1,16 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
 import { DELETE } from './+server.ts';
 import { removeFavorite } from '../../../queries/favorites/deleteFavorite';
-import { jsonResponse } from '../../../utils/responseUtil';
+import { assertResponse } from '../../../../test-utils/mockUtils';
 
 vi.mock('../../../queries/favorites/deleteFavorite', () => ({
 	removeFavorite: vi.fn()
-}));
-vi.mock('../../../utils/responseUtil', () => ({
-	jsonResponse: vi.fn((data, options) => ({ data, options }))
 }));
 
 describe('deleteFavorites route test', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+        vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
 	it('should delete a favorite and return a JSON response', async () => {
@@ -28,8 +26,7 @@ describe('deleteFavorites route test', () => {
 		const response = await DELETE({ request: fakeRequest });
 
 		expect(removeFavorite).toHaveBeenCalledWith(1, 123);
-		expect(jsonResponse).toHaveBeenCalledWith(fakeResult);
-		expect(response).toEqual({ data: fakeResult, options: undefined });
+		await assertResponse(response, 200, fakeResult);
 	});
 
 	it('should return a 400 error if the request body is invalid', async () => {
@@ -39,11 +36,7 @@ describe('deleteFavorites route test', () => {
 
 		const response = await DELETE({ request: fakeRequest });
 
-		expect(jsonResponse).toHaveBeenCalledWith({ message: 'Invalid request body' }, 400);
-		expect(response).toEqual({
-			data: { message: 'Invalid request body' },
-			options: 400
-		});
+		await assertResponse(response, 400, { message: 'Invalid request body' });
 	});
 
 	it('should handle errors and return a 500 JSON error response', async () => {
@@ -57,10 +50,6 @@ describe('deleteFavorites route test', () => {
 
 		const response = await DELETE({ request: fakeRequest });
 
-		expect(jsonResponse).toHaveBeenCalledWith({ message: 'Internal server error' }, 500);
-		expect(response).toEqual({
-			data: { message: 'Internal server error' },
-			options: 500
-		});
+		await assertResponse(response, 500, { message: 'Internal server error' });
 	});
 });
