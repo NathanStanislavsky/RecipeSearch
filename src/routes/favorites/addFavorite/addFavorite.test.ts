@@ -4,12 +4,9 @@ import { POST } from './+server.ts';
 vi.mock('../../../queries/favorites/addFavorite.ts', () => ({
 	addFavorite: vi.fn()
 }));
-vi.mock('../../../utils/responseUtil.ts', () => ({
-	jsonResponse: vi.fn((data, options) => ({ data, options }))
-}));
 
 import { addFavorite } from '../../../queries/favorites/addFavorite';
-import { jsonResponse } from '../../../utils/responseUtil';
+import { assertResponse } from '../../../../test-utils/mockUtils';
 
 describe('addFavorites route test', () => {
 	beforeEach(() => {
@@ -32,19 +29,16 @@ describe('addFavorites route test', () => {
 		const fakeRequest = {
 			json: async () => ({
 				userId: 1,
-				recipeData: {
-					mockRecipe
-				}
+				recipeData: mockRecipe
 			})
 		};
 
 		const response = await POST({ request: fakeRequest });
 
-		expect(addFavorite).toHaveBeenCalledWith(1, {
-			mockRecipe
-		});
-		expect(jsonResponse).toHaveBeenCalledWith(fakeResult);
-		expect(response).toEqual({ data: fakeResult, options: undefined });
+		// Verify that addFavorite was called correctly.
+		expect(addFavorite).toHaveBeenCalledWith(1, mockRecipe);
+		// Use assertResponse to check that response has status 200 and contains fakeResult.
+		await assertResponse(response, 200, fakeResult);
 	});
 
 	it('should handle errors and return a 500 JSON error response', async () => {
@@ -58,14 +52,7 @@ describe('addFavorites route test', () => {
 
 		const response = await POST({ request: fakeRequest });
 
-		expect(jsonResponse).toHaveBeenCalledWith(
-			{ message: 'Internal server error' },
-			{ status: 500 }
-		);
-		expect(response).toEqual({
-			data: { message: 'Internal server error' },
-			options: { status: 500 }
-		});
+		await assertResponse(response, 500, { message: 'Internal server error' });
 	});
 
 	it('should return a 400 error if the request body is invalid', async () => {
@@ -75,10 +62,6 @@ describe('addFavorites route test', () => {
 
 		const response = await POST({ request: fakeRequest });
 
-		expect(jsonResponse).toHaveBeenCalledWith({ message: 'Invalid request body' }, { status: 400 });
-		expect(response).toEqual({
-			data: { message: 'Invalid request body' },
-			options: { status: 400 }
-		});
+		await assertResponse(response, 400, { message: 'Invalid request body' });
 	});
 });
