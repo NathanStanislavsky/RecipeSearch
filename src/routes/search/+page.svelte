@@ -3,8 +3,11 @@
 	import SearchBar from '$lib/SearchBar/SearchBar.svelte';
 	import RecipeCardParent from '$lib/RecipeCardParent/RecipeCardParent.svelte';
 
+	export let data;
+
 	let ingredients = '';
 	let recipes: Array<{
+		id: number;
 		image: string;
 		title: string;
 		readyInMinutes: number;
@@ -46,7 +49,7 @@
 		<p>Loading...</p>
 	{:else if recipes.length > 0}
 		<div class="w-full max-w-4xl px-4">
-			<RecipeCardParent {recipes} />
+			<RecipeCardParent {recipes} user={data.user} />
 		</div>
 	{:else if hasSearched}
 		<p>No results</p>

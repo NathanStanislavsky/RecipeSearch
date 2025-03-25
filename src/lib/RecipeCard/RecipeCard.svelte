@@ -12,6 +12,9 @@
 		sourceUrl: string;
 	};
 
+	export let user: { userId: number; email: string; iat: number; exp: number } | null;
+	const userId = user ? user.userId : null;
+
 	let isFavorited = false;
 
 	async function toggleFavorite() {
