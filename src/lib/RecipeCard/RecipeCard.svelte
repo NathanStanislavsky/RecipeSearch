@@ -18,7 +18,54 @@
 	let isFavorited = false;
 
 	async function toggleFavorite() {
-		isFavorited = !isFavorited;
+		if (!userId) {
+			console.error('User is not logged in');
+			return;
+		}
+
+		if (!isFavorited) {
+			// Call the POST API to add the recipe to favorites.
+			try {
+				const response = await fetch('/favorites/addFavorite', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						userId,
+						recipeData: recipe
+					})
+				});
+				if (response.ok) {
+					isFavorited = true;
+				} else {
+					console.error('Failed to add favorite');
+				}
+			} catch (error) {
+				console.error('Error adding favorite:', error);
+			}
+		} else {
+			// Call the DELETE API to remove the recipe from favorites.
+			try {
+				const response = await fetch('/favorites/deleteFavorite', {
+					method: 'DELETE',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						userId,
+						recipeId: recipe.id
+					})
+				});
+				if (response.ok) {
+					isFavorited = false;
+				} else {
+					console.error('Failed to remove favorite');
+				}
+			} catch (error) {
+				console.error('Error removing favorite:', error);
+			}
+		}
 	}
 </script>
 
