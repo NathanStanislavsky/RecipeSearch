@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
 	export let user = $page?.data?.user;
 	$: currentPath = $page?.url?.pathname || '';
 
