@@ -23,7 +23,7 @@ describe('recipeByIDsUtils', () => {
 
 		describe.each([
 			['empty recipesData', []],
-			['data with no valid IDs', [{ name: 'No ID Recipe' }, { name: 'Another Recipe' }]]
+			['data with no valid IDs', [{ id: 0 }, { id: 0 }]]
 		])('when %s', (_, sampleData) => {
 			it('returns an error response', async () => {
 				const result = extractRecipeIds(sampleData);

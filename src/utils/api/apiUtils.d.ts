@@ -1,7 +1,7 @@
 export declare const SPOONACULAR_BASE_URL =
 	'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com';
 export declare const getSpoonacularHeaders: () => {
-	'x-rapidapi-key': any;
+	'x-rapidapi-key': string;
 	'x-rapidapi-host': string;
 	'Content-Type': string;
 };

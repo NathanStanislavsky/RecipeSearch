@@ -5,13 +5,27 @@ import {
 	handleApiResponse
 } from '$utils/api/apiUtils.js';
 
+interface BasicRecipe {
+	id: number;
+}
+
+interface DetailedRecipe extends BasicRecipe {
+	image: string;
+	title: string;
+	readyInMinutes: number;
+	servings: number;
+	sourceUrl: string;
+}
+
 interface ExtractRecipeIdsResult {
 	recipeIds?: number[];
 	errorResponse?: Response;
 }
 
-export function extractRecipeIds(recipesData: any[]): ExtractRecipeIdsResult {
-	const recipeIds = recipesData.map((recipe) => recipe.id).filter((id) => id != null); // null or undefined check
+export function extractRecipeIds(recipesData: BasicRecipe[]): ExtractRecipeIdsResult {
+	const recipeIds = recipesData
+		.map((recipe) => recipe.id)
+		.filter((id) => typeof id === 'number' && id > 0);
 
 	if (recipeIds.length === 0) {
 		return {
@@ -50,7 +64,7 @@ export async function filterInformationBulkReponse(bulkResponse: Response): Prom
 
 	const detailedRecipes = await bulkResponse.json();
 
-	const filteredRecipes = detailedRecipes.map((recipe: any) => ({
+	const filteredRecipes = detailedRecipes.map((recipe: DetailedRecipe) => ({
 		id: recipe.id,
 		image: recipe.image,
 		title: recipe.title,

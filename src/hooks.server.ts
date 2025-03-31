@@ -3,12 +3,23 @@ import { redirect } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '$env/static/private';
 
-function verifyToken(token: string) {
-	return jwt.verify(token, JWT_SECRET) as unknown as {
-		id: number;
-		email: string;
-		name: string;
-	};
+interface UserPayload {
+	id: number;
+	email: string;
+	name: string;
+}
+
+function verifyToken(token: string): UserPayload {
+	const decoded = jwt.verify(token, JWT_SECRET);
+	
+	if (typeof decoded === 'object' && decoded !== null) {
+		if ('payload' in decoded) {
+			return (decoded as { payload: UserPayload }).payload;
+		}
+		return decoded as UserPayload;
+	}
+
+	throw new Error('Invalid token payload');
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
