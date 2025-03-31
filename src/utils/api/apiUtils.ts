@@ -1,9 +1,9 @@
-import { RAPIDAPI_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export const SPOONACULAR_BASE_URL = 'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com';
 
 export const getSpoonacularHeaders = () => ({
-    'x-rapidapi-key': RAPIDAPI_KEY,
+    'x-rapidapi-key': env.RAPIDAPI_KEY,
     'x-rapidapi-host': 'spoonacular-recipe-food-nutrition-v1.p.rapidapi.com',
     'Content-Type': 'application/json'
 });

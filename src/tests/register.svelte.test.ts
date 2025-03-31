@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/svelte';
-import userEvent from '@testing-library/user-event';
+import { userEvent } from '@testing-library/user-event';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -15,7 +15,7 @@ function setup() {
 
 // Helper: Mocks the global fetch response.
 function mockFetchResponse(responseData: object, status: number, additionalHeaders = {}) {
-	(global.fetch as jest.Mock).mockResolvedValueOnce(
+	(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
 		new Response(JSON.stringify(responseData), {
 			status,
 			headers: {
@@ -47,15 +47,16 @@ describe('RegisterForm Integration', () => {
 	});
 
 	it('handles successful registration', async () => {
+		const user = userEvent.setup();
 		const fakeResponse = { message: 'User registered successfully', userId: 1 };
 		mockFetchResponse(fakeResponse, 201);
 
 		const { nameInput, emailInput, passwordInput, registerButton } = setup();
 
-		await userEvent.type(nameInput, 'TestUser');
-		await userEvent.type(emailInput, 'test@example.com');
-		await userEvent.type(passwordInput, 'password123');
-		await userEvent.click(registerButton);
+		await user.type(nameInput, 'TestUser');
+		await user.type(emailInput, 'test@example.com');
+		await user.type(passwordInput, 'password123');
+		await user.click(registerButton);
 
 		await waitFor(() => {
 			expect(screen.getByText(/User registered successfully/i)).toBeInTheDocument();
@@ -63,14 +64,15 @@ describe('RegisterForm Integration', () => {
 	});
 
 	it('handles duplicate email error', async () => {
+		const user = userEvent.setup();
 		mockFetchResponse({ message: 'Email already registered' }, 409);
 
 		const { nameInput, emailInput, passwordInput, registerButton } = setup();
 
-		await userEvent.type(nameInput, 'TestUser');
-		await userEvent.type(emailInput, 'test@example.com');
-		await userEvent.type(passwordInput, 'password123');
-		await userEvent.click(registerButton);
+		await user.type(nameInput, 'TestUser');
+		await user.type(emailInput, 'test@example.com');
+		await user.type(passwordInput, 'password123');
+		await user.click(registerButton);
 
 		await waitFor(() => {
 			expect(screen.getByText(/Email already registered/i)).toBeInTheDocument();
@@ -78,14 +80,15 @@ describe('RegisterForm Integration', () => {
 	});
 
 	it('handles server errors gracefully', async () => {
+		const user = userEvent.setup();
 		mockFetchResponse({ message: 'Internal Server Error' }, 500);
 
 		const { nameInput, emailInput, passwordInput, registerButton } = setup();
 
-		await userEvent.type(nameInput, 'TestUser');
-		await userEvent.type(emailInput, 'test@example.com');
-		await userEvent.type(passwordInput, 'password123');
-		await userEvent.click(registerButton);
+		await user.type(nameInput, 'TestUser');
+		await user.type(emailInput, 'test@example.com');
+		await user.type(passwordInput, 'password123');
+		await user.click(registerButton);
 
 		await waitFor(() => {
 			expect(screen.getByText(/Internal Server Error/i)).toBeInTheDocument();
@@ -93,9 +96,10 @@ describe('RegisterForm Integration', () => {
 	});
 
 	it('displays validation errors for missing fields', async () => {
+		const user = userEvent.setup();
 		render(RegisterForm);
 		const registerButton = screen.getByRole('button', { name: /register/i });
-		await userEvent.click(registerButton);
+		await user.click(registerButton);
 
 		expect(screen.getByLabelText(/username/i)).toBeInvalid();
 		expect(screen.getByLabelText(/email/i)).toBeInvalid();

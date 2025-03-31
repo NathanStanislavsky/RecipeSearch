@@ -1,13 +1,14 @@
-<script>
+<script lang="ts">
 	let name = '';
 	let email = '';
 	let password = '';
 	let message = '';
 
-	async function handleSubmit(event) {
+	async function handleSubmit(event: SubmitEvent): Promise<void> {
 		event.preventDefault();
 
-		if (!event.target.checkValidity()) {
+		const target = event.target as HTMLFormElement;
+		if (!target.checkValidity()) {
 			return;
 		}
 

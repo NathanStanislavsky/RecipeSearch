@@ -3,7 +3,7 @@ import { getUserByEmail } from '../../queries/user/select.js';
 import { createUser } from '../../queries/user/insert.js';
 import { createJsonResponse } from '../../utils/api/apiUtils.js';
 
-const validateRegisterPayload = (payload: any) => {
+const validateRegisterPayload = (payload: { email: string; password: string; name: string }) => {
 	const { email, password, name } = payload;
 	if (!email || !password || !name) {
 		throw new Error('Missing required fields');
