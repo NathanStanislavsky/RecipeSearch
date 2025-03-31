@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { pool } from '$lib/server/db/index.ts';
-import { registerUser, loginUser } from '../test-utils/authenticatione2e';
+import { registerUser, loginUser } from '../test-utils/authenticationUtils';
 import { SearchHelper } from '../test-utils/searchHelper';
 
 test.describe('Complete user journey', () => {

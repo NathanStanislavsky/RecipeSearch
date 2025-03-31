@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { POST } from './+server';
 import * as selectModule from '../../queries/user/select';
 import * as insertModule from '../../queries/user/insert';
-import { createTestRequest } from '../../../test-utils/createTestRequest';
+import { createTestRequest } from '../../../test-utils/createTestRequestUtils';
 
 describe('POST /register endpoint', () => {
 	beforeAll(() => {

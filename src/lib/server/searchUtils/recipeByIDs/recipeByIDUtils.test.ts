@@ -4,7 +4,7 @@ import {
 	constructBulkApiURL,
 	fetchBulkRecipeInformation,
 	filterInformationBulkReponse
-} from './recipeByIDsUtils.ts';
+} from './recipeByIDUtils.ts';
 
 import { createMockResponse, assertResponse } from './test-utils/mockUtils.ts';
 

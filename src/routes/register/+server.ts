@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '../../queries/user/select';
 import { createUser } from '../../queries/user/insert';
-import { jsonResponse } from '../../utils/responseUtil';
+import { jsonResponse } from '../../utils/responseUtils';
 
 const validateRegisterPayload = (payload: any) => {
 	const { email, password, name } = payload;

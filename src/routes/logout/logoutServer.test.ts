@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST } from './+server';
+import { POST } from './+server.ts';
 
 describe('logout endpoint', () => {
 	beforeEach(() => {

@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import * as selectModule from '../../queries/user/select';
 import { assertResponse } from '../../../test-utils/mockUtils';
-import { createTestRequest } from '../../../test-utils/createTestRequest';
+import { createTestRequest } from '../../../test-utils/createTestRequestUtils';
 
 describe('/login endpoint', () => {
 	beforeAll(() => {
