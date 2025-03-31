@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import { POST } from './+server';
+import { POST } from './+server.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import * as selectModule from '../../queries/user/select';
-import { assertResponse } from '../../utils/test/mockUtils';
-import { createTestRequest } from '../../utils/test/createTestRequestUtils';
+import * as selectModule from '../../queries/user/select.js';
+import { assertResponse } from '../../utils/test/mockUtils.js';
+import { createTestRequest } from '../../utils/test/createTestRequestUtils.js';
 
 describe('/login endpoint', () => {
 	beforeAll(() => {

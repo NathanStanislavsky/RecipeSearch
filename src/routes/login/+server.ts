@@ -1,8 +1,8 @@
-import type { RequestHandler } from './$types';
-import { getUserByEmail } from '../../queries/user/select';
+import type { RequestHandler } from './$types.js';
+import { getUserByEmail } from '../../queries/user/select.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { createJsonResponse } from '../../utils/api/apiUtils';
+import { createJsonResponse } from '../../utils/api/apiUtils.js';
 
 export const POST: RequestHandler = async ({ request }: { request: Request }) => {
 	try {

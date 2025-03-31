@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
-import { getUserByEmail } from '../../queries/user/select';
-import { createUser } from '../../queries/user/insert';
-import { createJsonResponse } from '../../utils/api/apiUtils';
+import { getUserByEmail } from '../../queries/user/select.js';
+import { createUser } from '../../queries/user/insert.js';
+import { createJsonResponse } from '../../utils/api/apiUtils.js';
 
 const validateRegisterPayload = (payload: any) => {
 	const { email, password, name } = payload;
@@ -11,7 +11,7 @@ const validateRegisterPayload = (payload: any) => {
 	return { email, password, name };
 };
 
-export async function POST({ request }) {
+export async function POST({ request }: { request: Request }) {
 	try {
 		// Parse the request body
 		const { email, password, name } = await request.json();

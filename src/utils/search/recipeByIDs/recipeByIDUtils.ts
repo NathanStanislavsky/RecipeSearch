@@ -1,4 +1,4 @@
-import { createApiUrl, createJsonResponse, getSpoonacularHeaders, handleApiResponse } from '$utils/api/apiUtils';
+import { createApiUrl, createJsonResponse, getSpoonacularHeaders, handleApiResponse } from '$utils/api/apiUtils.js';
 
 interface ExtractRecipeIdsResult {
     recipeIds?: number[];

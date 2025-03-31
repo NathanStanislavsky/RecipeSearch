@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
-import { pool } from '$lib/server/db/index.ts';
-import { registerUser, loginUser } from '../src/utils/test/authenticationUtils';
-import { SearchHelper } from '../src/utils/test/searchHelper';
+import { pool } from '../src/lib/server/db/index.js';
+import { registerUser, loginUser } from '../src/utils/test/authenticationUtils.js';
+import { SearchHelper } from '../src/utils/test/searchHelper.js';
 
 test.describe('Complete user journey', () => {
 	let uniqueEmail: string;

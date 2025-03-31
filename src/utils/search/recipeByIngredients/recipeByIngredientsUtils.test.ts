@@ -3,7 +3,7 @@ import {
 	parseIngredients,
 	fetchRecipeByIngredients,
 	constructApiUrl
-} from './recipeByIngredientsUtils.ts';
+} from './recipeByIngredientsUtils.js';
 
 const createTestURL = (urlString: string) => new URL(urlString);
 

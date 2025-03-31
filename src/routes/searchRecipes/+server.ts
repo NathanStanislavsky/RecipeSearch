@@ -4,12 +4,12 @@ import {
 	constructBulkApiURL,
 	fetchBulkRecipeInformation,
 	filterInformationBulkReponse
-} from '$utils/search/recipeByIDs/recipeByIDUtils.ts';
+} from '$utils/search/recipeByIDs/recipeByIDUtils.js';
 import {
 	parseIngredients,
 	fetchRecipeByIngredients,
 	constructApiUrl
-} from '$utils/search/recipeByIngredients/recipeByIngredientsUtils.ts';
+} from '$utils/search/recipeByIngredients/recipeByIngredientsUtils.js';
 
 export const GET: RequestHandler = async ({ url }) => {
 	// 1. Parse ingredients from the request URL

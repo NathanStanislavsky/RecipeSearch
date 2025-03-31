@@ -4,9 +4,9 @@ import {
 	constructBulkApiURL,
 	fetchBulkRecipeInformation,
 	filterInformationBulkReponse
-} from './recipeByIDUtils.ts';
+} from './recipeByIDUtils.js';
 
-import { createMockResponse, assertResponse } from '../../test/mockUtils';
+import { createMockResponse, assertResponse } from '../../test/mockUtils.js';
 
 describe('recipeByIDsUtils', () => {
 	describe('extractRecipeIds', () => {
@@ -62,7 +62,7 @@ describe('recipeByIDsUtils', () => {
 		const testUrl = new URL(
 			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk?ids=123,456,789'
 		);
-		let mockFetch: ReturnType<typeof vi.spyOn>;
+		let mockFetch: vi.SpyInstance<[input: URL | RequestInfo, init?: RequestInit | undefined], Promise<Response>>;
 
 		beforeEach(() => {
 			mockFetch = vi.spyOn(global, 'fetch');
