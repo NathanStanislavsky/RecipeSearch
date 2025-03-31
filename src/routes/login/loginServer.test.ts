@@ -3,8 +3,8 @@ import { POST } from './+server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import * as selectModule from '../../queries/user/select';
-import { assertResponse } from '../../../test-utils/mockUtils';
-import { createTestRequest } from '../../../test-utils/createTestRequestUtils';
+import { assertResponse } from '../../utils/test/mockUtils';
+import { createTestRequest } from '../../utils/test/createTestRequestUtils';
 
 describe('/login endpoint', () => {
 	beforeAll(() => {

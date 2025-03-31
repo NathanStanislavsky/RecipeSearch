@@ -6,7 +6,7 @@ import {
 	filterInformationBulkReponse
 } from './recipeByIDUtils.ts';
 
-import { createMockResponse, assertResponse } from './test-utils/mockUtils.ts';
+import { createMockResponse, assertResponse } from '../../test/mockUtils';
 
 describe('recipeByIDsUtils', () => {
 	describe('extractRecipeIds', () => {
@@ -98,7 +98,7 @@ describe('recipeByIDsUtils', () => {
 
 			const json = await response.json();
 			expect(json).toEqual({
-				error: 'Failed to fetch detailed recipe information',
+				error: 'Failed to fetch data from RapidAPI',
 				status: 500,
 				message: errorText
 			});
