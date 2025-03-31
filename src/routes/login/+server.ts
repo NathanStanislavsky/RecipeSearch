@@ -2,26 +2,26 @@ import type { RequestHandler } from './$types';
 import { getUserByEmail } from '../../queries/user/select';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { jsonResponse } from '../../utils/responseUtils';
+import { createJsonResponse } from '../../utils/api/apiUtils';
 
 export const POST: RequestHandler = async ({ request }: { request: Request }) => {
 	try {
 		const { email, password } = await request.json();
 
 		if (!email || !password) {
-			return jsonResponse({ message: 'Email and password required' }, 400);
+			return createJsonResponse({ message: 'Email and password required' }, 400);
 		}
 
 		const user = await getUserByEmail(email);
 
 		if (!user) {
-			return jsonResponse({ message: 'Invalid credentials' }, 401);
+			return createJsonResponse({ message: 'Invalid credentials' }, 401);
 		}
 
 		const passwordMatches = await bcrypt.compare(password, user.password);
 
 		if (!passwordMatches) {
-			return jsonResponse({ message: 'Invalid credentials' }, 401);
+			return createJsonResponse({ message: 'Invalid credentials' }, 401);
 		}
 
 		const token = jwt.sign(
@@ -43,6 +43,6 @@ export const POST: RequestHandler = async ({ request }: { request: Request }) =>
 		});
 	} catch (error) {
 		console.error(error);
-		return jsonResponse({ message: 'login failed' }, 500);
+		return createJsonResponse({ message: 'login failed' }, 500);
 	}
 };

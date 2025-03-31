@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '../../queries/user/select';
 import { createUser } from '../../queries/user/insert';
-import { jsonResponse } from '../../utils/responseUtils';
+import { createJsonResponse } from '../../utils/api/apiUtils';
 
 const validateRegisterPayload = (payload: any) => {
 	const { email, password, name } = payload;
@@ -21,7 +21,7 @@ export async function POST({ request }) {
 		// Check if a user with the given email already exists
 		const existingUser = await getUserByEmail(email);
 		if (existingUser) {
-			return jsonResponse({ message: 'Email already registered' }, 409);
+			return createJsonResponse({ message: 'Email already registered' }, 409);
 		}
 
 		// Hash the password using bcrypt with 10 salt rounds
@@ -35,7 +35,7 @@ export async function POST({ request }) {
 		});
 
 		// Return a 201 response with a success message and the new user's id
-		return jsonResponse(
+		return createJsonResponse(
 			{
 				message: 'User registered successfully',
 				userId: newUser.id
@@ -44,6 +44,6 @@ export async function POST({ request }) {
 		);
 	} catch (error) {
 		console.error('Registration error:', error);
-		return jsonResponse({ message: 'Internal Server Error' }, 500);
+		return createJsonResponse({ message: 'Internal Server Error' }, 500);
 	}
 }
