@@ -6,96 +6,98 @@ import * as insertModule from '../../queries/user/insert.js';
 import { createTestRequest } from '../../utils/test/createTestRequestUtils.js';
 
 interface User {
-    id: number;
-    email: string;
-    password: string;
-    name: string;
+	id: number;
+	email: string;
+	password: string;
+	name: string;
 }
 
 interface RegisterPayload {
-    email: string;
-    password: string;
-    name: string;
+	email: string;
+	password: string;
+	name: string;
 }
 
 describe('POST /register endpoint', () => {
-    beforeAll(() => {
-        vi.spyOn(console, 'error').mockImplementation(() => {});
-    });
+	beforeAll(() => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+	});
 
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
 
-    const defaultEmail = 'test@example.com';
-    const defaultPassword = 'password';
-    const defaultName = 'Test';
+	const defaultEmail = 'test@example.com';
+	const defaultPassword = 'password';
+	const defaultName = 'Test';
 
-    const createRegisterPayload = (overrides: Partial<RegisterPayload> = {}): RegisterPayload => ({
-        email: defaultEmail,
-        password: defaultPassword,
-        name: defaultName,
-        ...overrides
-    });
+	const createRegisterPayload = (overrides: Partial<RegisterPayload> = {}): RegisterPayload => ({
+		email: defaultEmail,
+		password: defaultPassword,
+		name: defaultName,
+		...overrides
+	});
 
-    const createRegisterRequest = (payload: RegisterPayload) =>
-        createTestRequest('http://localhost/register', 'POST', payload);
+	const createRegisterRequest = (payload: RegisterPayload) =>
+		createTestRequest('http://localhost/register', 'POST', payload);
 
-    it('should register a new user when the email is unique', async () => {
-        vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
+	it('should register a new user when the email is unique', async () => {
+		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
 
-        const mockUser: User = {
-            id: 1,
-            email: defaultEmail,
-            password: 'hashedPassword',
-            name: defaultName
-        };
-        vi.spyOn(insertModule, 'createUser').mockResolvedValue(mockUser);
-        const mockPasswordHash = vi.spyOn(bcrypt, 'hash').mockImplementation(async () => 'hashedPassword');
+		const mockUser: User = {
+			id: 1,
+			email: defaultEmail,
+			password: 'hashedPassword',
+			name: defaultName
+		};
+		vi.spyOn(insertModule, 'createUser').mockResolvedValue(mockUser);
+		const mockPasswordHash = vi
+			.spyOn(bcrypt, 'hash')
+			.mockImplementation(async () => 'hashedPassword');
 
-        const reqPayload = createRegisterPayload();
-        const request = createRegisterRequest(reqPayload);
+		const reqPayload = createRegisterPayload();
+		const request = createRegisterRequest(reqPayload);
 
-        const response = await POST({ request });
-        const data = await response.json();
+		const response = await POST({ request });
+		const data = await response.json();
 
-        expect(response.status).toBe(201);
-        expect(data).toHaveProperty('message', 'User registered successfully');
-        expect(data).toHaveProperty('userId', mockUser.id);
-        expect(mockPasswordHash).toHaveBeenCalledWith(defaultPassword, 10);
-    });
+		expect(response.status).toBe(201);
+		expect(data).toHaveProperty('message', 'User registered successfully');
+		expect(data).toHaveProperty('userId', mockUser.id);
+		expect(mockPasswordHash).toHaveBeenCalledWith(defaultPassword, 10);
+	});
 
-    it('should return an error when the user already exists', async () => {
-        const existingUser: User = {
-            id: 123,
-            email: defaultEmail,
-            password: 'hashedPassword',
-            name: defaultName
-        };
-        vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(existingUser);
+	it('should return an error when the user already exists', async () => {
+		const existingUser: User = {
+			id: 123,
+			email: defaultEmail,
+			password: 'hashedPassword',
+			name: defaultName
+		};
+		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(existingUser);
 
-        const reqPayload = createRegisterPayload();
-        const request = createRegisterRequest(reqPayload);
+		const reqPayload = createRegisterPayload();
+		const request = createRegisterRequest(reqPayload);
 
-        const response = await POST({ request });
-        const data = await response.json();
+		const response = await POST({ request });
+		const data = await response.json();
 
-        expect(response.status).toBe(409);
-        expect(data).toHaveProperty('message', 'Email already registered');
-    });
+		expect(response.status).toBe(409);
+		expect(data).toHaveProperty('message', 'Email already registered');
+	});
 
-    it('should return a 500 error when an exception is thrown', async () => {
-        vi.spyOn(selectModule, 'getUserByEmail').mockImplementation(() => {
-            throw new Error('Simulated DB error');
-        });
+	it('should return a 500 error when an exception is thrown', async () => {
+		vi.spyOn(selectModule, 'getUserByEmail').mockImplementation(() => {
+			throw new Error('Simulated DB error');
+		});
 
-        const reqPayload = createRegisterPayload({ email: 'error@example.com', name: 'Error' });
-        const request = createRegisterRequest(reqPayload);
+		const reqPayload = createRegisterPayload({ email: 'error@example.com', name: 'Error' });
+		const request = createRegisterRequest(reqPayload);
 
-        const response = await POST({ request });
-        const data = await response.json();
+		const response = await POST({ request });
+		const data = await response.json();
 
-        expect(response.status).toBe(500);
-        expect(data).toHaveProperty('message', 'Internal Server Error');
-    });
+		expect(response.status).toBe(500);
+		expect(data).toHaveProperty('message', 'Internal Server Error');
+	});
 });

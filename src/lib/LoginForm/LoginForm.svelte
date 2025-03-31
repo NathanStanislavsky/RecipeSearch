@@ -19,7 +19,7 @@
 				},
 				body: JSON.stringify({ email, password })
 			});
-			
+
 			if (res.ok) {
 				message = 'welcome';
 				window.location.href = '/search';

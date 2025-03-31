@@ -62,7 +62,7 @@ describe('recipeByIDsUtils', () => {
 		const testUrl = new URL(
 			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk?ids=123,456,789'
 		);
-		let mockFetch: MockInstance<(input: RequestInfo, init?: RequestInit) => Promise<Response>>;		;
+		let mockFetch: MockInstance<(input: RequestInfo, init?: RequestInit) => Promise<Response>>;
 
 		beforeEach(() => {
 			mockFetch = vi.spyOn(global, 'fetch');
