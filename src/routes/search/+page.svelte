@@ -2,15 +2,10 @@
 	import SearchButton from '$lib/SearchButton/SearchButton.svelte';
 	import SearchBar from '$lib/SearchBar/SearchBar.svelte';
 	import RecipeCardParent from '$lib/RecipeCardParent/RecipeCardParent.svelte';
+	import type { Recipe } from '../../types/recipe.js';
 
 	let ingredients = '';
-	let recipes: Array<{
-		image: string;
-		title: string;
-		readyInMinutes: number;
-		servings: number;
-		sourceUrl: string;
-	}> = [];
+	let recipes: Recipe[] = [];
 
 	let isLoading = false;
 	let hasSearched = false;

@@ -66,7 +66,7 @@
 			<div>
 				<button
 					type="submit"
-					class="w-full rounded-md bg-sky-300 px-4 py-2 font-semibold text-white hover:bg-sky-400 focus:ring-2 focus:ring-sky-600 focus:outline-none"
+					class="w-full rounded-md bg-blue-500 px-4 py-2 font-semibold text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 				>
 					Login
 				</button>

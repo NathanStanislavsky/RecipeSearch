@@ -1,11 +1,7 @@
 <script lang="ts">
-	export let recipe: {
-		image: string;
-		title: string;
-		readyInMinutes: number;
-		servings: number;
-		sourceUrl: string;
-	};
+	import type { Recipe } from '../../types/recipe.js';
+
+	export let recipe: Recipe;
 </script>
 
 <div class="max-w-sm overflow-hidden rounded bg-white shadow-lg">
