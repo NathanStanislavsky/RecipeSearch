@@ -4,19 +4,7 @@ import { POST } from './+server.js';
 import * as selectModule from '../../queries/user/select.js';
 import * as insertModule from '../../queries/user/insert.js';
 import { createTestRequest } from '../../utils/test/createTestRequestUtils.js';
-
-interface User {
-	id: number;
-	email: string;
-	password: string;
-	name: string;
-}
-
-interface RegisterPayload {
-	email: string;
-	password: string;
-	name: string;
-}
+import type { User, RegisterPayload } from '../../types/user.ts';
 
 describe('POST /register endpoint', () => {
 	beforeAll(() => {

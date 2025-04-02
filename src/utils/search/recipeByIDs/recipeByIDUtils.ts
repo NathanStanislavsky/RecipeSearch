@@ -4,23 +4,9 @@ import {
 	getSpoonacularHeaders,
 	handleApiResponse
 } from '$utils/api/apiUtils.js';
-
-interface BasicRecipe {
-	id: number;
-}
-
-interface DetailedRecipe extends BasicRecipe {
-	image: string;
-	title: string;
-	readyInMinutes: number;
-	servings: number;
-	sourceUrl: string;
-}
-
-interface ExtractRecipeIdsResult {
-	recipeIds?: number[];
-	errorResponse?: Response;
-}
+import type { ExtractRecipeIdsResult } from '../../../types/recipe.ts';
+import type { BasicRecipe } from '../../../types/recipe.ts';
+import type { DetailedRecipe } from '../../../types/recipe.ts';
 
 export function extractRecipeIds(recipesData: BasicRecipe[]): ExtractRecipeIdsResult {
 	const recipeIds = recipesData

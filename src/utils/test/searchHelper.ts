@@ -1,14 +1,5 @@
 import { type Page, expect } from '@playwright/test';
-
-interface RecipeResponse {
-	id: number;
-	title: string;
-	image: string;
-	readyInMinutes: number;
-	servings: number;
-	sourceUrl: string;
-}
-
+import type { RecipeResponse } from '../../types/recipe.ts';
 export class SearchHelper {
 	private page: Page;
 

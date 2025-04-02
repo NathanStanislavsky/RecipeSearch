@@ -4,12 +4,7 @@ import type { Cookies } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '$env/static/private';
 import { handle } from './hooks.server.js';
-
-interface UserPayload {
-	id: number;
-	email: string;
-	name: string;
-}
+import type { UserPayload } from './types/user.ts';
 
 interface Locals {
 	user: { id: number; name: string; email: string };

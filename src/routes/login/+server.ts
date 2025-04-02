@@ -3,16 +3,7 @@ import { getUserByEmail } from '../../queries/user/select.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { createJsonResponse } from '../../utils/api/apiUtils.js';
-
-interface LoginRequest {
-	email: string;
-	password: string;
-}
-
-interface JWTPayload {
-	userId: number;
-	email: string;
-}
+import type { LoginPayload, JWTPayload } from '../../types/user.ts';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
@@ -58,12 +49,12 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 };
 
-function validateLoginRequest(body: unknown): LoginRequest {
+function validateLoginRequest(body: unknown): LoginPayload {
 	if (!body || typeof body !== 'object') {
 		throw new Error('Invalid request body');
 	}
 
-	const { email, password } = body as LoginRequest;
+	const { email, password } = body as LoginPayload;
 	if (!email || typeof email !== 'string' || !password || typeof password !== 'string') {
 		throw new Error('Email and password required');
 	}

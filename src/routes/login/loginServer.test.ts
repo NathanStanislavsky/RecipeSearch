@@ -7,18 +7,7 @@ import jwt from 'jsonwebtoken';
 import * as selectModule from '../../queries/user/select.js';
 import { assertResponse } from '../../utils/test/mockUtils.js';
 import { createTestRequest } from '../../utils/test/createTestRequestUtils.js';
-
-interface User {
-	id: number;
-	email: string;
-	password: string;
-	name: string;
-}
-
-interface LoginPayload {
-	email: string;
-	password: string;
-}
+import type { User, LoginPayload } from '../../types/user.ts';
 
 type LoginRequestEvent = RequestEvent & {
 	route: { id: '/login' };

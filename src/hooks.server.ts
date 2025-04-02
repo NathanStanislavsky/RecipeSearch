@@ -2,15 +2,7 @@ import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '$env/static/private';
-
-/**
- * Interface representing a user payload in the JWT token
- */
-interface UserPayload {
-	id: number;
-	email: string;
-	name: string;
-}
+import type { UserPayload } from './types/user.ts';
 
 /**
  * Custom error class for JWT verification failures
