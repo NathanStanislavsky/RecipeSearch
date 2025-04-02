@@ -29,7 +29,7 @@ export const parseIngredients = (url: URL): string | Response => {
  * @param limit - The maximum number of recipes to return (default: 20)
  * @returns The constructed API URL
  */
-export const constructApiUrl = (ingredients: string, limit: number = 20): URL => {
+export const constructApiUrl = (ingredients: string, limit: number = 100): URL => {
 	const apiUrl = createApiUrl('/recipes/findByIngredients');
 	apiUrl.searchParams.append('ingredients', ingredients);
 	apiUrl.searchParams.append('number', limit.toString());
