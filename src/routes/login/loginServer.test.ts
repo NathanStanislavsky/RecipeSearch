@@ -61,17 +61,24 @@ describe('/login endpoint', () => {
 		};
 	};
 
-	const verifyLoginResponse = async (response: Response, expectedStatus: number, expectedData: LoginResponse) => {
-		const data = await assertResponse(response, expectedStatus, expectedData) as LoginResponse;
-		
+	const verifyLoginResponse = async (
+		response: Response,
+		expectedStatus: number,
+		expectedData: LoginResponse
+	) => {
+		const data = (await assertResponse(response, expectedStatus, expectedData)) as LoginResponse;
+
 		if (data.token) {
-			const decodedToken = jwt.verify(data.token, process.env.JWT_SECRET || 'test-secret') as { userId: number; email: string };
+			const decodedToken = jwt.verify(data.token, process.env.JWT_SECRET || 'test-secret') as {
+				userId: number;
+				email: string;
+			};
 			expect(decodedToken).toMatchObject({
 				userId: TEST_CONSTANTS.userId,
 				email: TEST_CONSTANTS.email
 			});
 		}
-		
+
 		return data;
 	};
 
@@ -91,9 +98,9 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest({ email: '', password: '' });
 		const event = createLoginRequestEvent(request);
 		const response = await POST(event);
-		await verifyLoginResponse(response, 400, { 
-			success: false, 
-			message: 'Email and password required' 
+		await verifyLoginResponse(response, 400, {
+			success: false,
+			message: 'Email and password required'
 		});
 	});
 
@@ -103,9 +110,9 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(reqPayload);
 		const event = createLoginRequestEvent(request);
 		const response = await POST(event);
-		await verifyLoginResponse(response, 401, { 
-			success: false, 
-			message: 'Invalid credentials' 
+		await verifyLoginResponse(response, 401, {
+			success: false,
+			message: 'Invalid credentials'
 		});
 	});
 
@@ -117,9 +124,9 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(reqPayload);
 		const event = createLoginRequestEvent(request);
 		const response = await POST(event);
-		await verifyLoginResponse(response, 401, { 
-			success: false, 
-			message: 'Invalid credentials' 
+		await verifyLoginResponse(response, 401, {
+			success: false,
+			message: 'Invalid credentials'
 		});
 	});
 });

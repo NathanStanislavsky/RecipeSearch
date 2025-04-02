@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	export let user = $page?.data?.user;
-	$: currentPath = $page?.url?.pathname || '';
+	import { page } from '$app/state';
+
+	export let user = page.data.user;
+
+	let currentPath = page.url.pathname || '';
 
 	async function handleLogout() {
 		try {
