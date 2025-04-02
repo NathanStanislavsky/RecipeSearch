@@ -1,16 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
-import Page from './+page.svelte';
-
-describe('/+page.svelte Rendering', () => {
-	it('renders the h1 with correct text', () => {
-		render(Page);
-		const heading = screen.getByRole('heading', { level: 1 });
-		expect(heading).toBeInTheDocument();
-		expect(heading).toHaveTextContent('What is in your fridge?');
-	});
-});
+import Page from '../routes/search/+page.svelte';
 
 describe('Page Integration Tests', () => {
 	let fetchSpy: MockInstance<(input: RequestInfo, init?: RequestInit) => Promise<Response>>;

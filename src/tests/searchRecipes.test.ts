@@ -1,11 +1,7 @@
 import { describe, it, vi, afterEach } from 'vitest';
-import { GET } from './+server.js';
+import { GET } from '../routes/searchRecipes/+server.ts';
 
-import {
-	mockRequestEvent,
-	assertResponse,
-	createMockResponse
-} from '../../utils/test/mockUtils.js';
+import { mockRequestEvent, assertResponse, createMockResponse } from '../utils/test/mockUtils.ts';
 
 describe('GET handler integration tests', () => {
 	afterEach(() => {
