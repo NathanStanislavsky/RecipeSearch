@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
-import type { Cookies } from '@sveltejs/kit';
 import { POST } from './+server.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import * as selectModule from '../../queries/user/select.js';
-import { assertResponse } from '../../utils/test/mockUtils.js';
+import { assertResponse, mockRequestEvent } from '../../utils/test/mockUtils.js';
 import { createTestRequest } from '../../utils/test/createTestRequestUtils.js';
 import type { User, LoginPayload } from '../../types/user.ts';
+import type { LoginResponse } from '../../types/user.ts';
 
 type LoginRequestEvent = RequestEvent & {
 	route: { id: '/login' };
@@ -18,56 +18,62 @@ describe('/login endpoint', () => {
 		process.env.JWT_SECRET = 'test-secret';
 	});
 
-	const defaultEmail = 'test@example.com';
-	const correctPassword = 'correct-password';
-	const wrongPassword = 'wrong-password';
-	const defaultName = 'Test User';
+	const TEST_CONSTANTS = {
+		email: 'test@example.com',
+		correctPassword: 'correct-password',
+		wrongPassword: 'wrong-password',
+		name: 'Test User',
+		userId: 1
+	} as const;
 
 	const createLoginPayload = (overrides: Partial<LoginPayload> = {}): LoginPayload => ({
-		email: defaultEmail,
-		password: correctPassword,
+		email: TEST_CONSTANTS.email,
+		password: TEST_CONSTANTS.correctPassword,
 		...overrides
 	});
 
 	const createLoginRequest = (payload: LoginPayload) =>
 		createTestRequest('http://localhost/login', 'POST', payload);
 
-	const createFakeUser = async (password = correctPassword): Promise<User> => {
+	const createFakeUser = async (password = TEST_CONSTANTS.correctPassword): Promise<User> => {
 		const passwordHash = await bcrypt.hash(password, 10);
 		return {
-			id: 1,
-			email: defaultEmail,
+			id: TEST_CONSTANTS.userId,
+			email: TEST_CONSTANTS.email,
 			password: passwordHash,
-			name: defaultName
+			name: TEST_CONSTANTS.name
 		};
 	};
 
-	const createRequestEvent = (request: Request): LoginRequestEvent => ({
-		request,
-		cookies: {
-			get: vi.fn(),
-			set: vi.fn(),
-			delete: vi.fn(),
-			serialize: vi.fn(),
-			getAll: vi.fn()
-		} as unknown as Cookies,
-		fetch: vi.fn(),
-		getClientAddress: () => '127.0.0.1',
-		locals: {
-			user: {
-				id: 1,
-				name: defaultName,
-				email: defaultEmail
+	const createLoginRequestEvent = (request: Request): LoginRequestEvent => {
+		const event = mockRequestEvent(request.url) as LoginRequestEvent;
+		return {
+			...event,
+			request,
+			route: { id: '/login' },
+			locals: {
+				user: {
+					id: TEST_CONSTANTS.userId,
+					name: TEST_CONSTANTS.name,
+					email: TEST_CONSTANTS.email
+				}
 			}
-		},
-		params: {},
-		platform: {},
-		route: { id: '/login' },
-		setHeaders: vi.fn(),
-		url: new URL(request.url),
-		isDataRequest: false,
-		isSubRequest: false
-	});
+		};
+	};
+
+	const verifyLoginResponse = async (response: Response, expectedStatus: number, expectedData: LoginResponse) => {
+		const data = await assertResponse(response, expectedStatus, expectedData) as LoginResponse;
+		
+		if (data.token) {
+			const decodedToken = jwt.verify(data.token, process.env.JWT_SECRET || 'test-secret') as { userId: number; email: string };
+			expect(decodedToken).toMatchObject({
+				userId: TEST_CONSTANTS.userId,
+				email: TEST_CONSTANTS.email
+			});
+		}
+		
+		return data;
+	};
 
 	it('returns valid token if login was successful', async () => {
 		const fakeUser = await createFakeUser();
@@ -75,43 +81,45 @@ describe('/login endpoint', () => {
 
 		const reqPayload = createLoginPayload();
 		const request = createLoginRequest(reqPayload);
-		const event = createRequestEvent(request);
+		const event = createLoginRequestEvent(request);
 
 		const response = await POST(event);
-		const expected = { success: true, token: expect.any(String) };
-
-		const data = await assertResponse(response, 200, expected);
-		const decodedToken = jwt.verify(data.token, process.env.JWT_SECRET || 'test-secret');
-		expect(decodedToken).toMatchObject({
-			userId: fakeUser.id,
-			email: fakeUser.email
-		});
+		await verifyLoginResponse(response, 200, { success: true, token: expect.any(String) });
 	});
 
 	it('if email or password were not in request then return 400 error', async () => {
 		const request = createLoginRequest({ email: '', password: '' });
-		const event = createRequestEvent(request);
+		const event = createLoginRequestEvent(request);
 		const response = await POST(event);
-		await assertResponse(response, 400, { success: false, message: 'Email and password required' });
+		await verifyLoginResponse(response, 400, { 
+			success: false, 
+			message: 'Email and password required' 
+		});
 	});
 
 	it('if email does not match user in database then return 401 error', async () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
 		const reqPayload = createLoginPayload();
 		const request = createLoginRequest(reqPayload);
-		const event = createRequestEvent(request);
+		const event = createLoginRequestEvent(request);
 		const response = await POST(event);
-		await assertResponse(response, 401, { success: false, message: 'Invalid credentials' });
+		await verifyLoginResponse(response, 401, { 
+			success: false, 
+			message: 'Invalid credentials' 
+		});
 	});
 
 	it('if password does not match user in database then return 401 error', async () => {
 		const fakeUser = await createFakeUser();
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
-		const reqPayload = createLoginPayload({ password: wrongPassword });
+		const reqPayload = createLoginPayload({ password: TEST_CONSTANTS.wrongPassword });
 		const request = createLoginRequest(reqPayload);
-		const event = createRequestEvent(request);
+		const event = createLoginRequestEvent(request);
 		const response = await POST(event);
-		await assertResponse(response, 401, { success: false, message: 'Invalid credentials' });
+		await verifyLoginResponse(response, 401, { 
+			success: false, 
+			message: 'Invalid credentials' 
+		});
 	});
 });

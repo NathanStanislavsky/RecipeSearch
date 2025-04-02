@@ -26,3 +26,9 @@ export interface JWTPayload {
 	userId: number;
 	email: string;
 }
+
+export interface LoginResponse {
+	success: boolean;
+	token?: string;
+	message?: string;
+}
