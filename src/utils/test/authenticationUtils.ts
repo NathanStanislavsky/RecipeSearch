@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
 
 export async function registerUser(page: Page, name: string, email: string, password: string) {
 	await page.fill('input[name="name"]', name);

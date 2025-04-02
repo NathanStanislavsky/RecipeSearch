@@ -1,7 +1,7 @@
 import { describe, it, vi, afterEach } from 'vitest';
-import { GET } from './+server.js';
+import { GET } from '../routes/searchRecipes/+server.ts';
 
-import { mockRequestEvent, assertResponse, createMockResponse } from './test-utils/mockUtils.ts';
+import { mockRequestEvent, assertResponse, createMockResponse } from '../utils/test/mockUtils.ts';
 
 describe('GET handler integration tests', () => {
 	afterEach(() => {
@@ -22,7 +22,7 @@ describe('GET handler integration tests', () => {
 		);
 
 		assertResponse(response, 500, {
-			error: 'Failed to fetch recipes by ingredients from RapidAPI',
+			error: 'Failed to fetch data from RapidAPI',
 			message: '"External API error"',
 			status: 500
 		});
@@ -63,7 +63,7 @@ describe('GET handler integration tests', () => {
 		);
 
 		await assertResponse(response, 500, {
-			error: 'Failed to fetch detailed recipe information',
+			error: 'Failed to fetch data from RapidAPI',
 			status: 500,
 			message: errorText
 		});

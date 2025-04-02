@@ -1,5 +1,5 @@
-import { Page, expect } from '@playwright/test';
-
+import { type Page, expect } from '@playwright/test';
+import type { RecipeResponse } from '../../types/recipe.ts';
 export class SearchHelper {
 	private page: Page;
 
@@ -23,7 +23,7 @@ export class SearchHelper {
 		await searchButton.click();
 	}
 
-	async simulateApiResponse(responseBody: any, delayMs: number = 0) {
+	async simulateApiResponse(responseBody: RecipeResponse | RecipeResponse[], delayMs: number = 0) {
 		await this.page.route('**/searchRecipes*', async (route) => {
 			if (delayMs) {
 				await new Promise((resolve) => setTimeout(resolve, delayMs));

@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/svelte';
-import userEvent from '@testing-library/user-event';
+import { userEvent } from '@testing-library/user-event';
 import LoginForm from '$lib/LoginForm/LoginForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -14,7 +14,7 @@ function setup() {
 
 // Helper: Set up a mock fetch response.
 function mockFetchResponse(responseData: object, status: number, additionalHeaders = {}) {
-	(global.fetch as jest.Mock).mockResolvedValueOnce(
+	(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
 		new Response(JSON.stringify(responseData), {
 			status,
 			headers: {
@@ -46,6 +46,7 @@ describe('LoginForm Integration', () => {
 	});
 
 	it('handles successful login', async () => {
+		const user = userEvent.setup();
 		const fakeResponse = { success: true, token: 'fake-jwt-token' };
 		mockFetchResponse(fakeResponse, 200, {
 			'Set-Cookie': 'jwt=fake-jwt-token; HttpOnly; Path=/; Max-Age=3600; Secure'
@@ -53,9 +54,9 @@ describe('LoginForm Integration', () => {
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
-		await userEvent.type(emailInput, 'test@example.com');
-		await userEvent.type(passwordInput, 'correct-password');
-		await userEvent.click(loginButton);
+		await user.type(emailInput, 'test@example.com');
+		await user.type(passwordInput, 'correct-password');
+		await user.click(loginButton);
 
 		await waitFor(() => {
 			expect(screen.getByText(/welcome/i)).toBeInTheDocument();
@@ -63,13 +64,14 @@ describe('LoginForm Integration', () => {
 	});
 
 	it('handles invalid credentials', async () => {
+		const user = userEvent.setup();
 		mockFetchResponse({ message: 'Invalid credentials' }, 401);
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
-		await userEvent.type(emailInput, 'test@example.com');
-		await userEvent.type(passwordInput, 'wrong-password');
-		await userEvent.click(loginButton);
+		await user.type(emailInput, 'test@example.com');
+		await user.type(passwordInput, 'wrong-password');
+		await user.click(loginButton);
 
 		await waitFor(() => {
 			expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
@@ -77,13 +79,14 @@ describe('LoginForm Integration', () => {
 	});
 
 	it('handles server errors gracefully', async () => {
+		const user = userEvent.setup();
 		mockFetchResponse({ message: 'login failed' }, 500);
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
-		await userEvent.type(emailInput, 'test@example.com');
-		await userEvent.type(passwordInput, 'correct-password');
-		await userEvent.click(loginButton);
+		await user.type(emailInput, 'test@example.com');
+		await user.type(passwordInput, 'correct-password');
+		await user.click(loginButton);
 
 		await waitFor(() => {
 			expect(screen.getByText(/login failed/i)).toBeInTheDocument();

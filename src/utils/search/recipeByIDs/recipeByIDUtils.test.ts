@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach, type MockInstance } from 'vitest';
 import {
 	extractRecipeIds,
 	constructBulkApiURL,
 	fetchBulkRecipeInformation,
 	filterInformationBulkReponse
-} from './recipeByIDsUtils.ts';
+} from './recipeByIDUtils.js';
 
-import { createMockResponse, assertResponse } from './test-utils/mockUtils.ts';
+import { createMockResponse, assertResponse } from '../../test/mockUtils.js';
 
 describe('recipeByIDsUtils', () => {
 	describe('extractRecipeIds', () => {
@@ -23,7 +23,7 @@ describe('recipeByIDsUtils', () => {
 
 		describe.each([
 			['empty recipesData', []],
-			['data with no valid IDs', [{ name: 'No ID Recipe' }, { name: 'Another Recipe' }]]
+			['data with no valid IDs', [{ id: 0 }, { id: 0 }]]
 		])('when %s', (_, sampleData) => {
 			it('returns an error response', async () => {
 				const result = extractRecipeIds(sampleData);
@@ -62,7 +62,7 @@ describe('recipeByIDsUtils', () => {
 		const testUrl = new URL(
 			'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/informationBulk?ids=123,456,789'
 		);
-		let mockFetch: ReturnType<typeof vi.spyOn>;
+		let mockFetch: MockInstance<(input: RequestInfo, init?: RequestInit) => Promise<Response>>;
 
 		beforeEach(() => {
 			mockFetch = vi.spyOn(global, 'fetch');
@@ -98,7 +98,7 @@ describe('recipeByIDsUtils', () => {
 
 			const json = await response.json();
 			expect(json).toEqual({
-				error: 'Failed to fetch detailed recipe information',
+				error: 'Failed to fetch data from RapidAPI',
 				status: 500,
 				message: errorText
 			});

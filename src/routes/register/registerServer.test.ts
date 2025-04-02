@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import bcrypt from 'bcryptjs';
-import { POST } from './+server';
-import * as selectModule from '../../queries/user/select';
-import * as insertModule from '../../queries/user/insert';
-import { createTestRequest } from '../../../test-utils/createTestRequest';
+import { POST } from './+server.js';
+import * as selectModule from '../../queries/user/select.js';
+import * as insertModule from '../../queries/user/insert.js';
+import { createTestRequest } from '../../utils/test/createTestRequestUtils.js';
+import type { User, RegisterPayload } from '../../types/user.ts';
 
 describe('POST /register endpoint', () => {
 	beforeAll(() => {
@@ -18,22 +19,29 @@ describe('POST /register endpoint', () => {
 	const defaultPassword = 'password';
 	const defaultName = 'Test';
 
-	const createRegisterPayload = (overrides = {}) => ({
+	const createRegisterPayload = (overrides: Partial<RegisterPayload> = {}): RegisterPayload => ({
 		email: defaultEmail,
 		password: defaultPassword,
 		name: defaultName,
 		...overrides
 	});
 
-	const createRegisterRequest = (payload: object) =>
+	const createRegisterRequest = (payload: RegisterPayload) =>
 		createTestRequest('http://localhost/register', 'POST', payload);
 
 	it('should register a new user when the email is unique', async () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
 
-		const mockUser = { id: 1, email: defaultEmail, name: defaultName };
+		const mockUser: User = {
+			id: 1,
+			email: defaultEmail,
+			password: 'hashedPassword',
+			name: defaultName
+		};
 		vi.spyOn(insertModule, 'createUser').mockResolvedValue(mockUser);
-		const mockPasswordHash = vi.spyOn(bcrypt, 'hash').mockResolvedValue('hashedPassword');
+		const mockPasswordHash = vi
+			.spyOn(bcrypt, 'hash')
+			.mockImplementation(async () => 'hashedPassword');
 
 		const reqPayload = createRegisterPayload();
 		const request = createRegisterRequest(reqPayload);
@@ -48,7 +56,12 @@ describe('POST /register endpoint', () => {
 	});
 
 	it('should return an error when the user already exists', async () => {
-		const existingUser = { id: 123, email: defaultEmail };
+		const existingUser: User = {
+			id: 123,
+			email: defaultEmail,
+			password: 'hashedPassword',
+			name: defaultName
+		};
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(existingUser);
 
 		const reqPayload = createRegisterPayload();

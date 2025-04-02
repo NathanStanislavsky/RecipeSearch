@@ -3,7 +3,7 @@ import {
 	parseIngredients,
 	fetchRecipeByIngredients,
 	constructApiUrl
-} from './recipeByIngredientsUtils.ts';
+} from './recipeByIngredientsUtils.js';
 
 const createTestURL = (urlString: string) => new URL(urlString);
 
@@ -88,7 +88,7 @@ describe('_fetchRecipeByIngredients', () => {
 			const response = await fetchRecipeByIngredients(TEST_URL);
 			expect(response.ok).toBe(false);
 			expect(await response.json()).toEqual({
-				error: 'Failed to fetch recipes by ingredients from RapidAPI',
+				error: 'Failed to fetch data from RapidAPI',
 				status: 500,
 				message: 'Internal Server Error'
 			});

@@ -1,14 +1,16 @@
-<script>
-	let email = '';
-	let password = '';
-	let message = '';
+<script lang="ts">
+	let email: string = '';
+	let password: string = '';
+	let message: string = '';
 
-	async function handleSubmit(event) {
+	async function handleSubmit(event: SubmitEvent): Promise<void> {
 		event.preventDefault();
 
-		if (!event.target.checkValidity()) {
+		const target = event.target as HTMLFormElement;
+		if (!target.checkValidity()) {
 			return;
 		}
+
 		try {
 			const res = await fetch('/login', {
 				method: 'POST',
@@ -17,7 +19,7 @@
 				},
 				body: JSON.stringify({ email, password })
 			});
-			
+
 			if (res.ok) {
 				message = 'welcome';
 				window.location.href = '/search';
@@ -64,7 +66,7 @@
 			<div>
 				<button
 					type="submit"
-					class="w-full rounded-md bg-sky-300 px-4 py-2 font-semibold text-white hover:bg-sky-400 focus:ring-2 focus:ring-sky-600 focus:outline-none"
+					class="w-full rounded-md bg-blue-500 px-4 py-2 font-semibold text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 				>
 					Login
 				</button>

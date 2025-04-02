@@ -1,6 +1,6 @@
-<script>
-	export let ingredients = '';
-	export let placeholder = 'Potatoes, carrots, beef...';
+<script lang="ts">
+	export let ingredients: string = '';
+	export let placeholder: string = 'Potatoes, carrots, beef...';
 </script>
 
 <input
