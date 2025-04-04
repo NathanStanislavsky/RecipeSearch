@@ -45,7 +45,7 @@ describe('LoginForm Integration', () => {
 		vi.resetAllMocks();
 	});
 
-	it('handles successful login', async () => {
+	it('handles successful login and redirects to /search', async () => {
 		const user = userEvent.setup();
 		const fakeResponse = { success: true, token: 'fake-jwt-token' };
 		mockFetchResponse(fakeResponse, 200, {
@@ -59,7 +59,7 @@ describe('LoginForm Integration', () => {
 		await user.click(loginButton);
 
 		await waitFor(() => {
-			expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+			expect(window.location.href).toBe('/search');
 		});
 	});
 

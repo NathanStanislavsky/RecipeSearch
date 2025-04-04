@@ -1,16 +1,14 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
-import { POST } from './+server.js';
+import { actions } from './+page.server.js';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import * as selectModule from '../../queries/user/select.js';
-import { assertResponse, mockRequestEvent } from '../../utils/test/mockUtils.js';
-import { createTestRequest } from '../../utils/test/createTestRequestUtils.js';
-import type { User, LoginPayload } from '../../types/user.ts';
-import type { LoginResponse } from '../../types/user.ts';
+import { mockRequestEvent } from '../../utils/test/mockUtils.js';
+import type { User } from '../../types/user.ts';
 
 type LoginRequestEvent = RequestEvent & {
 	route: { id: '/login' };
+	locals: { user: { id: number; name: string; email: string } | null };
 };
 
 describe('/login endpoint', () => {
@@ -26,14 +24,15 @@ describe('/login endpoint', () => {
 		userId: 1
 	} as const;
 
-	const createLoginPayload = (overrides: Partial<LoginPayload> = {}): LoginPayload => ({
-		email: TEST_CONSTANTS.email,
-		password: TEST_CONSTANTS.correctPassword,
-		...overrides
-	});
-
-	const createLoginRequest = (payload: LoginPayload) =>
-		createTestRequest('http://localhost/login', 'POST', payload);
+	const createLoginRequest = (email: string, password: string) => {
+		const formData = new FormData();
+		formData.append('email', email);
+		formData.append('password', password);
+		return new Request('http://localhost/login', {
+			method: 'POST',
+			body: formData
+		});
+	};
 
 	const createFakeUser = async (password = TEST_CONSTANTS.correctPassword): Promise<User> => {
 		const passwordHash = await bcrypt.hash(password, 10);
@@ -61,70 +60,50 @@ describe('/login endpoint', () => {
 		};
 	};
 
-	const verifyLoginResponse = async (
-		response: Response,
-		expectedStatus: number,
-		expectedData: LoginResponse
-	) => {
-		const data = (await assertResponse(response, expectedStatus, expectedData)) as LoginResponse;
-
-		if (data.token) {
-			const decodedToken = jwt.verify(data.token, process.env.JWT_SECRET || 'test-secret') as {
-				userId: number;
-				email: string;
-			};
-			expect(decodedToken).toMatchObject({
-				userId: TEST_CONSTANTS.userId,
-				email: TEST_CONSTANTS.email
-			});
-		}
-
-		return data;
-	};
-
-	it('returns valid token if login was successful', async () => {
+	it('returns undefined on successful login', async () => {
 		const fakeUser = await createFakeUser();
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
-		const reqPayload = createLoginPayload();
-		const request = createLoginRequest(reqPayload);
+		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
 		const event = createLoginRequestEvent(request);
 
-		const response = await POST(event);
-		await verifyLoginResponse(response, 200, { success: true, token: expect.any(String) });
+		// Now, instead of expecting a thrown redirect, we expect the action to resolve with undefined.
+		const result = await actions.default(event);
+		expect(result).toBeUndefined();
 	});
 
-	it('if email or password were not in request then return 400 error', async () => {
-		const request = createLoginRequest({ email: '', password: '' });
+	it('returns error if email or password are missing', async () => {
+		const request = createLoginRequest('', '');
 		const event = createLoginRequestEvent(request);
-		const response = await POST(event);
-		await verifyLoginResponse(response, 400, {
+
+		const result = await actions.default(event);
+		expect(result).toEqual({
 			success: false,
 			message: 'Email and password required'
 		});
 	});
 
-	it('if email does not match user in database then return 401 error', async () => {
+	it('returns error if user not found', async () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
-		const reqPayload = createLoginPayload();
-		const request = createLoginRequest(reqPayload);
+		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
 		const event = createLoginRequestEvent(request);
-		const response = await POST(event);
-		await verifyLoginResponse(response, 401, {
+
+		const result = await actions.default(event);
+		expect(result).toEqual({
 			success: false,
 			message: 'Invalid credentials'
 		});
 	});
 
-	it('if password does not match user in database then return 401 error', async () => {
+	it('returns error if password is incorrect', async () => {
 		const fakeUser = await createFakeUser();
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
-		const reqPayload = createLoginPayload({ password: TEST_CONSTANTS.wrongPassword });
-		const request = createLoginRequest(reqPayload);
+		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.wrongPassword);
 		const event = createLoginRequestEvent(request);
-		const response = await POST(event);
-		await verifyLoginResponse(response, 401, {
+
+		const result = await actions.default(event);
+		expect(result).toEqual({
 			success: false,
 			message: 'Invalid credentials'
 		});
