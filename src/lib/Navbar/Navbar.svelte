@@ -7,11 +7,10 @@
 
 	async function handleLogout() {
 		try {
+			const formData = new FormData();
 			const response = await fetch('/logout', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				}
+				body: formData
 			});
 			if (response.ok) {
 				window.location.href = '/';
