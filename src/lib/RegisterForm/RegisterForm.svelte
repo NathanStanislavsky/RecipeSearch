@@ -13,12 +13,10 @@
 		}
 
 		try {
+			const formData = new FormData(target);
 			const res = await fetch('/register', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ name, email, password })
+				body: formData
 			});
 			const data = await res.json();
 

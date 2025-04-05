@@ -1,10 +1,20 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import bcrypt from 'bcryptjs';
-import { POST } from './+server.js';
+import { actions } from './+page.server.js';
 import * as selectModule from '../../queries/user/select.js';
 import * as insertModule from '../../queries/user/insert.js';
-import { createTestRequest } from '../../utils/test/createTestRequestUtils.js';
 import type { User, RegisterPayload } from '../../types/user.ts';
+
+const createRegisterRequest = (payload: RegisterPayload) => {
+	const formData = new FormData();
+	formData.append('email', payload.email);
+	formData.append('password', payload.password);
+	formData.append('name', payload.name);
+	return new Request('http://localhost/register', {
+		method: 'POST',
+		body: formData
+	});
+};
 
 describe('POST /register endpoint', () => {
 	beforeAll(() => {
@@ -26,8 +36,35 @@ describe('POST /register endpoint', () => {
 		...overrides
 	});
 
-	const createRegisterRequest = (payload: RegisterPayload) =>
-		createTestRequest('http://localhost/register', 'POST', payload);
+	const createRegisterRequestEvent = (request: Request) => {
+		const url = new URL(request.url);
+		return {
+			request,
+			cookies: {
+				get: vi.fn(),
+				getAll: vi.fn(),
+				set: vi.fn(),
+				delete: vi.fn(),
+				serialize: vi.fn()
+			},
+			fetch: vi.fn(),
+			getClientAddress: () => '127.0.0.1',
+			locals: {
+				user: {
+					id: 0,
+					name: '',
+					email: ''
+				}
+			},
+			params: {},
+			platform: {},
+			route: { id: '/register' as const },
+			url,
+			setHeaders: vi.fn(),
+			isDataRequest: false,
+			isSubRequest: false
+		};
+	};
 
 	it('should register a new user when the email is unique', async () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
@@ -45,13 +82,15 @@ describe('POST /register endpoint', () => {
 
 		const reqPayload = createRegisterPayload();
 		const request = createRegisterRequest(reqPayload);
+		const event = createRegisterRequestEvent(request);
 
-		const response = await POST({ request });
-		const data = await response.json();
+		const result = await actions.default(event);
 
-		expect(response.status).toBe(201);
-		expect(data).toHaveProperty('message', 'User registered successfully');
-		expect(data).toHaveProperty('userId', mockUser.id);
+		expect(result).toEqual({
+			success: true,
+			message: 'User registered successfully',
+			userId: mockUser.id
+		});
 		expect(mockPasswordHash).toHaveBeenCalledWith(defaultPassword, 10);
 	});
 
@@ -66,12 +105,14 @@ describe('POST /register endpoint', () => {
 
 		const reqPayload = createRegisterPayload();
 		const request = createRegisterRequest(reqPayload);
+		const event = createRegisterRequestEvent(request);
 
-		const response = await POST({ request });
-		const data = await response.json();
+		const result = await actions.default(event);
 
-		expect(response.status).toBe(409);
-		expect(data).toHaveProperty('message', 'Email already registered');
+		expect(result).toEqual({
+			success: false,
+			message: 'Email already registered'
+		});
 	});
 
 	it('should return a 500 error when an exception is thrown', async () => {
@@ -81,11 +122,13 @@ describe('POST /register endpoint', () => {
 
 		const reqPayload = createRegisterPayload({ email: 'error@example.com', name: 'Error' });
 		const request = createRegisterRequest(reqPayload);
+		const event = createRegisterRequestEvent(request);
 
-		const response = await POST({ request });
-		const data = await response.json();
+		const result = await actions.default(event);
 
-		expect(response.status).toBe(500);
-		expect(data).toHaveProperty('message', 'Internal Server Error');
+		expect(result).toEqual({
+			success: false,
+			message: 'Failed to register'
+		});
 	});
 });

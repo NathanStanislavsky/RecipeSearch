@@ -59,7 +59,8 @@ test.describe('Complete user journey', () => {
 					title: '4-Ingredient Carrot Raisin Salad',
 					readyInMinutes: 15,
 					servings: 2,
-					sourceUrl: 'https://www.acedarspoon.com/4-ingredient-carrot-raisin-salad/'
+					sourceUrl: 'https://www.acedarspoon.com/4-ingredient-carrot-raisin-salad/',
+					id: 0
 				}
 			],
 			1000
