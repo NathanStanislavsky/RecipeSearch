@@ -13,7 +13,7 @@ import {
 import { createJsonResponse } from '$utils/api/apiUtils.js';
 
 /**
- * GET handler for the searchRecipes endpoint
+ * GET handler for the search endpoint
  * Searches for recipes based on provided ingredients
  * @param {Object} params - The request parameters
  * @param {URL} params.url - The request URL containing search parameters
@@ -62,7 +62,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		const finalResponse = await filterInformationBulkReponse(bulkResponse);
 		return finalResponse;
 	} catch (error) {
-		console.error('Error in searchRecipes endpoint:', error);
+		console.error('Error in search endpoint:', error);
 		return createJsonResponse(
 			{
 				error: 'Failed to search recipes',

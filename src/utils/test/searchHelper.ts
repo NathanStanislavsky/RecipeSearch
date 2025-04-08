@@ -24,7 +24,7 @@ export class SearchHelper {
 	}
 
 	async simulateApiResponse(responseBody: RecipeResponse | RecipeResponse[], delayMs: number = 0) {
-		await this.page.route('**/searchRecipes*', async (route) => {
+		await this.page.route('**/search*', async (route) => {
 			if (delayMs) {
 				await new Promise((resolve) => setTimeout(resolve, delayMs));
 			}

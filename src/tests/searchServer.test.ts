@@ -1,9 +1,9 @@
 import { describe, it, vi, afterEach } from 'vitest';
-import { GET } from '../routes/searchRecipes/+server.ts';
+import { GET } from '../routes/search/+server.ts';
 
 import { mockRequestEvent, assertResponse, createMockResponse } from '../utils/test/mockUtils.ts';
 
-describe('GET handler integration tests', () => {
+describe('Search server integration tests', () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
 	});

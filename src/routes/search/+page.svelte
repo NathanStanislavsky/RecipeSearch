@@ -19,7 +19,7 @@
 
 			isLoading = true;
 			hasSearched = true;
-			const response = await fetch(`/searchRecipes?ingredients=${ingredients}`);
+			const response = await fetch(`/search?ingredients=${ingredients}`);
 			const data = await response.json();
 			recipes = data;
 		} catch (error) {

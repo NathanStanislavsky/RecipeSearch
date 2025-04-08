@@ -15,7 +15,7 @@ describe('Page Integration Tests', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('calls searchRecipes when ingredients are provided', async () => {
+	it('calls search when ingredients are provided', async () => {
 		fetchSpy.mockResolvedValueOnce({
 			json: vi.fn().mockResolvedValueOnce({ success: true, data: ['recipe1', 'recipe2'] })
 		} as unknown as Response);
@@ -28,7 +28,7 @@ describe('Page Integration Tests', () => {
 		await fireEvent.input(input, { target: { value: 'chicken' } });
 		await fireEvent.click(button);
 
-		expect(fetchSpy).toHaveBeenCalledWith('/searchRecipes?ingredients=chicken');
+		expect(fetchSpy).toHaveBeenCalledWith('/search?ingredients=chicken');
 	});
 
 	it('does not call fetch when no ingredients are provided', async () => {
