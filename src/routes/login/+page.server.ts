@@ -1,9 +1,9 @@
 import type { Actions } from './$types.js';
 import { getUserByEmail } from '../../queries/user/select.js';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import type { JWTPayload } from '../../types/user.ts';
 import type { RequestEvent } from '@sveltejs/kit';
+import { AuthService } from '../../utils/auth/authService.ts';
+import { setAuthCookie } from '../../utils/cookieUtils.js';
+import { validateLoginForm } from '../../utils/formValidation.js';
 
 export const actions: Actions = {
 	default: async ({ request, cookies }: RequestEvent) => {
@@ -14,8 +14,9 @@ export const actions: Actions = {
 			const password = formData.get('password')?.toString() || '';
 
 			// Validate input
-			if (!email || !password) {
-				return { success: false, message: 'Email and password required' };
+			const validation = validateLoginForm(email, password);
+			if (!validation.isValid) {
+				return { success: false, message: validation.message };
 			}
 
 			// Look up the user by email
@@ -24,32 +25,19 @@ export const actions: Actions = {
 				return { success: false, message: 'Invalid credentials' };
 			}
 
-			// Compare the password with the stored hash
-			const passwordMatches = await bcrypt.compare(password, user.password);
-			if (!passwordMatches) {
+			// Validate credentials
+			const authService = AuthService.getInstance();
+			const isValid = await authService.validateCredentials(user, password);
+			if (!isValid) {
 				return { success: false, message: 'Invalid credentials' };
 			}
 
-			// Create the JWT payload and token
-			const payload: JWTPayload = {
-				userId: user.id,
-				email: user.email
-			};
+			// Create and set JWT token
+			const token = authService.createJwtToken(user);
+			setAuthCookie(cookies, token);
 
-			const jwtSecret = process.env.JWT_SECRET;
-			if (!jwtSecret) {
-				throw new Error('JWT_SECRET environment variable is not set');
-			}
-
-			const token = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
-
-			// Set the JWT cookie
-			cookies.set('jwt', token, {
-				httpOnly: true,
-				path: '/',
-				maxAge: 3600,
-				secure: true
-			});
+			// Return undefined on successful login
+			return undefined;
 		} catch (error) {
 			console.error(error);
 			return { success: false, message: 'Login failed' };
