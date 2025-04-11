@@ -2,8 +2,7 @@
 	import { page } from '$app/state';
 
 	export let user = page.data.user;
-
-	let currentPath = page.url.pathname || '';
+	export let currentPath = page.url.pathname || '';
 
 	async function handleLogout() {
 		try {
