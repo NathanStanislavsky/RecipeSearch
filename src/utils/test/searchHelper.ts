@@ -13,7 +13,9 @@ export class SearchHelper {
 	}
 
 	async fillSearchInput(value: string) {
-		const searchInput = this.page.locator('input[placeholder="Potatoes, carrots, beef..."]');
+		const searchInput = this.page.locator(
+			'input[placeholder="Enter ingredients separated by commas (e.g., tomato, basil, garlic)"]'
+		);
 		await searchInput.fill(value);
 		await expect(searchInput).toHaveValue(value);
 	}

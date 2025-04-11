@@ -10,7 +10,10 @@ describe('SearchBar Component', () => {
 		const searchBar = screen.getByRole('textbox');
 
 		expect(searchBar).toBeInTheDocument();
-		expect(searchBar).toHaveAttribute('placeholder', 'Potatoes, carrots, beef...');
+		expect(searchBar).toHaveAttribute(
+			'placeholder',
+			'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
+		);
 		expect(searchBar).toHaveValue('');
 	});
 

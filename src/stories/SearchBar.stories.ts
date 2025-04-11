@@ -18,7 +18,7 @@ const meta = {
 	},
 	args: {
 		ingredients: '',
-		placeholder: 'Potatoes, carrots, beef...'
+		placeholder: 'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
 	}
 } satisfies Meta<SearchBar>;
 
@@ -29,7 +29,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
 	args: {
 		ingredients: '',
-		placeholder: 'Potatoes, carrots, beef...'
+		placeholder: 'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
 	}
 };
 
@@ -37,11 +37,13 @@ export const Default: Story = {
 export const Focused: Story = {
 	args: {
 		ingredients: '',
-		placeholder: 'Potatoes, carrots, beef...'
+		placeholder: 'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
-		const input = canvas.getByPlaceholderText('Potatoes, carrots, beef...');
+		const input = canvas.getByPlaceholderText(
+			'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
+		);
 		input.focus();
 		await waitFor(() => expect(input).toHaveFocus());
 	}
@@ -51,11 +53,13 @@ export const Focused: Story = {
 export const Filled: Story = {
 	args: {
 		ingredients: 'Carrots',
-		placeholder: 'Potatoes, carrots, beef...'
+		placeholder: 'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
-		const input = canvas.getByPlaceholderText('Potatoes, carrots, beef...');
+		const input = canvas.getByPlaceholderText(
+			'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
+		);
 		await expect(input).toHaveValue('Carrots');
 	}
 };

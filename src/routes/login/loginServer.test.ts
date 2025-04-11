@@ -134,16 +134,12 @@ describe('/login endpoint', () => {
 		const event = createLoginRequestEvent(request);
 
 		await actions.default(event);
-		expect(event.cookies.set).toHaveBeenCalledWith(
-			'jwt',
-			expect.any(String),
-			{
-				path: '/',
-				httpOnly: true,
-				secure: true,
-				maxAge: 3600
-			}
-		);
+		expect(event.cookies.set).toHaveBeenCalledWith('jwt', expect.any(String), {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			maxAge: 3600
+		});
 	});
 
 	it('validates email format', async () => {

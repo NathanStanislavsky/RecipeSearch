@@ -38,10 +38,8 @@ describe('Search server integration tests', () => {
 	});
 
 	it('should return 500 if external API call times out', async () => {
-		vi.spyOn(global, 'fetch').mockImplementationOnce(() => 
-			new Promise((_, reject) => 
-				setTimeout(() => reject(new Error('Request timeout')), 100)
-			)
+		vi.spyOn(global, 'fetch').mockImplementationOnce(
+			() => new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 100))
 		);
 
 		const response = await GET(

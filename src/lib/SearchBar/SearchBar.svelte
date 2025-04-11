@@ -1,6 +1,7 @@
 <script lang="ts">
 	export let ingredients: string = '';
-	export let placeholder: string = 'Potatoes, carrots, beef...';
+	export let placeholder: string =
+		'Enter ingredients separated by commas (e.g., tomato, basil, garlic)';
 </script>
 
 <input
