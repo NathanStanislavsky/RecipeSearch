@@ -2,51 +2,35 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { actions } from './+page.server.js';
 import { mockRequestEvent } from '../../utils/test/mockUtils.js';
+import { TEST_USER } from '../../utils/test/testConstants.js';
+import { createFakeUser } from '../../utils/test/userTestUtils.js';
+import type { User } from '../../types/user.ts';
 
-type User = {
-	id: number;
-	name: string;
-	email: string;
+type LogoutRequestEvent = RequestEvent & {
+	route: { id: '/logout' };
 };
 
-interface LogoutRequestEvent extends RequestEvent {
-	route: {
-		id: '/logout';
-	};
-	locals: {
-		user: User;
-	};
-}
-
 describe('logout endpoint', () => {
-	const TEST_CONSTANTS = {
-		userId: 1,
-		name: 'Test User',
-		email: 'test@example.com',
-		baseUrl: 'http://localhost/logout'
-	} as const;
-
 	const createLogoutRequestEvent = (user?: User): LogoutRequestEvent => {
 		const formData = new FormData();
-		const request = new Request(TEST_CONSTANTS.baseUrl, {
+		const request = new Request('http://localhost/logout', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded'
 			},
 			body: formData
 		});
-		const event = mockRequestEvent(TEST_CONSTANTS.baseUrl) as LogoutRequestEvent;
+		const event = mockRequestEvent('http://localhost/logout', {
+			user: user || {
+				id: TEST_USER.userId,
+				name: TEST_USER.name,
+				email: TEST_USER.email
+			}
+		}) as LogoutRequestEvent;
 		return {
 			...event,
 			request,
-			route: { id: '/logout' },
-			locals: {
-				user: user || {
-					id: TEST_CONSTANTS.userId,
-					name: TEST_CONSTANTS.name,
-					email: TEST_CONSTANTS.email
-				}
-			}
+			route: { id: '/logout' }
 		};
 	};
 
@@ -98,7 +82,7 @@ describe('logout endpoint', () => {
 
 	it('handles different HTTP methods', async () => {
 		const event = createLogoutRequestEvent();
-		event.request = new Request(TEST_CONSTANTS.baseUrl, {
+		event.request = new Request('http://localhost/logout', {
 			method: 'GET'
 		});
 
@@ -111,11 +95,11 @@ describe('logout endpoint', () => {
 	});
 
 	it('handles missing user in locals', async () => {
-		const event = createLogoutRequestEvent({
-			id: 0,
-			name: '',
-			email: ''
-		});
+		const emptyUser = await createFakeUser();
+		emptyUser.id = 0;
+		emptyUser.name = '';
+		emptyUser.email = '';
+		const event = createLogoutRequestEvent(emptyUser);
 
 		await expect(actions.default(event)).rejects.toMatchObject({
 			status: 302,
