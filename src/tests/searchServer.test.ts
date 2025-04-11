@@ -10,8 +10,12 @@ describe('Search server integration tests', () => {
 
 	it('should return 400 if ingredients are missing', async () => {
 		const response = await GET(mockRequestEvent('http://localhost/api/getRecipe'));
+		await assertResponse(response, 400, { error: 'Missing required parameter: ingredients' });
+	});
 
-		assertResponse(response, 400, { error: 'Missing required parameter: ingredients' });
+	it('should return 400 if ingredients parameter is empty', async () => {
+		const response = await GET(mockRequestEvent('http://localhost/api/getRecipe?ingredients='));
+		await assertResponse(response, 400, { error: 'Missing required parameter: ingredients' });
 	});
 
 	it('should return 500 if external API call fails on ingredients search', async () => {
@@ -21,17 +25,45 @@ describe('Search server integration tests', () => {
 			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
 		);
 
-		assertResponse(response, 500, {
+		await assertResponse(response, 500, {
 			error: 'Failed to fetch data from RapidAPI',
 			message: '"External API error"',
 			status: 500
 		});
 	});
 
+	it('should return 500 if external API call times out', async () => {
+		vi.spyOn(global, 'fetch').mockImplementationOnce(() => 
+			new Promise((_, reject) => 
+				setTimeout(() => reject(new Error('Request timeout')), 100)
+			)
+		);
+
+		const response = await GET(
+			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
+		);
+
+		await assertResponse(response, 500, {
+			error: 'Failed to fetch recipes',
+			message: 'Request timeout'
+		});
+	});
+
 	it('should return 404 if no valid recipe IDs are found', async () => {
 		const mockRecipes = [{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }];
-
 		vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse(mockRecipes, 200));
+
+		const response = await GET(
+			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
+		);
+
+		await assertResponse(response, 404, {
+			error: 'No recipes found for the provided ingredients'
+		});
+	});
+
+	it('should return 404 if recipe data is empty', async () => {
+		vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse([], 200));
 
 		const response = await GET(
 			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
@@ -104,7 +136,7 @@ describe('Search server integration tests', () => {
 			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
 		);
 
-		assertResponse(response, 200, [
+		await assertResponse(response, 200, [
 			{
 				id: 1,
 				image: 'tomato_soup.jpg',
