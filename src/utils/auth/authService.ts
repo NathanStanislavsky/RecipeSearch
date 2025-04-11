@@ -143,4 +143,15 @@ export class AuthService {
 			secure: true
 		});
 	}
+	
+	public validateLoginForm = (email: string, password: string) => {
+		if (!email || !password) {
+			return {
+				isValid: false,
+				message: 'Email and password required'
+			};
+		}
+		return { isValid: true };
+	};
+	
 }
