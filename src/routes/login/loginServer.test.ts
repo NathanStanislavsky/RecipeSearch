@@ -14,6 +14,7 @@ type LoginRequestEvent = RequestEvent & {
 describe('/login endpoint', () => {
 	beforeAll(() => {
 		process.env.JWT_SECRET = 'test-secret';
+		process.env.NODE_ENV = 'test';
 	});
 
 	const TEST_CONSTANTS = {
@@ -106,5 +107,68 @@ describe('/login endpoint', () => {
 			success: false,
 			message: 'Invalid credentials'
 		});
+	});
+
+	it('handles database errors gracefully', async () => {
+		vi.spyOn(selectModule, 'getUserByEmail').mockRejectedValue(new Error('Database error'));
+		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
+		const event = createLoginRequestEvent(request);
+
+		const result = await actions.default(event);
+		expect(result).toEqual({
+			success: false,
+			message: 'Login failed'
+		});
+	});
+
+	it('sets auth cookie on successful login', async () => {
+		const fakeUser = await createFakeUser();
+		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
+
+		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
+		const event = createLoginRequestEvent(request);
+
+		await actions.default(event);
+		expect(event.cookies.set).toHaveBeenCalledWith(
+			'jwt',
+			expect.any(String),
+			{
+				path: '/',
+				httpOnly: true,
+				secure: true,
+				maxAge: 3600
+			}
+		);
+	});
+
+	it('validates email format', async () => {
+		const request = createLoginRequest('invalid-email', '');
+		const event = createLoginRequestEvent(request);
+
+		const result = await actions.default(event);
+		expect(result).toEqual({
+			success: false,
+			message: 'Email and password required'
+		});
+	});
+
+	it('handles concurrent login attempts', async () => {
+		const fakeUser = await createFakeUser();
+		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
+
+		const request1 = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
+		const request2 = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
+		const event1 = createLoginRequestEvent(request1);
+		const event2 = createLoginRequestEvent(request2);
+
+		const [result1, result2] = await Promise.all([
+			actions.default(event1),
+			actions.default(event2)
+		]);
+
+		expect(result1).toBeUndefined();
+		expect(result2).toBeUndefined();
+		expect(event1.cookies.set).toHaveBeenCalled();
+		expect(event2.cookies.set).toHaveBeenCalled();
 	});
 });
