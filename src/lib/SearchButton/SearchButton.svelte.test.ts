@@ -42,7 +42,7 @@ describe('SearchButton Component', () => {
 		render(SearchButton);
 		const defaultButton = screen.getByRole('button');
 		expect(defaultButton).toBeInTheDocument();
-		
+
 		expect(() => userEvent.click(defaultButton)).not.toThrow();
 	});
 

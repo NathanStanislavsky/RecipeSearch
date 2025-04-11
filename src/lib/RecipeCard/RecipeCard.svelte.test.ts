@@ -35,7 +35,7 @@ describe('RecipeCard', () => {
 		it('has proper accessibility attributes', () => {
 			const card = screen.getByRole('article');
 			expect(card).toHaveAttribute('aria-label', `Recipe card for ${recipe.title}`);
-			
+
 			const image = screen.getByRole('img');
 			expect(image).toHaveAttribute('alt', `Image of ${recipe.title}`);
 			expect(image).toHaveAttribute('loading', 'lazy');

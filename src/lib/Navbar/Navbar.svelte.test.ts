@@ -42,7 +42,7 @@ describe('navigation bar', () => {
 
 	describe('path-based rendering', () => {
 		const paths = ['/login', '/register', '/search'];
-		const testCases = paths.map(path => ({
+		const testCases = paths.map((path) => ({
 			path,
 			description: `hides auth links when on ${path} page`
 		}));

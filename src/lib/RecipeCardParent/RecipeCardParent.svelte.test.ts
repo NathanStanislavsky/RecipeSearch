@@ -55,7 +55,7 @@ describe('RecipeCardParent', () => {
 
 			const minutesSpan = screen.getByText(`${recipe.readyInMinutes} minutes`);
 			expect(minutesSpan).toHaveClass('font-semibold');
-			
+
 			expect(screen.getByText(`${recipe.servings} servings`)).toBeInTheDocument();
 		});
 	});
@@ -76,7 +76,7 @@ describe('RecipeCardParent', () => {
 
 	it('applies correct grid layout classes', () => {
 		const { container } = render(RecipeCardParent, { props: { recipes: mockRecipes } });
-		
+
 		const gridContainer = container.firstChild as HTMLElement;
 		expect(gridContainer).toHaveClass('grid');
 		expect(gridContainer).toHaveClass('grid-cols-1');
@@ -87,7 +87,7 @@ describe('RecipeCardParent', () => {
 
 	it('handles empty recipes array gracefully', () => {
 		render(RecipeCardParent, { props: { recipes: [] } });
-		
+
 		const recipeHeadings = screen.queryAllByRole('heading', { level: 2 });
 		expect(recipeHeadings).toHaveLength(0);
 	});
