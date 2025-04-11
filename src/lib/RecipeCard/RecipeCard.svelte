@@ -11,7 +11,7 @@
 	aria-label="Recipe card for {recipe.title}"
 >
 	{#if loading}
-		<div class="h-48 w-full animate-pulse bg-gray-200"></div>
+		<div data-testid="loading-placeholder" class="h-48 w-full animate-pulse bg-gray-200"></div>
 	{:else}
 		<img
 			class="h-48 w-full object-cover"
