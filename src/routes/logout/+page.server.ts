@@ -1,10 +1,12 @@
 import { redirect } from '@sveltejs/kit';
-import type { Actions } from './$types.js';
-import type { RequestEvent } from '@sveltejs/kit';
 
-export const actions: Actions = {
-	default: async ({ cookies }: RequestEvent) => {
-		cookies.delete('jwt', { path: '/' });
+export const actions = {
+	default: async (event) => {
+		try {
+			event.cookies.delete('jwt', { path: '/' });
+		} catch (error) {
+			console.error('Failed to delete jwt cookie', error);
+		}
 		throw redirect(302, '/');
 	}
 };
