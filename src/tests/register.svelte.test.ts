@@ -18,6 +18,7 @@ describe('RegisterForm Integration', () => {
 	let mockFetch: ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 		mockFetch = vi.fn();
 		global.fetch = mockFetch;
 

@@ -13,6 +13,7 @@ describe('RegisterForm Component', () => {
 		// Reset the mock before each test
 		mockFetch = vi.fn();
 		global.fetch = mockFetch;
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 		render(RegisterForm);
 	});
 

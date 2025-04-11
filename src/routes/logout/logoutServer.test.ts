@@ -52,6 +52,7 @@ describe('logout endpoint', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
 	it('deletes the jwt cookie and redirects to home', async () => {

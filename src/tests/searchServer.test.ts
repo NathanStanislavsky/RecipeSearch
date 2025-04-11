@@ -1,9 +1,14 @@
-import { describe, it, vi, afterEach } from 'vitest';
+import { describe, it, vi, afterEach, beforeEach } from 'vitest';
 import { GET } from '../routes/search/+server.ts';
 
 import { mockRequestEvent, assertResponse, createMockResponse } from '../utils/test/mockUtils.ts';
 
 describe('Search server integration tests', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+	});
+
 	afterEach(() => {
 		vi.restoreAllMocks();
 	});

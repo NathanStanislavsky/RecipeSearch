@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { actions } from './+page.server.js';
 import bcrypt from 'bcryptjs';
@@ -15,6 +15,11 @@ describe('/login endpoint', () => {
 	beforeAll(() => {
 		process.env.JWT_SECRET = 'test-secret';
 		process.env.NODE_ENV = 'test';
+	});
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
 	const TEST_CONSTANTS = {
