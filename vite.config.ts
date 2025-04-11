@@ -16,6 +16,9 @@ export default defineConfig({
 		},
 		extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.svelte']
 	},
+	optimizeDeps: {
+		exclude: ['chunk-OHR3ZO4N']
+	},
 
 	test: {
 		workspace: [
