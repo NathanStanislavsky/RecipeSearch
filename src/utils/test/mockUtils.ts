@@ -1,5 +1,6 @@
 import { expect, vi } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
+import { TEST_USER } from './testConstants.js';
 
 export function createMockResponse(
 	body: unknown,
@@ -23,18 +24,30 @@ export async function assertResponse<T>(
 	}
 }
 
-export function mockRequestEvent(urlString: string): RequestEvent {
+export function mockRequestEvent(
+	urlString: string,
+	options: {
+		user?: { id: number; name: string; email: string } | null;
+		cookies?: Record<string, string>;
+	} = {}
+): RequestEvent {
+	const defaultUser = {
+		id: TEST_USER.userId,
+		name: TEST_USER.name,
+		email: TEST_USER.email
+	};
+
 	return {
 		url: new URL(urlString),
 		fetch: global.fetch,
 		params: {},
 		request: new Request(urlString),
-		locals: { user: { id: 0, name: '', email: '' } },
+		locals: { user: options.user ?? defaultUser },
 		cookies: {
-			get: vi.fn(),
+			get: vi.fn((key) => options.cookies?.[key]),
 			set: vi.fn(),
 			delete: vi.fn(),
-			getAll: vi.fn(),
+			getAll: vi.fn(() => Object.entries(options.cookies || {}).map(([name, value]) => ({ name, value }))),
 			serialize: vi.fn()
 		},
 		platform: 'node'

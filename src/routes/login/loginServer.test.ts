@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { actions } from './+page.server.js';
-import bcrypt from 'bcryptjs';
 import * as selectModule from '../../queries/user/select.js';
 import { mockRequestEvent } from '../../utils/test/mockUtils.js';
-import type { User } from '../../types/user.ts';
+import { createFakeUser } from '../../utils/test/userTestUtils.js';
+import { TEST_USER } from '../../utils/test/testConstants.js';
 
 type LoginRequestEvent = RequestEvent & {
 	route: { id: '/login' };
-	locals: { user: { id: number; name: string; email: string } | null };
 };
 
 describe('/login endpoint', () => {
@@ -22,14 +21,6 @@ describe('/login endpoint', () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
-	const TEST_CONSTANTS = {
-		email: 'test@example.com',
-		correctPassword: 'correct-password',
-		wrongPassword: 'wrong-password',
-		name: 'Test User',
-		userId: 1
-	} as const;
-
 	const createLoginRequest = (email: string, password: string) => {
 		const formData = new FormData();
 		formData.append('email', email);
@@ -40,29 +31,12 @@ describe('/login endpoint', () => {
 		});
 	};
 
-	const createFakeUser = async (password = TEST_CONSTANTS.correctPassword): Promise<User> => {
-		const passwordHash = await bcrypt.hash(password, 10);
-		return {
-			id: TEST_CONSTANTS.userId,
-			email: TEST_CONSTANTS.email,
-			password: passwordHash,
-			name: TEST_CONSTANTS.name
-		};
-	};
-
 	const createLoginRequestEvent = (request: Request): LoginRequestEvent => {
 		const event = mockRequestEvent(request.url) as LoginRequestEvent;
 		return {
 			...event,
 			request,
-			route: { id: '/login' },
-			locals: {
-				user: {
-					id: TEST_CONSTANTS.userId,
-					name: TEST_CONSTANTS.name,
-					email: TEST_CONSTANTS.email
-				}
-			}
+			route: { id: '/login' }
 		};
 	};
 
@@ -70,7 +44,7 @@ describe('/login endpoint', () => {
 		const fakeUser = await createFakeUser();
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
-		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
+		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
 		const result = await actions.default(event);
@@ -90,7 +64,7 @@ describe('/login endpoint', () => {
 
 	it('returns error if user not found', async () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
-		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
+		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
 		const result = await actions.default(event);
@@ -104,7 +78,7 @@ describe('/login endpoint', () => {
 		const fakeUser = await createFakeUser();
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
-		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.wrongPassword);
+		const request = createLoginRequest(TEST_USER.email, TEST_USER.wrongPassword);
 		const event = createLoginRequestEvent(request);
 
 		const result = await actions.default(event);
@@ -116,7 +90,7 @@ describe('/login endpoint', () => {
 
 	it('handles database errors gracefully', async () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockRejectedValue(new Error('Database error'));
-		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
+		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
 		const result = await actions.default(event);
@@ -130,7 +104,7 @@ describe('/login endpoint', () => {
 		const fakeUser = await createFakeUser();
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
-		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
+		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
 		await actions.default(event);
@@ -157,8 +131,8 @@ describe('/login endpoint', () => {
 		const fakeUser = await createFakeUser();
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
-		const request1 = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
-		const request2 = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
+		const request1 = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
+		const request2 = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event1 = createLoginRequestEvent(request1);
 		const event2 = createLoginRequestEvent(request2);
 
