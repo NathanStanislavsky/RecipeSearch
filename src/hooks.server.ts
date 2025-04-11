@@ -1,4 +1,4 @@
-import { verifyToken } from '$utils/auth/auth.ts';
+import { AuthService } from '$utils/auth/authService.ts';
 import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 
@@ -12,10 +12,11 @@ const PROTECTED_ROUTES = ['/search'] as const;
  */
 export const handle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('jwt');
+	const authService = AuthService.getInstance();
 
 	if (token) {
 		try {
-			const decoded = verifyToken(token);
+			const decoded = authService.verifyToken(token);
 			event.locals.user = decoded;
 		} catch (error) {
 			console.error(
