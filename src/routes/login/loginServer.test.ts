@@ -67,7 +67,6 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(TEST_CONSTANTS.email, TEST_CONSTANTS.correctPassword);
 		const event = createLoginRequestEvent(request);
 
-		// Now, instead of expecting a thrown redirect, we expect the action to resolve with undefined.
 		const result = await actions.default(event);
 		expect(result).toBeUndefined();
 	});

@@ -1,9 +1,13 @@
-import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { describe, beforeEach, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import LoginForm from './LoginForm.svelte';
 import { userEvent } from '@storybook/test';
 
 describe('LoginForm Component', () => {
+	beforeAll(() => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+	});
+
 	beforeEach(() => {
 		render(LoginForm);
 	});
@@ -20,6 +24,15 @@ describe('LoginForm Component', () => {
 
 		expect(screen.getByLabelText(/email/i)).toBeInvalid();
 		expect(screen.getByLabelText(/password/i)).toBeInvalid();
+	});
+
+	it('validates email format', async () => {
+		const user = userEvent.setup();
+		await user.type(screen.getByLabelText(/email/i), 'invalid-email');
+		await user.type(screen.getByLabelText(/password/i), 'password123');
+		await user.click(screen.getByRole('button', { name: /login/i }));
+
+		expect(screen.getByLabelText(/email/i)).toBeInvalid();
 	});
 
 	it('shows loading state during submission', async () => {
@@ -47,6 +60,53 @@ describe('LoginForm Component', () => {
 		await waitFor(() => {
 			expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
 		});
+	});
+
+	it('shows generic error message on network error', async () => {
+		const user = userEvent.setup();
+		vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('Network error'));
+
+		await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+		await user.type(screen.getByLabelText(/password/i), 'password123');
+		await user.click(screen.getByRole('button', { name: /login/i }));
+
+		await waitFor(() => {
+			expect(screen.getByText('An error occurred during login')).toBeInTheDocument();
+		});
+	});
+
+	it('resets loading state after error', async () => {
+		const user = userEvent.setup();
+		vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('Network error'));
+
+		await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+		await user.type(screen.getByLabelText(/password/i), 'password123');
+		await user.click(screen.getByRole('button', { name: /login/i }));
+
+		await waitFor(() => {
+			expect(screen.getByRole('button')).not.toBeDisabled();
+			expect(screen.getByRole('button')).toHaveTextContent('Login');
+		});
+	});
+
+	it('submits correct form data', async () => {
+		const user = userEvent.setup();
+		const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+			new Response(JSON.stringify({ success: true }), { status: 200 })
+		);
+
+		await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+		await user.type(screen.getByLabelText(/password/i), 'password123');
+		await user.click(screen.getByRole('button', { name: /login/i }));
+
+		expect(mockFetch).toHaveBeenCalledWith('/login', {
+			method: 'POST',
+			body: expect.any(FormData)
+		});
+
+		const formData = (mockFetch.mock.calls[0][1] as { body: FormData }).body;
+		expect(formData.get('email')).toBe('test@example.com');
+		expect(formData.get('password')).toBe('password123');
 	});
 
 	it('redirects to /search on successful login', async () => {
