@@ -1,7 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/svelte';
 import Page from '../routes/search/+page.svelte';
+
+// Helper: Sets up the search form and returns key elements
+function setupSearchForm() {
+	render(Page);
+	const input = screen.getByRole('textbox');
+	const button = screen.getByRole('button', { name: /search/i });
+	return { input, button };
+}
+
+// Helper: Performs a search with given ingredients
+async function performSearch(input: HTMLElement, button: HTMLElement, ingredients: string) {
+	await fireEvent.input(input, { target: { value: ingredients } });
+	await fireEvent.click(button);
+}
 
 describe('Page Integration Tests', () => {
 	let fetchSpy: MockInstance<(input: RequestInfo, init?: RequestInit) => Promise<Response>>;
@@ -13,6 +27,7 @@ describe('Page Integration Tests', () => {
 
 	afterEach(() => {
 		vi.restoreAllMocks();
+		cleanup();
 	});
 
 	it('calls search when ingredients are provided', async () => {
@@ -20,13 +35,8 @@ describe('Page Integration Tests', () => {
 			json: vi.fn().mockResolvedValueOnce([{ title: 'Recipe 1' }, { title: 'Recipe 2' }])
 		} as unknown as Response);
 
-		render(Page);
-
-		const input = screen.getByRole('textbox');
-		const button = screen.getByRole('button', { name: /search/i });
-
-		await fireEvent.input(input, { target: { value: 'chicken' } });
-		await fireEvent.click(button);
+		const { input, button } = setupSearchForm();
+		await performSearch(input, button, 'chicken');
 
 		expect(fetchSpy).toHaveBeenCalledWith('/search?ingredients=chicken');
 	});
@@ -34,9 +44,7 @@ describe('Page Integration Tests', () => {
 	it('does not call fetch when no ingredients are provided', async () => {
 		fetchSpy.mockClear();
 
-		render(Page);
-
-		const button = screen.getByRole('button', { name: /search/i });
+		const { button } = setupSearchForm();
 		await fireEvent.click(button);
 
 		expect(fetchSpy).not.toHaveBeenCalled();
@@ -45,31 +53,34 @@ describe('Page Integration Tests', () => {
 	it('displays loading state while fetching', async () => {
 		fetchSpy.mockImplementation(() => new Promise(() => {}));
 
-		render(Page);
-
-		const input = screen.getByRole('textbox');
-		const button = screen.getByRole('button', { name: /search/i });
-
-		await fireEvent.input(input, { target: { value: 'chicken' } });
-		await fireEvent.click(button);
+		const { input, button } = setupSearchForm();
+		await performSearch(input, button, 'chicken');
 
 		expect(screen.getByText('Loading...')).toBeInTheDocument();
 	});
 
-	it('handles API errors gracefully', async () => {
-		fetchSpy.mockRejectedValueOnce(new Error('API Error'));
+	it('handles various error scenarios', async () => {
+		const errorScenarios = [
+			{
+				mock: () => fetchSpy.mockRejectedValueOnce(new Error('API Error')),
+				expectedText: 'No results'
+			},
+			{
+				mock: () => fetchSpy.mockRejectedValueOnce(new Error('Network error')),
+				expectedText: 'No results'
+			}
+		];
 
-		render(Page);
+		for (const scenario of errorScenarios) {
+			scenario.mock();
+			const { input, button } = setupSearchForm();
+			await performSearch(input, button, 'chicken');
 
-		const input = screen.getByRole('textbox');
-		const button = screen.getByRole('button', { name: /search/i });
-
-		await fireEvent.input(input, { target: { value: 'chicken' } });
-		await fireEvent.click(button);
-
-		await waitFor(() => {
-			expect(screen.getByText('No results')).toBeInTheDocument();
-		});
+			await waitFor(() => {
+				expect(screen.getByText(scenario.expectedText)).toBeInTheDocument();
+			});
+			cleanup();
+		}
 	});
 
 	it('displays search results correctly', async () => {
@@ -82,33 +93,12 @@ describe('Page Integration Tests', () => {
 			json: vi.fn().mockResolvedValueOnce(mockRecipes)
 		} as unknown as Response);
 
-		render(Page);
-
-		const input = screen.getByRole('textbox');
-		const button = screen.getByRole('button', { name: /search/i });
-
-		await fireEvent.input(input, { target: { value: 'chicken' } });
-		await fireEvent.click(button);
+		const { input, button } = setupSearchForm();
+		await performSearch(input, button, 'chicken');
 
 		await waitFor(() => {
 			expect(screen.getByText('Chicken Soup')).toBeInTheDocument();
 			expect(screen.getByText('Grilled Chicken')).toBeInTheDocument();
-		});
-	});
-
-	it('handles network errors gracefully', async () => {
-		fetchSpy.mockRejectedValueOnce(new Error('Network error'));
-
-		render(Page);
-
-		const input = screen.getByRole('textbox');
-		const button = screen.getByRole('button', { name: /search/i });
-
-		await fireEvent.input(input, { target: { value: 'chicken' } });
-		await fireEvent.click(button);
-
-		await waitFor(() => {
-			expect(screen.getByText('No results')).toBeInTheDocument();
 		});
 	});
 
@@ -117,13 +107,8 @@ describe('Page Integration Tests', () => {
 			json: vi.fn().mockResolvedValueOnce([])
 		} as unknown as Response);
 
-		render(Page);
-
-		const input = screen.getByRole('textbox');
-		const button = screen.getByRole('button', { name: /search/i });
-
-		await fireEvent.input(input, { target: { value: 'chicken' } });
-		await fireEvent.click(button);
+		const { input, button } = setupSearchForm();
+		await performSearch(input, button, 'chicken');
 
 		await waitFor(() => {
 			expect(screen.getByText('No results')).toBeInTheDocument();
@@ -135,13 +120,8 @@ describe('Page Integration Tests', () => {
 			json: vi.fn().mockResolvedValueOnce([{ title: 'Recipe 1' }])
 		} as unknown as Response);
 
-		render(Page);
-
-		const input = screen.getByRole('textbox');
-		const button = screen.getByRole('button', { name: /search/i });
-
-		await fireEvent.input(input, { target: { value: 'chicken, rice, vegetables' } });
-		await fireEvent.click(button);
+		const { input, button } = setupSearchForm();
+		await performSearch(input, button, 'chicken, rice, vegetables');
 
 		expect(fetchSpy).toHaveBeenCalledWith('/search?ingredients=chicken, rice, vegetables');
 	});
