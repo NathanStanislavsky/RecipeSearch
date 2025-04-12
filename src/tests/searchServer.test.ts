@@ -1,7 +1,22 @@
 import { describe, it, vi, afterEach, beforeEach } from 'vitest';
 import { GET } from '../routes/search/+server.ts';
-
 import { mockRequestEvent, assertResponse, createMockResponse } from '../utils/test/mockUtils.ts';
+
+// Helper: Creates a mock request event with ingredients
+function createMockRequest(ingredients: string) {
+	return mockRequestEvent(`http://localhost/api/getRecipe?ingredients=${ingredients}`);
+}
+
+// Helper: Sets up mock fetch with a single response
+function setupMockFetch(response: Response) {
+	vi.spyOn(global, 'fetch').mockResolvedValueOnce(response);
+}
+
+// Helper: Sets up mock fetch with multiple responses
+function setupMockFetchSequence(responses: Response[]) {
+	const spy = vi.spyOn(global, 'fetch');
+	responses.forEach(response => spy.mockResolvedValueOnce(response));
+}
 
 describe('Search server integration tests', () => {
 	beforeEach(() => {
@@ -13,68 +28,63 @@ describe('Search server integration tests', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('should return 400 if ingredients are missing', async () => {
-		const response = await GET(mockRequestEvent('http://localhost/api/getRecipe'));
-		await assertResponse(response, 400, { error: 'Missing required parameter: ingredients' });
+	it('should return 400 for invalid ingredient parameters', async () => {
+		const scenarios = [
+			{ url: 'http://localhost/api/getRecipe', expectedError: 'Missing required parameter: ingredients' },
+			{ url: 'http://localhost/api/getRecipe?ingredients=', expectedError: 'Missing required parameter: ingredients' }
+		];
+
+		for (const scenario of scenarios) {
+			const response = await GET(mockRequestEvent(scenario.url));
+			await assertResponse(response, 400, { error: scenario.expectedError });
+		}
 	});
 
-	it('should return 400 if ingredients parameter is empty', async () => {
-		const response = await GET(mockRequestEvent('http://localhost/api/getRecipe?ingredients='));
-		await assertResponse(response, 400, { error: 'Missing required parameter: ingredients' });
+	it('should handle various API error scenarios', async () => {
+		const errorScenarios = [
+			{
+				mock: () => setupMockFetch(createMockResponse('External API error', 500)),
+				expectedError: {
+					error: 'Failed to fetch data from RapidAPI',
+					message: '"External API error"',
+					status: 500
+				}
+			},
+			{
+				mock: () => vi.spyOn(global, 'fetch').mockImplementationOnce(
+					() => new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 100))
+				),
+				expectedError: {
+					error: 'Failed to fetch recipes',
+					message: 'Request timeout'
+				}
+			}
+		];
+
+		for (const scenario of errorScenarios) {
+			scenario.mock();
+			const response = await GET(createMockRequest('tomato,cheese'));
+			await assertResponse(response, 500, scenario.expectedError);
+		}
 	});
 
-	it('should return 500 if external API call fails on ingredients search', async () => {
-		vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse('External API error', 500));
+	it('should handle no results scenarios', async () => {
+		const noResultsScenarios = [
+			{
+				mock: () => setupMockFetch(createMockResponse([{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }], 200)),
+				expectedError: { error: 'No recipes found for the provided ingredients' }
+			},
+			{
+				mock: () => setupMockFetch(createMockResponse([], 200)),
+				expectedError: { error: 'No recipes found for the provided ingredients' }
+			}
+		];
 
-		const response = await GET(
-			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
-		);
-
-		await assertResponse(response, 500, {
-			error: 'Failed to fetch data from RapidAPI',
-			message: '"External API error"',
-			status: 500
-		});
-	});
-
-	it('should return 500 if external API call times out', async () => {
-		vi.spyOn(global, 'fetch').mockImplementationOnce(
-			() => new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 100))
-		);
-
-		const response = await GET(
-			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
-		);
-
-		await assertResponse(response, 500, {
-			error: 'Failed to fetch recipes',
-			message: 'Request timeout'
-		});
-	});
-
-	it('should return 404 if no valid recipe IDs are found', async () => {
-		const mockRecipes = [{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }];
-		vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse(mockRecipes, 200));
-
-		const response = await GET(
-			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
-		);
-
-		await assertResponse(response, 404, {
-			error: 'No recipes found for the provided ingredients'
-		});
-	});
-
-	it('should return 404 if recipe data is empty', async () => {
-		vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse([], 200));
-
-		const response = await GET(
-			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
-		);
-
-		await assertResponse(response, 404, {
-			error: 'No recipes found for the provided ingredients'
-		});
+		for (const scenario of noResultsScenarios) {
+			scenario.mock();
+			const response = await GET(createMockRequest('tomato,cheese'));
+			await assertResponse(response, 404, scenario.expectedError);
+		}
 	});
 
 	it('should return error response if fetching bulk recipe details fails', async () => {
@@ -84,18 +94,15 @@ describe('Search server integration tests', () => {
 		];
 		const errorText = 'Bulk API error';
 
-		vi.spyOn(global, 'fetch')
-			.mockResolvedValueOnce(createMockResponse(mockIngredientsRecipes, 200))
-			.mockResolvedValueOnce(
-				new Response(errorText, {
-					status: 500,
-					headers: { 'Content-Type': 'text/plain' }
-				})
-			);
+		setupMockFetchSequence([
+			createMockResponse(mockIngredientsRecipes, 200),
+			new Response(errorText, {
+				status: 500,
+				headers: { 'Content-Type': 'text/plain' }
+			})
+		]);
 
-		const response = await GET(
-			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
-		);
+		const response = await GET(createMockRequest('tomato,cheese'));
 
 		await assertResponse(response, 500, {
 			error: 'Failed to fetch data from RapidAPI',
@@ -131,13 +138,12 @@ describe('Search server integration tests', () => {
 			}
 		];
 
-		vi.spyOn(global, 'fetch')
-			.mockResolvedValueOnce(createMockResponse(mockIngredientsRecipes, 200))
-			.mockResolvedValueOnce(createMockResponse(mockDetailedRecipes, 200));
+		setupMockFetchSequence([
+			createMockResponse(mockIngredientsRecipes, 200),
+			createMockResponse(mockDetailedRecipes, 200)
+		]);
 
-		const response = await GET(
-			mockRequestEvent('http://localhost/api/getRecipe?ingredients=tomato,cheese')
-		);
+		const response = await GET(createMockRequest('tomato,cheese'));
 
 		await assertResponse(response, 200, [
 			{
