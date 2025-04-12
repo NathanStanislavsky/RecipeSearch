@@ -4,20 +4,13 @@ import { actions } from './+page.server.js';
 import * as selectModule from '../../queries/user/select.js';
 import * as insertModule from '../../queries/user/insert.js';
 import { mockRequestEvent } from '../../utils/test/mockUtils.js';
+import { createFormDataRequest } from '../../utils/test/createTestRequestUtils.js';
+import { TEST_USER } from '../../utils/test/testConstants.js';
 import type { User, RegisterPayload } from '../../types/user.ts';
 import type { RequestEvent } from '@sveltejs/kit';
 
 type RegisterRequestEvent = RequestEvent & {
-	route: {
-		id: '/register';
-	};
-	locals: {
-		user: {
-			id: number;
-			name: string;
-			email: string;
-		};
-	};
+	route: { id: '/register' };
 };
 
 const createRegisterRequest = (payload: RegisterPayload) => {
@@ -25,10 +18,7 @@ const createRegisterRequest = (payload: RegisterPayload) => {
 	formData.append('email', payload.email);
 	formData.append('password', payload.password);
 	formData.append('name', payload.name);
-	return new Request('http://localhost/register', {
-		method: 'POST',
-		body: formData
-	});
+	return createFormDataRequest('http://localhost/register', 'POST', formData);
 };
 
 describe('POST /register endpoint', () => {
@@ -40,17 +30,10 @@ describe('POST /register endpoint', () => {
 		vi.clearAllMocks();
 	});
 
-	const TEST_CONSTANTS = {
-		email: 'test@example.com',
-		password: 'password123',
-		name: 'Test User',
-		userId: 1
-	} as const;
-
 	const createRegisterPayload = (overrides: Partial<RegisterPayload> = {}): RegisterPayload => ({
-		email: TEST_CONSTANTS.email,
-		password: TEST_CONSTANTS.password,
-		name: TEST_CONSTANTS.name,
+		email: TEST_USER.email,
+		password: TEST_USER.correctPassword,
+		name: TEST_USER.name,
 		...overrides
 	});
 
@@ -59,14 +42,7 @@ describe('POST /register endpoint', () => {
 		return {
 			...event,
 			request,
-			route: { id: '/register' },
-			locals: {
-				user: {
-					id: 0,
-					name: '',
-					email: ''
-				}
-			}
+			route: { id: '/register' }
 		};
 	};
 
@@ -74,10 +50,10 @@ describe('POST /register endpoint', () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
 
 		const mockUser: User = {
-			id: TEST_CONSTANTS.userId,
-			email: TEST_CONSTANTS.email,
+			id: TEST_USER.userId,
+			email: TEST_USER.email,
 			password: 'hashedPassword',
-			name: TEST_CONSTANTS.name
+			name: TEST_USER.name
 		};
 		vi.spyOn(insertModule, 'createUser').mockResolvedValue(mockUser);
 		const mockPasswordHash = vi
@@ -94,15 +70,15 @@ describe('POST /register endpoint', () => {
 			message: 'User registered successfully',
 			userId: mockUser.id
 		});
-		expect(mockPasswordHash).toHaveBeenCalledWith(TEST_CONSTANTS.password, 10);
+		expect(mockPasswordHash).toHaveBeenCalledWith(TEST_USER.correctPassword, 10);
 	});
 
 	it('should return an error when the user already exists', async () => {
 		const existingUser: User = {
-			id: TEST_CONSTANTS.userId,
-			email: TEST_CONSTANTS.email,
+			id: TEST_USER.userId,
+			email: TEST_USER.email,
 			password: 'hashedPassword',
-			name: TEST_CONSTANTS.name
+			name: TEST_USER.name
 		};
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(existingUser);
 
