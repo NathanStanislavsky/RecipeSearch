@@ -8,9 +8,8 @@ export function createMockResponse(
 	headers: Record<string, string> = {}
 ): Response {
 	const defaultHeaders = {
-		'Content-Type': typeof body === 'string' || body instanceof FormData
-			? 'text/plain'
-			: 'application/json'
+		'Content-Type':
+			typeof body === 'string' || body instanceof FormData ? 'text/plain' : 'application/json'
 	};
 	const finalHeaders = { ...defaultHeaders, ...headers };
 	const responseBody = body instanceof FormData ? body : JSON.stringify(body);
@@ -54,7 +53,9 @@ export function mockRequestEvent(
 			get: vi.fn((key) => options.cookies?.[key]),
 			set: vi.fn(),
 			delete: vi.fn(),
-			getAll: vi.fn(() => Object.entries(options.cookies || {}).map(([name, value]) => ({ name, value }))),
+			getAll: vi.fn(() =>
+				Object.entries(options.cookies || {}).map(([name, value]) => ({ name, value }))
+			),
 			serialize: vi.fn()
 		},
 		platform: 'node'

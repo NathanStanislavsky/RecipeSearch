@@ -143,7 +143,7 @@ export class AuthService {
 			secure: true
 		});
 	}
-	
+
 	public validateLoginForm = (email: string, password: string) => {
 		if (!email || !password) {
 			return {
@@ -153,5 +153,4 @@ export class AuthService {
 		}
 		return { isValid: true };
 	};
-	
 }

@@ -15,7 +15,7 @@ function setupMockFetch(response: Response) {
 // Helper: Sets up mock fetch with multiple responses
 function setupMockFetchSequence(responses: Response[]) {
 	const spy = vi.spyOn(global, 'fetch');
-	responses.forEach(response => spy.mockResolvedValueOnce(response));
+	responses.forEach((response) => spy.mockResolvedValueOnce(response));
 }
 
 describe('Search server integration tests', () => {
@@ -30,8 +30,14 @@ describe('Search server integration tests', () => {
 
 	it('should return 400 for invalid ingredient parameters', async () => {
 		const scenarios = [
-			{ url: 'http://localhost/api/getRecipe', expectedError: 'Missing required parameter: ingredients' },
-			{ url: 'http://localhost/api/getRecipe?ingredients=', expectedError: 'Missing required parameter: ingredients' }
+			{
+				url: 'http://localhost/api/getRecipe',
+				expectedError: 'Missing required parameter: ingredients'
+			},
+			{
+				url: 'http://localhost/api/getRecipe?ingredients=',
+				expectedError: 'Missing required parameter: ingredients'
+			}
 		];
 
 		for (const scenario of scenarios) {
@@ -51,9 +57,15 @@ describe('Search server integration tests', () => {
 				}
 			},
 			{
-				mock: () => vi.spyOn(global, 'fetch').mockImplementationOnce(
-					() => new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 100))
-				),
+				mock: () =>
+					vi
+						.spyOn(global, 'fetch')
+						.mockImplementationOnce(
+							() =>
+								new Promise((_, reject) =>
+									setTimeout(() => reject(new Error('Request timeout')), 100)
+								)
+						),
 				expectedError: {
 					error: 'Failed to fetch recipes',
 					message: 'Request timeout'
@@ -71,7 +83,10 @@ describe('Search server integration tests', () => {
 	it('should handle no results scenarios', async () => {
 		const noResultsScenarios = [
 			{
-				mock: () => setupMockFetch(createMockResponse([{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }], 200)),
+				mock: () =>
+					setupMockFetch(
+						createMockResponse([{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }], 200)
+					),
 				expectedError: { error: 'No recipes found for the provided ingredients' }
 			},
 			{

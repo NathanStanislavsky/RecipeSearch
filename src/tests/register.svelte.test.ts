@@ -15,7 +15,10 @@ function setup() {
 }
 
 // Fills in the registration form with test data
-async function fillRegistrationForm(user: ReturnType<typeof userEvent.setup>, elements: ReturnType<typeof setup>) {
+async function fillRegistrationForm(
+	user: ReturnType<typeof userEvent.setup>,
+	elements: ReturnType<typeof setup>
+) {
 	const { nameInput, emailInput, passwordInput } = elements;
 	await user.type(nameInput, 'TestUser');
 	await user.type(emailInput, 'test@example.com');
