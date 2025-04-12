@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { render, screen, waitFor, cleanup } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -12,6 +12,29 @@ function setup() {
 	const passwordInput = screen.getByLabelText(/password/i);
 	const registerButton = screen.getByRole('button', { name: /register/i });
 	return { nameInput, emailInput, passwordInput, registerButton };
+}
+
+// Fills in the registration form with test data
+async function fillRegistrationForm(user: ReturnType<typeof userEvent.setup>, elements: ReturnType<typeof setup>) {
+	const { nameInput, emailInput, passwordInput } = elements;
+	await user.type(nameInput, 'TestUser');
+	await user.type(emailInput, 'test@example.com');
+	await user.type(passwordInput, 'password123');
+}
+
+// Tests error scenarios with a given response
+async function testErrorScenario(
+	user: ReturnType<typeof userEvent.setup>,
+	mockResponse: Response,
+	expectedErrorMessage: string | RegExp
+) {
+	const elements = setup();
+	await fillRegistrationForm(user, elements);
+	await user.click(elements.registerButton);
+
+	await waitFor(() => {
+		expect(screen.getByText(expectedErrorMessage)).toBeInTheDocument();
+	});
 }
 
 describe('RegisterForm Integration', () => {
@@ -36,6 +59,7 @@ describe('RegisterForm Integration', () => {
 
 	afterEach(() => {
 		vi.resetAllMocks();
+		cleanup();
 	});
 
 	it('handles successful registration', async () => {
@@ -43,12 +67,9 @@ describe('RegisterForm Integration', () => {
 		const fakeResponse = { message: 'User registered successfully', userId: 1 };
 		mockFetch.mockResolvedValueOnce(createMockResponse(fakeResponse, 201));
 
-		const { nameInput, emailInput, passwordInput, registerButton } = setup();
-
-		await user.type(nameInput, 'TestUser');
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'password123');
-		await user.click(registerButton);
+		const elements = setup();
+		await fillRegistrationForm(user, elements);
+		await user.click(elements.registerButton);
 
 		await waitFor(() => {
 			expect(screen.getByText(/User registered successfully/i)).toBeInTheDocument();
@@ -57,81 +78,57 @@ describe('RegisterForm Integration', () => {
 		expect(window.location.href).toBe('/login');
 	});
 
-	it('handles duplicate email error', async () => {
+	it('handles various error scenarios', async () => {
 		const user = userEvent.setup();
-		mockFetch.mockResolvedValueOnce(
-			createMockResponse({ message: 'Email already registered' }, 409)
-		);
+		const errorScenarios = [
+			{
+				response: createMockResponse({ message: 'Email already registered' }, 409),
+				errorMessage: /Email already registered/i
+			},
+			{
+				response: createMockResponse({ message: 'Internal Server Error' }, 500),
+				errorMessage: /Internal Server Error/i
+			}
+		];
 
-		const { nameInput, emailInput, passwordInput, registerButton } = setup();
-
-		await user.type(nameInput, 'TestUser');
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'password123');
-		await user.click(registerButton);
-
-		await waitFor(() => {
-			expect(screen.getByText(/Email already registered/i)).toBeInTheDocument();
-		});
-	});
-
-	it('handles server errors gracefully', async () => {
-		const user = userEvent.setup();
-		mockFetch.mockResolvedValueOnce(createMockResponse({ message: 'Internal Server Error' }, 500));
-
-		const { nameInput, emailInput, passwordInput, registerButton } = setup();
-
-		await user.type(nameInput, 'TestUser');
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'password123');
-		await user.click(registerButton);
-
-		await waitFor(() => {
-			expect(screen.getByText(/Internal Server Error/i)).toBeInTheDocument();
-		});
+		for (const scenario of errorScenarios) {
+			mockFetch.mockResolvedValueOnce(scenario.response);
+			await testErrorScenario(user, scenario.response, scenario.errorMessage);
+			cleanup();
+			vi.clearAllMocks();
+		}
 	});
 
 	it('handles network errors gracefully', async () => {
 		const user = userEvent.setup();
 		mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-		const { nameInput, emailInput, passwordInput, registerButton } = setup();
-
-		await user.type(nameInput, 'TestUser');
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'password123');
-		await user.click(registerButton);
+		const elements = setup();
+		await fillRegistrationForm(user, elements);
+		await user.click(elements.registerButton);
 
 		await waitFor(() => {
 			expect(screen.getByText(/Internal Server Error/i)).toBeInTheDocument();
 		});
 	});
 
-	it('displays validation errors for missing fields', async () => {
+	it('validates form inputs', async () => {
 		const user = userEvent.setup();
-		const { registerButton } = setup();
+		const elements = setup();
 
-		// Submit the form without filling any fields
-		await user.click(registerButton);
-
-		// Wait for validation to be triggered
+		// Test missing fields
+		await user.click(elements.registerButton);
 		await waitFor(() => {
-			expect(screen.getByLabelText(/username/i)).toBeInvalid();
-			expect(screen.getByLabelText(/email/i)).toBeInvalid();
-			expect(screen.getByLabelText(/password/i)).toBeInvalid();
+			expect(elements.nameInput).toBeInvalid();
+			expect(elements.emailInput).toBeInvalid();
+			expect(elements.passwordInput).toBeInvalid();
 		});
-	});
 
-	it('validates email format', async () => {
-		const user = userEvent.setup();
-		const { emailInput, registerButton } = setup();
-
-		await user.type(emailInput, 'invalid-email');
-		await user.click(registerButton);
-
-		// Wait for validation to be triggered
+		// Test invalid email format
+		await user.type(elements.emailInput, 'invalid-email');
+		await user.click(elements.registerButton);
 		await waitFor(() => {
-			expect(emailInput).toBeInvalid();
+			expect(elements.emailInput).toBeInvalid();
 		});
 	});
 });
