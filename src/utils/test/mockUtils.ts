@@ -5,9 +5,16 @@ import { TEST_USER } from './testConstants.js';
 export function createMockResponse(
 	body: unknown,
 	status: number,
-	headers = { 'Content-Type': 'application/json' }
+	headers: Record<string, string> = {}
 ): Response {
-	return new Response(JSON.stringify(body), { status, headers });
+	const defaultHeaders = {
+		'Content-Type': typeof body === 'string' || body instanceof FormData
+			? 'text/plain'
+			: 'application/json'
+	};
+	const finalHeaders = { ...defaultHeaders, ...headers };
+	const responseBody = body instanceof FormData ? body : JSON.stringify(body);
+	return new Response(responseBody, { status, headers: finalHeaders });
 }
 
 export async function assertResponse<T>(

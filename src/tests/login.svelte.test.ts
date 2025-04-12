@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event';
 import LoginForm from '$lib/LoginForm/LoginForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createMockResponse } from '../utils/test/mockUtils.js';
+import { TEST_USER } from '../utils/test/testConstants.js';
 
 // Helper: Render component and return key elements.
 function setup() {
@@ -44,8 +45,8 @@ describe('LoginForm Integration', () => {
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'correct-password');
+		await user.type(emailInput, TEST_USER.email);
+		await user.type(passwordInput, TEST_USER.correctPassword);
 		await user.click(loginButton);
 
 		await waitFor(() => {
@@ -60,8 +61,8 @@ describe('LoginForm Integration', () => {
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'correct-password');
+		await user.type(emailInput, TEST_USER.email);
+		await user.type(passwordInput, TEST_USER.correctPassword);
 		await user.click(loginButton);
 
 		expect(loginButton).toBeDisabled();
@@ -70,12 +71,13 @@ describe('LoginForm Integration', () => {
 
 	it('handles invalid credentials', async () => {
 		const user = userEvent.setup();
-		mockFetch.mockResolvedValueOnce(createMockResponse({ message: 'Invalid credentials' }, 401));
+		const errorResponse = { success: false, message: 'Invalid credentials' };
+		mockFetch.mockResolvedValueOnce(createMockResponse(errorResponse, 401));
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'wrong-password');
+		await user.type(emailInput, TEST_USER.email);
+		await user.type(passwordInput, TEST_USER.wrongPassword);
 		await user.click(loginButton);
 
 		await waitFor(() => {
@@ -85,12 +87,13 @@ describe('LoginForm Integration', () => {
 
 	it('handles server errors gracefully', async () => {
 		const user = userEvent.setup();
-		mockFetch.mockResolvedValueOnce(createMockResponse({ message: 'Internal Server Error' }, 500));
+		const errorResponse = { success: false, message: 'Internal Server Error' };
+		mockFetch.mockResolvedValueOnce(createMockResponse(errorResponse, 500));
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'correct-password');
+		await user.type(emailInput, TEST_USER.email);
+		await user.type(passwordInput, TEST_USER.correctPassword);
 		await user.click(loginButton);
 
 		await waitFor(() => {
@@ -104,8 +107,8 @@ describe('LoginForm Integration', () => {
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'correct-password');
+		await user.type(emailInput, TEST_USER.email);
+		await user.type(passwordInput, TEST_USER.correctPassword);
 		await user.click(loginButton);
 
 		await waitFor(() => {
@@ -139,13 +142,14 @@ describe('LoginForm Integration', () => {
 
 	it('clears error message when form is resubmitted', async () => {
 		const user = userEvent.setup();
-		mockFetch.mockResolvedValueOnce(createMockResponse({ message: 'Invalid credentials' }, 401));
+		const errorResponse = { success: false, message: 'Invalid credentials' };
+		mockFetch.mockResolvedValueOnce(createMockResponse(errorResponse, 401));
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
 		// First attempt with invalid credentials
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'wrong-password');
+		await user.type(emailInput, TEST_USER.email);
+		await user.type(passwordInput, TEST_USER.wrongPassword);
 		await user.click(loginButton);
 
 		await waitFor(() => {
@@ -155,8 +159,8 @@ describe('LoginForm Integration', () => {
 		// Clear inputs and try again
 		await user.clear(emailInput);
 		await user.clear(passwordInput);
-		await user.type(emailInput, 'test@example.com');
-		await user.type(passwordInput, 'correct-password');
+		await user.type(emailInput, TEST_USER.email);
+		await user.type(passwordInput, TEST_USER.correctPassword);
 		await user.click(loginButton);
 
 		await waitFor(() => {
