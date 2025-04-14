@@ -49,7 +49,15 @@ describe('RecipeCard', () => {
 
 		it('applies correct styling to the card', () => {
 			const card = screen.getByRole('article');
-			expect(card).toHaveClass('max-w-sm', 'overflow-hidden', 'rounded', 'bg-white', 'shadow-lg', 'transition-transform', 'hover:scale-105');
+			expect(card).toHaveClass(
+				'max-w-sm',
+				'overflow-hidden',
+				'rounded',
+				'bg-white',
+				'shadow-lg',
+				'transition-transform',
+				'hover:scale-105'
+			);
 		});
 
 		it('applies correct styling to the image', () => {
@@ -59,7 +67,22 @@ describe('RecipeCard', () => {
 
 		it('applies correct styling to the link', () => {
 			const link = screen.getByRole('link', { name: /view recipe/i });
-			expect(link).toHaveClass('block', 'rounded', 'bg-blue-500', 'px-4', 'py-2', 'text-center', 'font-bold', 'text-white', 'transition-colors', 'hover:bg-blue-700', 'focus:ring-2', 'focus:ring-blue-500', 'focus:ring-offset-2', 'focus:outline-none');
+			expect(link).toHaveClass(
+				'block',
+				'rounded',
+				'bg-blue-500',
+				'px-4',
+				'py-2',
+				'text-center',
+				'font-bold',
+				'text-white',
+				'transition-colors',
+				'hover:bg-blue-700',
+				'focus:ring-2',
+				'focus:ring-blue-500',
+				'focus:ring-offset-2',
+				'focus:outline-none'
+			);
 		});
 
 		it('handles image loading error', async () => {
@@ -118,7 +141,12 @@ describe('RecipeCard', () => {
 
 		it('applies focus styles to the link', () => {
 			const link = screen.getByRole('link', { name: /view recipe/i });
-			expect(link).toHaveClass('focus:ring-2', 'focus:ring-blue-500', 'focus:ring-offset-2', 'focus:outline-none');
+			expect(link).toHaveClass(
+				'focus:ring-2',
+				'focus:ring-blue-500',
+				'focus:ring-offset-2',
+				'focus:outline-none'
+			);
 		});
 	});
 });

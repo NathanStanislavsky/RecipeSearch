@@ -51,7 +51,9 @@ describe('SearchButton Component', () => {
 
 		it('should handle rapid clicks', async () => {
 			const user = userEvent.setup();
-			const clickPromises = Array(5).fill(null).map(() => user.click(button));
+			const clickPromises = Array(5)
+				.fill(null)
+				.map(() => user.click(button));
 			await Promise.all(clickPromises);
 			expect(onClickMock).toHaveBeenCalledTimes(5);
 		});
