@@ -64,16 +64,19 @@ export const Default: Story = {
 		const canvas = within(canvasElement);
 		const recipeCards = canvas.getAllByRole('article');
 		await expect(recipeCards).toHaveLength(2);
-		
+
 		// Verify each card has the expected content
 		recipeCards.forEach(async (card) => {
 			const title = within(card).getByText('Chili Stuffed Potatoes');
 			const image = within(card).getByRole('img');
 			const time = within(card).getByText('45 min');
 			const servings = within(card).getByText('1 serving');
-			
+
 			await expect(title).toBeInTheDocument();
-			await expect(image).toHaveAttribute('src', 'https://img.spoonacular.com/recipes/1421065-556x370.jpeg');
+			await expect(image).toHaveAttribute(
+				'src',
+				'https://img.spoonacular.com/recipes/1421065-556x370.jpeg'
+			);
 			await expect(time).toBeInTheDocument();
 			await expect(servings).toBeInTheDocument();
 		});

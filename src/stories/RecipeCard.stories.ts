@@ -57,9 +57,12 @@ export const Default: Story = {
 		const image = canvas.getByRole('img');
 		const time = canvas.getByText('15 min');
 		const servings = canvas.getByText('4 servings');
-		
+
 		await expect(title).toBeInTheDocument();
-		await expect(image).toHaveAttribute('src', 'https://img.spoonacular.com/recipes/987-556x370.jpg');
+		await expect(image).toHaveAttribute(
+			'src',
+			'https://img.spoonacular.com/recipes/987-556x370.jpg'
+		);
 		await expect(time).toBeInTheDocument();
 		await expect(servings).toBeInTheDocument();
 	}
@@ -81,7 +84,7 @@ export const Interactive: Story = {
 		const canvas = within(canvasElement);
 		const titleElement = canvas.getByText('Sea Bass and Cucumbers in Champagne Sauce');
 		const linkElement = canvas.getByRole('link', { name: /view recipe/i });
-		
+
 		await waitFor(() => expect(titleElement).toBeInTheDocument());
 		await waitFor(() =>
 			expect(linkElement).toHaveAttribute(

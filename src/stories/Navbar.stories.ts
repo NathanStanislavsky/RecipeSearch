@@ -36,7 +36,7 @@ export const LoggedOut: Story = {
 		const canvas = within(canvasElement);
 		const registerButton = canvas.getByRole('button', { name: /register/i });
 		const loginLink = canvas.getByRole('link', { name: /log in/i });
-		
+
 		await expect(registerButton).toBeInTheDocument();
 		await expect(loginLink).toBeInTheDocument();
 	}
@@ -50,7 +50,7 @@ export const LoggedIn: Story = {
 		const canvas = within(canvasElement);
 		const userMenu = canvas.getByText('Test User');
 		const logoutButton = canvas.getByRole('button', { name: /logout/i });
-		
+
 		await expect(userMenu).toBeInTheDocument();
 		await expect(logoutButton).toBeInTheDocument();
 	}

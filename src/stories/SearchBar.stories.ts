@@ -40,7 +40,10 @@ export const Default: Story = {
 		const canvas = within(canvasElement);
 		const input = canvas.getByRole('textbox');
 		await expect(input).toHaveValue('');
-		await expect(input).toHaveAttribute('placeholder', 'Enter ingredients separated by commas (e.g., tomato, basil, garlic)');
+		await expect(input).toHaveAttribute(
+			'placeholder',
+			'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
+		);
 	}
 };
 
