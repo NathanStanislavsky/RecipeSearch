@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import Navbar from '$lib/Navbar/Navbar.svelte';
 import { createMockResponse } from '../../utils/test/mockUtils.js';
+import { createFakeUser } from '../../utils/test/userTestUtils.js';
 
 describe('navigation bar', () => {
 	beforeEach(() => {
@@ -31,12 +32,31 @@ describe('navigation bar', () => {
 			expect(screen.queryByRole('button', { name: /logout/i })).not.toBeInTheDocument();
 		});
 
-		it('shows logout button when user is logged in', () => {
-			render(Navbar, { user: { id: 1, email: 'test@example.com' } });
+		it('shows logout button when user is logged in', async () => {
+			const mockUser = await createFakeUser();
+			render(Navbar, { user: mockUser });
 
 			expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
 			expect(screen.queryByRole('button', { name: /register/i })).not.toBeInTheDocument();
 			expect(screen.queryByRole('link', { name: /sign in/i })).not.toBeInTheDocument();
+		});
+
+		it('applies correct styling to navigation elements', () => {
+			render(Navbar);
+			const nav = screen.getByRole('navigation');
+			expect(nav).toHaveClass(
+				'fixed',
+				'top-0',
+				'z-50',
+				'flex',
+				'h-16',
+				'items-center',
+				'border-b',
+				'border-gray-200',
+				'bg-white',
+				'px-6',
+				'font-serif'
+			);
 		});
 	});
 
@@ -55,10 +75,42 @@ describe('navigation bar', () => {
 				expect(screen.queryByRole('link', { name: /sign in/i })).not.toBeInTheDocument();
 			});
 		});
+
+		describe('shows auth links when on non-auth pages', () => {
+			const nonAuthPaths = ['/'];
+
+			nonAuthPaths.forEach((path) => {
+				it(`shows auth links on the "${path}" page`, () => {
+					render(Navbar, { user: null, currentPath: path });
+					expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
+					expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
+				});
+			});
+		});
+	});
+
+	describe('navigation functionality', () => {
+		it('navigates to register page when register button is clicked', () => {
+			render(Navbar, { user: null, currentPath: '/' });
+			const registerButton = screen.getByRole('button', { name: /register/i });
+			expect(registerButton.closest('a')).toHaveAttribute('href', '/register');
+		});
+
+		it('navigates to login page when sign in link is clicked', () => {
+			render(Navbar, { user: null, currentPath: '/' });
+			const signInLink = screen.getByRole('link', { name: /sign in/i });
+			expect(signInLink).toHaveAttribute('href', '/login');
+		});
 	});
 
 	describe('logout functionality', () => {
-		const mockUser = { id: 1, email: 'test@example.com' };
+		let mockUser: Awaited<ReturnType<typeof createFakeUser>>;
+
+		beforeEach(async () => {
+			mockUser = await createFakeUser();
+			// Reset window.location.href before each test
+			window.location.href = '';
+		});
 
 		it('handles logout successfully', async () => {
 			const mockFetch = vi
@@ -85,6 +137,16 @@ describe('navigation bar', () => {
 			await fireEvent.click(logoutButton);
 
 			expect(consoleSpy).toHaveBeenCalledWith('Logout error:', expect.any(Error));
+			expect(window.location.href).not.toBe('/');
+		});
+
+		it('does not redirect on failed logout response', async () => {
+			vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse(null, 500));
+
+			render(Navbar, { user: mockUser });
+			const logoutButton = screen.getByRole('button', { name: /logout/i });
+			await fireEvent.click(logoutButton);
+
 			expect(window.location.href).not.toBe('/');
 		});
 	});
