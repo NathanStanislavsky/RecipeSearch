@@ -35,7 +35,7 @@
 <div class="flex h-full items-center justify-center">
 	<div class="w-full max-w-md rounded-md bg-white p-6 shadow-md">
 		<h1 class="mb-6 text-center text-2xl font-bold">Register</h1>
-		<form class="space-y-4" on:submit={handleSubmit}>
+		<form data-testid="register-form" class="space-y-4" on:submit={handleSubmit}>
 			<div>
 				<label for="name" class="block text-sm font-medium text-gray-700">Username</label>
 				<input
