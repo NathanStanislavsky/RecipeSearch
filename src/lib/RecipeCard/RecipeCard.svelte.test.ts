@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import { describe, it, beforeEach, expect } from 'vitest';
 import RecipeCard from './RecipeCard.svelte';
 
@@ -46,6 +46,27 @@ describe('RecipeCard', () => {
 			expect(link).toHaveAttribute('target', '_blank');
 			expect(link).toHaveAttribute('rel', 'noopener noreferrer');
 		});
+
+		it('applies correct styling to the card', () => {
+			const card = screen.getByRole('article');
+			expect(card).toHaveClass('max-w-sm', 'overflow-hidden', 'rounded', 'bg-white', 'shadow-lg', 'transition-transform', 'hover:scale-105');
+		});
+
+		it('applies correct styling to the image', () => {
+			const image = screen.getByRole('img');
+			expect(image).toHaveClass('h-48', 'w-full', 'object-cover');
+		});
+
+		it('applies correct styling to the link', () => {
+			const link = screen.getByRole('link', { name: /view recipe/i });
+			expect(link).toHaveClass('block', 'rounded', 'bg-blue-500', 'px-4', 'py-2', 'text-center', 'font-bold', 'text-white', 'transition-colors', 'hover:bg-blue-700', 'focus:ring-2', 'focus:ring-blue-500', 'focus:ring-offset-2', 'focus:outline-none');
+		});
+
+		it('handles image loading error', async () => {
+			const image = screen.getByRole('img');
+			await fireEvent.error(image);
+			expect(image).toHaveAttribute('src', recipe.image);
+		});
 	});
 
 	describe('when loading', () => {
@@ -68,6 +89,36 @@ describe('RecipeCard', () => {
 			expect(screen.getByText('Ready in')).toBeInTheDocument();
 			expect(screen.getByText(`${recipe.readyInMinutes} minutes`)).toBeInTheDocument();
 			expect(screen.getByText(`${recipe.servings} servings`)).toBeInTheDocument();
+		});
+
+		it('applies correct styling to the loading placeholder', () => {
+			const placeholder = screen.getByTestId('loading-placeholder');
+			expect(placeholder).toHaveClass('h-48', 'w-full', 'animate-pulse', 'bg-gray-200');
+		});
+	});
+
+	describe('interaction states', () => {
+		beforeEach(() => {
+			render(RecipeCard, {
+				props: {
+					recipe
+				}
+			});
+		});
+
+		it('applies hover effect to the card', () => {
+			const card = screen.getByRole('article');
+			expect(card).toHaveClass('hover:scale-105');
+		});
+
+		it('applies hover effect to the link', () => {
+			const link = screen.getByRole('link', { name: /view recipe/i });
+			expect(link).toHaveClass('hover:bg-blue-700');
+		});
+
+		it('applies focus styles to the link', () => {
+			const link = screen.getByRole('link', { name: /view recipe/i });
+			expect(link).toHaveClass('focus:ring-2', 'focus:ring-blue-500', 'focus:ring-offset-2', 'focus:outline-none');
 		});
 	});
 });
