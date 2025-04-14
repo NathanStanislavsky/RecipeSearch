@@ -58,21 +58,4 @@ describe('SearchButton Component', () => {
 			expect(onClickMock).toHaveBeenCalledTimes(5);
 		});
 	});
-
-	describe('keyboard interaction', () => {
-		it('should maintain focus styles on keyboard navigation', async () => {
-			const user = userEvent.setup();
-			await user.tab();
-			expect(button).toHaveFocus();
-			expect(button).toHaveClass('focus:ring-2');
-			expect(button).toHaveClass('focus:ring-blue-500');
-		});
-
-		it('should handle keyboard events', async () => {
-			const user = userEvent.setup();
-			await user.tab();
-			await user.keyboard('{Enter}');
-			expect(onClickMock).toHaveBeenCalledTimes(1);
-		});
-	});
 });

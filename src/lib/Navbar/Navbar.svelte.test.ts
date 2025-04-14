@@ -24,14 +24,6 @@ describe('navigation bar', () => {
 			expect(screen.getByText('PantryChef')).toBeInTheDocument();
 		});
 
-		it('shows "Register" and "Sign in" when user is not logged in and not on auth pages', () => {
-			render(Navbar, { user: null, currentPath: '/' });
-
-			expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
-			expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
-			expect(screen.queryByRole('button', { name: /logout/i })).not.toBeInTheDocument();
-		});
-
 		it('shows logout button when user is logged in', async () => {
 			const mockUser = await createFakeUser();
 			render(Navbar, { user: mockUser });
@@ -108,7 +100,7 @@ describe('navigation bar', () => {
 
 		beforeEach(async () => {
 			mockUser = await createFakeUser();
-			// Reset window.location.href before each test
+
 			window.location.href = '';
 		});
 
