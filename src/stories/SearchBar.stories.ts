@@ -2,6 +2,11 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import SearchBar from '$lib/SearchBar/SearchBar.svelte';
 import { expect, within, waitFor } from '@storybook/test';
 
+interface SearchBarProps {
+	ingredients: string;
+	placeholder: string;
+}
+
 const meta = {
 	title: 'Components/SearchBar',
 	component: SearchBar,
@@ -20,7 +25,7 @@ const meta = {
 		ingredients: '',
 		placeholder: 'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
 	}
-} satisfies Meta<SearchBar>;
+} satisfies Meta<SearchBarProps>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -30,6 +35,12 @@ export const Default: Story = {
 	args: {
 		ingredients: '',
 		placeholder: 'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
+	},
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const input = canvas.getByRole('textbox');
+		await expect(input).toHaveValue('');
+		await expect(input).toHaveAttribute('placeholder', 'Enter ingredients separated by commas (e.g., tomato, basil, garlic)');
 	}
 };
 
@@ -41,9 +52,7 @@ export const Focused: Story = {
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
-		const input = canvas.getByPlaceholderText(
-			'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
-		);
+		const input = canvas.getByRole('textbox');
 		input.focus();
 		await waitFor(() => expect(input).toHaveFocus());
 	}
@@ -52,14 +61,12 @@ export const Focused: Story = {
 // Filled state: input shows prefilled ingredients
 export const Filled: Story = {
 	args: {
-		ingredients: 'Carrots',
+		ingredients: 'Carrots, Onions, Garlic',
 		placeholder: 'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
-		const input = canvas.getByPlaceholderText(
-			'Enter ingredients separated by commas (e.g., tomato, basil, garlic)'
-		);
-		await expect(input).toHaveValue('Carrots');
+		const input = canvas.getByRole('textbox');
+		await expect(input).toHaveValue('Carrots, Onions, Garlic');
 	}
 };

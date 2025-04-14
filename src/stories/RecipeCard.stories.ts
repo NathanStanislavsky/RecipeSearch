@@ -2,6 +2,18 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import RecipeCard from '$lib/RecipeCard/RecipeCard.svelte';
 import { expect, within, waitFor } from '@storybook/test';
 
+interface Recipe {
+	image: string;
+	title: string;
+	readyInMinutes: number;
+	servings: number;
+	sourceUrl: string;
+}
+
+interface RecipeCardProps {
+	recipe: Recipe;
+}
+
 const meta = {
 	title: 'Components/RecipeCard',
 	component: RecipeCard,
@@ -22,7 +34,7 @@ const meta = {
 				'http://www.myrecipes.com/recipe/sea-bass-cucumbers-champagne-sauce-10000000640888/'
 		}
 	}
-} satisfies Meta<RecipeCard>;
+} satisfies Meta<RecipeCardProps>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -38,6 +50,18 @@ export const Default: Story = {
 			sourceUrl:
 				'http://www.myrecipes.com/recipe/sea-bass-cucumbers-champagne-sauce-10000000640888/'
 		}
+	},
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const title = canvas.getByText('Sea Bass and Cucumbers in Champagne Sauce');
+		const image = canvas.getByRole('img');
+		const time = canvas.getByText('15 min');
+		const servings = canvas.getByText('4 servings');
+		
+		await expect(title).toBeInTheDocument();
+		await expect(image).toHaveAttribute('src', 'https://img.spoonacular.com/recipes/987-556x370.jpg');
+		await expect(time).toBeInTheDocument();
+		await expect(servings).toBeInTheDocument();
 	}
 };
 
@@ -56,8 +80,9 @@ export const Interactive: Story = {
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
 		const titleElement = canvas.getByText('Sea Bass and Cucumbers in Champagne Sauce');
-		await waitFor(() => expect(titleElement).toBeInTheDocument());
 		const linkElement = canvas.getByRole('link', { name: /view recipe/i });
+		
+		await waitFor(() => expect(titleElement).toBeInTheDocument());
 		await waitFor(() =>
 			expect(linkElement).toHaveAttribute(
 				'href',
