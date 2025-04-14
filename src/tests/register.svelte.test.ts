@@ -2,7 +2,7 @@ import { render, screen, waitFor, cleanup } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createMockResponse } from '../utils/test/mockUtils.js';
+import { TestHelper } from '../utils/test/testHelper.ts';
 
 // Helper: Renders the register form and returns key elements.
 function setup() {
@@ -68,7 +68,7 @@ describe('RegisterForm Integration', () => {
 	it('handles successful registration', async () => {
 		const user = userEvent.setup();
 		const fakeResponse = { message: 'User registered successfully', userId: 1 };
-		mockFetch.mockResolvedValueOnce(createMockResponse(fakeResponse, 201));
+		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(fakeResponse, 201));
 
 		const elements = setup();
 		await fillRegistrationForm(user, elements);
@@ -85,11 +85,11 @@ describe('RegisterForm Integration', () => {
 		const user = userEvent.setup();
 		const errorScenarios = [
 			{
-				response: createMockResponse({ message: 'Email already registered' }, 409),
+				response: TestHelper.createMockResponse({ message: 'Email already registered' }, 409),
 				errorMessage: /Email already registered/i
 			},
 			{
-				response: createMockResponse({ message: 'Internal Server Error' }, 500),
+				response: TestHelper.createMockResponse({ message: 'Internal Server Error' }, 500),
 				errorMessage: /Internal Server Error/i
 			}
 		];

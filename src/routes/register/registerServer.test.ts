@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { actions } from './+page.server.js';
 import * as selectModule from '../../queries/user/select.js';
 import * as insertModule from '../../queries/user/insert.js';
-import { mockRequestEvent } from '../../utils/test/mockUtils.js';
+import { TestHelper } from '../../utils/test/testHelper.ts';
 import { createFormDataRequest } from '../../utils/test/createTestRequestUtils.js';
 import { TEST_USER } from '../../utils/test/testConstants.js';
 import type { User, RegisterPayload } from '../../types/user.ts';
@@ -38,7 +38,7 @@ describe('POST /register endpoint', () => {
 	});
 
 	const createRegisterRequestEvent = (request: Request): RegisterRequestEvent => {
-		const event = mockRequestEvent(request.url) as RegisterRequestEvent;
+		const event = TestHelper.createMockRequestEvent(request.url) as RegisterRequestEvent;
 		return {
 			...event,
 			request,

@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
 import LoginForm from '$lib/LoginForm/LoginForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createMockResponse } from '../utils/test/mockUtils.js';
+import { TestHelper } from '../utils/test/testHelper.ts';
 import { TEST_USER } from '../utils/test/testConstants.js';
 
 // Helper: Render component and return key elements.
@@ -41,7 +41,7 @@ describe('LoginForm Integration', () => {
 	it('handles successful login and redirects to /search', async () => {
 		const user = userEvent.setup();
 		const fakeResponse = { success: true, token: 'fake-jwt-token' };
-		mockFetch.mockResolvedValueOnce(createMockResponse(fakeResponse, 200));
+		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(fakeResponse, 200));
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
@@ -57,7 +57,7 @@ describe('LoginForm Integration', () => {
 	it('shows loading state during login', async () => {
 		const user = userEvent.setup();
 		const fakeResponse = { success: true, token: 'fake-jwt-token' };
-		mockFetch.mockResolvedValueOnce(createMockResponse(fakeResponse, 200));
+		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(fakeResponse, 200));
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
@@ -72,7 +72,7 @@ describe('LoginForm Integration', () => {
 	it('handles invalid credentials', async () => {
 		const user = userEvent.setup();
 		const errorResponse = { success: false, message: 'Invalid credentials' };
-		mockFetch.mockResolvedValueOnce(createMockResponse(errorResponse, 401));
+		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(errorResponse, 401));
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
@@ -88,7 +88,7 @@ describe('LoginForm Integration', () => {
 	it('handles server errors gracefully', async () => {
 		const user = userEvent.setup();
 		const errorResponse = { success: false, message: 'Internal Server Error' };
-		mockFetch.mockResolvedValueOnce(createMockResponse(errorResponse, 500));
+		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(errorResponse, 500));
 
 		const { emailInput, passwordInput, loginButton } = setup();
 
@@ -143,7 +143,7 @@ describe('LoginForm Integration', () => {
 	it('clears error message when form is resubmitted', async () => {
 		const user = userEvent.setup();
 		const errorResponse = { success: false, message: 'Invalid credentials' };
-		mockFetch.mockResolvedValueOnce(createMockResponse(errorResponse, 401));
+		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(errorResponse, 401));
 
 		const { emailInput, passwordInput, loginButton } = setup();
 

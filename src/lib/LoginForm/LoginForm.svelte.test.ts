@@ -1,8 +1,8 @@
 import { describe, beforeEach, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/svelte';
-import LoginForm from './LoginForm.svelte';
+import LoginForm from '$lib/LoginForm/LoginForm.svelte';
 import { userEvent } from '@storybook/test';
-import { createMockResponse } from '../../utils/test/mockUtils.js';
+import { TestHelper } from '../../utils/test/testHelper.ts';
 
 describe('LoginForm Component', () => {
 	const mockUser = {
@@ -69,7 +69,7 @@ describe('LoginForm Component', () => {
 		it('shows error message on failed login', async () => {
 			const user = userEvent.setup();
 			vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-				createMockResponse({ message: 'Invalid credentials' }, 401)
+				TestHelper.createMockResponse({ message: 'Invalid credentials' }, 401)
 			);
 
 			await fillAndSubmitForm(user, mockUser.email, 'wrong-password');
@@ -106,7 +106,7 @@ describe('LoginForm Component', () => {
 			const user = userEvent.setup();
 			const mockFetch = vi
 				.spyOn(global, 'fetch')
-				.mockResolvedValueOnce(createMockResponse({ success: true }, 200));
+				.mockResolvedValueOnce(TestHelper.createMockResponse({ success: true }, 200));
 
 			await fillAndSubmitForm(user);
 
@@ -128,7 +128,9 @@ describe('LoginForm Component', () => {
 				value: { href: '' }
 			});
 
-			vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse({ success: true }, 200));
+			vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+				TestHelper.createMockResponse({ success: true }, 200)
+			);
 
 			await fillAndSubmitForm(user);
 

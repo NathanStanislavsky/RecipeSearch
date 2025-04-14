@@ -3,7 +3,7 @@ import type { Mock } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { userEvent } from '@storybook/test';
-import { createMockResponse } from '../../utils/test/mockUtils.js';
+import { TestHelper } from '../../utils/test/testHelper.ts';
 import { TEST_USER } from '../../utils/test/testConstants.js';
 
 type MockFetch = Mock;
@@ -93,7 +93,7 @@ describe('RegisterForm Component', () => {
 		it('submits form data correctly', async () => {
 			const user = userEvent.setup();
 			const mockResponse = { message: 'Registration successful' };
-			mockFetch.mockResolvedValueOnce(createMockResponse(mockResponse, 200));
+			mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(mockResponse, 200));
 
 			// Fill in the form
 			await user.type(screen.getByLabelText(/username/i), TEST_USER.name);
@@ -135,7 +135,7 @@ describe('RegisterForm Component', () => {
 		it('redirects to login page on successful registration', async () => {
 			const user = userEvent.setup();
 			const mockResponse = { message: 'Registration successful' };
-			mockFetch.mockResolvedValueOnce(createMockResponse(mockResponse, 200));
+			mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(mockResponse, 200));
 
 			// Mock window.location
 			const mockLocation = { href: '' };
@@ -159,7 +159,7 @@ describe('RegisterForm Component', () => {
 		it('displays server response message', async () => {
 			const user = userEvent.setup();
 			const mockResponse = { message: 'Custom server message' };
-			mockFetch.mockResolvedValueOnce(createMockResponse(mockResponse, 400));
+			mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(mockResponse, 400));
 
 			// Fill in the form
 			await user.type(screen.getByLabelText(/username/i), TEST_USER.name);

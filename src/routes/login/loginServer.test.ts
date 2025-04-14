@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { actions } from './+page.server.js';
 import * as selectModule from '../../queries/user/select.js';
-import { mockRequestEvent } from '../../utils/test/mockUtils.js';
+import { TestHelper } from '../../utils/test/testHelper.ts';
 import { createFakeUser } from '../../utils/test/userTestUtils.js';
 import { TEST_USER } from '../../utils/test/testConstants.js';
 
@@ -32,7 +32,7 @@ describe('/login endpoint', () => {
 	};
 
 	const createLoginRequestEvent = (request: Request): LoginRequestEvent => {
-		const event = mockRequestEvent(request.url) as LoginRequestEvent;
+		const event = TestHelper.createMockRequestEvent(request.url) as LoginRequestEvent;
 		return {
 			...event,
 			request,

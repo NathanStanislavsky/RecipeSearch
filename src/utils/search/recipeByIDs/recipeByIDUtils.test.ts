@@ -5,8 +5,7 @@ import {
 	fetchBulkRecipeInformation,
 	filterInformationBulkReponse
 } from './recipeByIDUtils.js';
-
-import { createMockResponse, assertResponse } from '../../test/mockUtils.js';
+import { TestHelper } from '../../test/testHelper.ts';
 
 describe('recipeByIDsUtils', () => {
 	describe('extractRecipeIds', () => {
@@ -27,7 +26,7 @@ describe('recipeByIDsUtils', () => {
 		])('when %s', (_, sampleData) => {
 			it('returns an error response', async () => {
 				const result = extractRecipeIds(sampleData);
-				await assertResponse(result.errorResponse, 404, {
+				await TestHelper.assertResponse(result.errorResponse, 404, {
 					error: 'No recipes found for the provided ingredients'
 				});
 			});
@@ -51,7 +50,7 @@ describe('recipeByIDsUtils', () => {
 		])('when %s', (_, recipeIds) => {
 			it('returns a 400 error Response', async () => {
 				const result = constructBulkApiURL(recipeIds);
-				await assertResponse(result as Response, 400, {
+				await TestHelper.assertResponse(result as Response, 400, {
 					error: 'Missing or empty required parameter: ids'
 				});
 			});
@@ -73,7 +72,7 @@ describe('recipeByIDsUtils', () => {
 
 		it('returns a successful response when API returns 200', async () => {
 			const mockData = [{ id: 123, title: 'Recipe One' }];
-			const mockResponse = createMockResponse(mockData, 200);
+			const mockResponse = TestHelper.createMockResponse(mockData, 200);
 			mockFetch.mockResolvedValueOnce(mockResponse);
 
 			const response = await fetchBulkRecipeInformation(testUrl);
@@ -150,7 +149,7 @@ describe('recipeByIDsUtils', () => {
 			];
 
 			beforeEach(() => {
-				bulkResponse = createMockResponse(detailedRecipes, 200);
+				bulkResponse = TestHelper.createMockResponse(detailedRecipes, 200);
 			});
 
 			it('should filter detailed recipes and return a new JSON response with only specific fields', async () => {

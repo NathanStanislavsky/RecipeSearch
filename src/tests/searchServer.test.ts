@@ -1,21 +1,12 @@
 import { describe, it, vi, afterEach, beforeEach } from 'vitest';
 import { GET } from '../routes/search/+server.ts';
-import { mockRequestEvent, assertResponse, createMockResponse } from '../utils/test/mockUtils.ts';
+import { TestHelper } from '../utils/test/testHelper.ts';
 
 // Helper: Creates a mock request event with ingredients
 function createMockRequest(ingredients: string) {
-	return mockRequestEvent(`http://localhost/api/getRecipe?ingredients=${ingredients}`);
-}
-
-// Helper: Sets up mock fetch with a single response
-function setupMockFetch(response: Response) {
-	vi.spyOn(global, 'fetch').mockResolvedValueOnce(response);
-}
-
-// Helper: Sets up mock fetch with multiple responses
-function setupMockFetchSequence(responses: Response[]) {
-	const spy = vi.spyOn(global, 'fetch');
-	responses.forEach((response) => spy.mockResolvedValueOnce(response));
+	return TestHelper.createMockRequestEvent(
+		`http://localhost/api/getRecipe?ingredients=${ingredients}`
+	);
 }
 
 describe('Search server integration tests', () => {
@@ -41,15 +32,16 @@ describe('Search server integration tests', () => {
 		];
 
 		for (const scenario of scenarios) {
-			const response = await GET(mockRequestEvent(scenario.url));
-			await assertResponse(response, 400, { error: scenario.expectedError });
+			const response = await GET(TestHelper.createMockRequestEvent(scenario.url));
+			await TestHelper.assertResponse(response, 400, { error: scenario.expectedError });
 		}
 	});
 
 	it('should handle various API error scenarios', async () => {
 		const errorScenarios = [
 			{
-				mock: () => setupMockFetch(createMockResponse('External API error', 500)),
+				mock: () =>
+					TestHelper.setupMockFetch(TestHelper.createMockResponse('External API error', 500)),
 				expectedError: {
 					error: 'Failed to fetch data from RapidAPI',
 					message: '"External API error"',
@@ -76,7 +68,7 @@ describe('Search server integration tests', () => {
 		for (const scenario of errorScenarios) {
 			scenario.mock();
 			const response = await GET(createMockRequest('tomato,cheese'));
-			await assertResponse(response, 500, scenario.expectedError);
+			await TestHelper.assertResponse(response, 500, scenario.expectedError);
 		}
 	});
 
@@ -84,13 +76,16 @@ describe('Search server integration tests', () => {
 		const noResultsScenarios = [
 			{
 				mock: () =>
-					setupMockFetch(
-						createMockResponse([{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }], 200)
+					TestHelper.setupMockFetch(
+						TestHelper.createMockResponse(
+							[{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }],
+							200
+						)
 					),
 				expectedError: { error: 'No recipes found for the provided ingredients' }
 			},
 			{
-				mock: () => setupMockFetch(createMockResponse([], 200)),
+				mock: () => TestHelper.setupMockFetch(TestHelper.createMockResponse([], 200)),
 				expectedError: { error: 'No recipes found for the provided ingredients' }
 			}
 		];
@@ -98,7 +93,7 @@ describe('Search server integration tests', () => {
 		for (const scenario of noResultsScenarios) {
 			scenario.mock();
 			const response = await GET(createMockRequest('tomato,cheese'));
-			await assertResponse(response, 404, scenario.expectedError);
+			await TestHelper.assertResponse(response, 404, scenario.expectedError);
 		}
 	});
 
@@ -109,8 +104,8 @@ describe('Search server integration tests', () => {
 		];
 		const errorText = 'Bulk API error';
 
-		setupMockFetchSequence([
-			createMockResponse(mockIngredientsRecipes, 200),
+		TestHelper.setupMockFetchSequence([
+			TestHelper.createMockResponse(mockIngredientsRecipes, 200),
 			new Response(errorText, {
 				status: 500,
 				headers: { 'Content-Type': 'text/plain' }
@@ -119,7 +114,7 @@ describe('Search server integration tests', () => {
 
 		const response = await GET(createMockRequest('tomato,cheese'));
 
-		await assertResponse(response, 500, {
+		await TestHelper.assertResponse(response, 500, {
 			error: 'Failed to fetch data from RapidAPI',
 			status: 500,
 			message: errorText
@@ -153,14 +148,14 @@ describe('Search server integration tests', () => {
 			}
 		];
 
-		setupMockFetchSequence([
-			createMockResponse(mockIngredientsRecipes, 200),
-			createMockResponse(mockDetailedRecipes, 200)
+		TestHelper.setupMockFetchSequence([
+			TestHelper.createMockResponse(mockIngredientsRecipes, 200),
+			TestHelper.createMockResponse(mockDetailedRecipes, 200)
 		]);
 
 		const response = await GET(createMockRequest('tomato,cheese'));
 
-		await assertResponse(response, 200, [
+		await TestHelper.assertResponse(response, 200, [
 			{
 				id: 1,
 				image: 'tomato_soup.jpg',

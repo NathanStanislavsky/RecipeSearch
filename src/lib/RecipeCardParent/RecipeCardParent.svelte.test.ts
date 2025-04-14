@@ -1,16 +1,11 @@
 import { render, screen } from '@testing-library/svelte';
 import { describe, it, expect } from 'vitest';
 import RecipeCardParent from './RecipeCardParent.svelte';
+import { TestHelper } from '$utils/test/testHelper.ts';
 import '@testing-library/jest-dom/vitest';
 
 // Create a mock recipe factory function
-const createMockRecipe = (index: number) => ({
-	image: `https://img.spoonacular.com/recipes/${index}-556x370.jpeg`,
-	title: `Test Recipe ${index}`,
-	readyInMinutes: 30 + index * 5,
-	servings: 1 + index,
-	sourceUrl: `https://example.com/recipe-${index}`
-});
+const createMockRecipe = (index: number) => TestHelper.createMockRecipe(index);
 
 // Create mock recipes with varying data
 const mockRecipes = Array.from({ length: 3 }, (_, i) => createMockRecipe(i));
@@ -45,15 +40,18 @@ describe('RecipeCardParent', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
 			mockRecipes.forEach((recipe) => {
-				const cookingTimeText = screen.getByText((content, element) => {
+				const cookingTimeElements = screen.getAllByText((content, element) => {
 					return element?.textContent === `Ready in ${recipe.readyInMinutes} minutes`;
 				});
-				expect(cookingTimeText).toBeInTheDocument();
+				expect(cookingTimeElements.length).toBeGreaterThan(0);
 
-				const minutesSpan = screen.getByText(`${recipe.readyInMinutes} minutes`);
-				expect(minutesSpan).toHaveClass('font-semibold');
+				const minutesSpan = screen.getAllByText(`${recipe.readyInMinutes} minutes`);
+				expect(minutesSpan.length).toBeGreaterThan(0);
+				minutesSpan.forEach((span) => {
+					expect(span).toHaveClass('font-semibold');
+				});
 
-				expect(screen.getByText(`${recipe.servings} servings`)).toBeInTheDocument();
+				expect(screen.getAllByText(`${recipe.servings} servings`).length).toBeGreaterThan(0);
 			});
 		});
 
@@ -125,8 +123,12 @@ describe('RecipeCardParent', () => {
 			render(RecipeCardParent, { props: { recipes: [incompleteRecipe] } });
 
 			expect(screen.getByText(incompleteRecipe.title)).toBeInTheDocument();
-			expect(screen.getByText(`${incompleteRecipe.readyInMinutes} minutes`)).toBeInTheDocument();
-			expect(screen.getByText(`${incompleteRecipe.servings} servings`)).toBeInTheDocument();
+			expect(
+				screen.getAllByText(`${incompleteRecipe.readyInMinutes} minutes`).length
+			).toBeGreaterThan(0);
+			expect(screen.getAllByText(`${incompleteRecipe.servings} servings`).length).toBeGreaterThan(
+				0
+			);
 			expect(screen.getByRole('link')).toHaveAttribute('href', incompleteRecipe.sourceUrl);
 		});
 	});

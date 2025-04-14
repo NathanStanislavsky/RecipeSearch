@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
-import Navbar from '$lib/Navbar/Navbar.svelte';
-import { createMockResponse } from '../../utils/test/mockUtils.js';
+import Navbar from './Navbar.svelte';
+import { TestHelper } from '../../utils/test/testHelper.ts';
 import { createFakeUser } from '../../utils/test/userTestUtils.js';
 
 describe('navigation bar', () => {
@@ -107,7 +107,7 @@ describe('navigation bar', () => {
 		it('handles logout successfully', async () => {
 			const mockFetch = vi
 				.spyOn(global, 'fetch')
-				.mockResolvedValueOnce(createMockResponse(null, 200));
+				.mockResolvedValueOnce(TestHelper.createMockResponse(null, 200));
 
 			render(Navbar, { user: mockUser });
 			const logoutButton = screen.getByRole('button', { name: /logout/i });
@@ -133,7 +133,7 @@ describe('navigation bar', () => {
 		});
 
 		it('does not redirect on failed logout response', async () => {
-			vi.spyOn(global, 'fetch').mockResolvedValueOnce(createMockResponse(null, 500));
+			vi.spyOn(global, 'fetch').mockResolvedValueOnce(TestHelper.createMockResponse(null, 500));
 
 			render(Navbar, { user: mockUser });
 			const logoutButton = screen.getByRole('button', { name: /logout/i });

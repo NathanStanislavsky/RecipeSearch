@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { actions } from './+page.server.js';
-import { mockRequestEvent } from '../../utils/test/mockUtils.js';
+import { TestHelper } from '../../utils/test/testHelper.ts';
 import { TEST_USER } from '../../utils/test/testConstants.js';
 import { createFakeUser } from '../../utils/test/userTestUtils.js';
 import type { User } from '../../types/user.ts';
@@ -20,7 +20,7 @@ describe('logout endpoint', () => {
 			},
 			body: formData
 		});
-		const event = mockRequestEvent('http://localhost/logout', {
+		const event = TestHelper.createMockRequestEvent('http://localhost/logout', {
 			user: user || {
 				id: TEST_USER.userId,
 				name: TEST_USER.name,
