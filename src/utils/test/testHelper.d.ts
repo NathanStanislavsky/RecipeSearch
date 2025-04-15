@@ -56,10 +56,4 @@ export declare class TestHelper {
      * @param responses - The responses to return in sequence
      */
     static setupMockFetchSequence(responses: Response[]): void;
-    /**
-     * Delays execution for the specified number of milliseconds
-     * @param ms - The number of milliseconds to delay
-     * @returns A Promise that resolves after the delay
-     */
-    static delay(ms: number): Promise<void>;
 }

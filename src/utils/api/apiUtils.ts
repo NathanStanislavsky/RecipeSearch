@@ -8,12 +8,12 @@ export const SPOONACULAR_BASE_URL = 'https://spoonacular-recipe-food-nutrition-v
  * @returns Headers object with API key and content type
  */
 export const getSpoonacularHeaders = (): Record<string, string> => {
-	if (!env.RAPIDAPI_KEY) {
-		console.error('RAPIDAPI_KEY environment variable is not set');
+	if (!env.RAPIDAPI_KEY_2) {
+		console.error('RAPIDAPI_KEY_2 environment variable is not set');
 	}
 
 	return {
-		'x-rapidapi-key': env.RAPIDAPI_KEY || '',
+		'x-rapidapi-key': env.RAPIDAPI_KEY_2 || '',
 		'x-rapidapi-host': 'spoonacular-recipe-food-nutrition-v1.p.rapidapi.com',
 		'Content-Type': 'application/json'
 	};
