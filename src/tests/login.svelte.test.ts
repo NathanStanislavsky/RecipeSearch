@@ -14,24 +14,40 @@ function setup() {
 	return { emailInput, passwordInput, loginButton };
 }
 
+function mockWindowLocation() {
+	Object.defineProperty(window, 'location', {
+		configurable: true,
+		writable: true,
+		value: {
+			href: '',
+			assign: vi.fn(),
+			replace: vi.fn(),
+			reload: vi.fn()
+		}
+	});
+}
+
+async function simulateLogin(
+	user: ReturnType<typeof userEvent.setup>,
+	elements: ReturnType<typeof setup>,
+	email: string,
+	password: string
+) {
+	await user.type(elements.emailInput, email);
+	await user.type(elements.passwordInput, password);
+	await user.click(elements.loginButton);
+}
+
 describe('LoginForm Integration', () => {
 	let mockFetch: ReturnType<typeof vi.fn>;
+	let user: ReturnType<typeof userEvent.setup>;
 
 	beforeEach(() => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		mockFetch = vi.fn();
 		global.fetch = mockFetch;
-
-		Object.defineProperty(window, 'location', {
-			configurable: true,
-			writable: true,
-			value: {
-				href: '',
-				assign: vi.fn(),
-				replace: vi.fn(),
-				reload: vi.fn()
-			}
-		});
+		mockWindowLocation();
+		user = userEvent.setup();
 	});
 
 	afterEach(() => {
@@ -39,15 +55,12 @@ describe('LoginForm Integration', () => {
 	});
 
 	it('handles successful login and redirects to /search', async () => {
-		const user = userEvent.setup();
 		const fakeResponse = { success: true, token: 'fake-jwt-token' };
 		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(fakeResponse, 200));
 
-		const { emailInput, passwordInput, loginButton } = setup();
+		const elements = setup();
 
-		await user.type(emailInput, TEST_USER.email);
-		await user.type(passwordInput, TEST_USER.correctPassword);
-		await user.click(loginButton);
+		await simulateLogin(user, elements, TEST_USER.email, TEST_USER.correctPassword);
 
 		await waitFor(() => {
 			expect(window.location.href).toBe('/search');
@@ -55,30 +68,25 @@ describe('LoginForm Integration', () => {
 	});
 
 	it('shows loading state during login', async () => {
-		const user = userEvent.setup();
 		const fakeResponse = { success: true, token: 'fake-jwt-token' };
 		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(fakeResponse, 200));
 
-		const { emailInput, passwordInput, loginButton } = setup();
+		const elements = setup();
 
-		await user.type(emailInput, TEST_USER.email);
-		await user.type(passwordInput, TEST_USER.correctPassword);
-		await user.click(loginButton);
+		await simulateLogin(user, elements, TEST_USER.email, TEST_USER.correctPassword);
 
-		expect(loginButton).toBeDisabled();
-		expect(loginButton).toHaveTextContent('Logging in...');
+		// Immediately after clicking, the login button should be disabled and show a loading state
+		expect(elements.loginButton).toBeDisabled();
+		expect(elements.loginButton).toHaveTextContent('Logging in...');
 	});
 
 	it('handles invalid credentials', async () => {
-		const user = userEvent.setup();
 		const errorResponse = { success: false, message: 'Invalid credentials' };
 		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(errorResponse, 401));
 
-		const { emailInput, passwordInput, loginButton } = setup();
+		const elements = setup();
 
-		await user.type(emailInput, TEST_USER.email);
-		await user.type(passwordInput, TEST_USER.wrongPassword);
-		await user.click(loginButton);
+		await simulateLogin(user, elements, TEST_USER.email, TEST_USER.wrongPassword);
 
 		await waitFor(() => {
 			expect(screen.getByText(/Invalid credentials/i)).toBeInTheDocument();
