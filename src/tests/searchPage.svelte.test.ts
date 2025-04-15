@@ -59,28 +59,17 @@ describe('Page Integration Tests', () => {
 		expect(screen.getByText('Loading...')).toBeInTheDocument();
 	});
 
-	it('handles various error scenarios', async () => {
-		const errorScenarios = [
-			{
-				mock: () => fetchSpy.mockRejectedValueOnce(new Error('API Error')),
-				expectedText: 'No results'
-			},
-			{
-				mock: () => fetchSpy.mockRejectedValueOnce(new Error('Network error')),
-				expectedText: 'No results'
-			}
-		];
+	it.each([
+		{ errorMessage: 'API Error', expectedText: 'No results' },
+		{ errorMessage: 'Network error', expectedText: 'No results' }
+	])('handles error scenario: %s', async ({ errorMessage, expectedText }) => {
+		fetchSpy.mockRejectedValueOnce(new Error(errorMessage));
+		const { input, button } = setupSearchForm();
+		await performSearch(input, button, 'chicken');
 
-		for (const scenario of errorScenarios) {
-			scenario.mock();
-			const { input, button } = setupSearchForm();
-			await performSearch(input, button, 'chicken');
-
-			await waitFor(() => {
-				expect(screen.getByText(scenario.expectedText)).toBeInTheDocument();
-			});
-			cleanup();
-		}
+		await waitFor(() => {
+			expect(screen.getByText(expectedText)).toBeInTheDocument();
+		});
 	});
 
 	it('displays search results correctly', async () => {
