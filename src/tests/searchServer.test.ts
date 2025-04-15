@@ -2,11 +2,16 @@ import { describe, it, vi, afterEach, beforeEach } from 'vitest';
 import { GET } from '../routes/search/+server.ts';
 import { TestHelper } from '../utils/test/testHelper.ts';
 
-// Helper: Creates a mock request event with ingredients
+// Creates a mock request event with ingredients
 function createMockRequest(ingredients: string) {
 	return TestHelper.createMockRequestEvent(
 		`http://localhost/api/getRecipe?ingredients=${ingredients}`
 	);
+}
+
+async function testGetResponse(ingredients: string, expectedStatus: number, expectedBody: object) {
+	const response = await GET(createMockRequest(ingredients));
+	await TestHelper.assertResponse(response, expectedStatus, expectedBody);
 }
 
 describe('Search server integration tests', () => {
@@ -19,82 +24,73 @@ describe('Search server integration tests', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('should return 400 for invalid ingredient parameters', async () => {
-		const scenarios = [
-			{
-				url: 'http://localhost/api/getRecipe',
-				expectedError: 'Missing required parameter: ingredients'
-			},
-			{
-				url: 'http://localhost/api/getRecipe?ingredients=',
-				expectedError: 'Missing required parameter: ingredients'
-			}
-		];
-
-		for (const scenario of scenarios) {
-			const response = await GET(TestHelper.createMockRequestEvent(scenario.url));
-			await TestHelper.assertResponse(response, 400, { error: scenario.expectedError });
+	it.each([
+		{
+			url: 'http://localhost/api/getRecipe',
+			expectedError: 'Missing required parameter: ingredients'
+		},
+		{
+			url: 'http://localhost/api/getRecipe?ingredients=',
+			expectedError: 'Missing required parameter: ingredients'
 		}
-	});
-
-	it('should handle various API error scenarios', async () => {
-		const errorScenarios = [
-			{
-				mock: () =>
-					TestHelper.setupMockFetch(TestHelper.createMockResponse('External API error', 500)),
-				expectedError: {
-					error: 'Failed to fetch data from RapidAPI',
-					message: '"External API error"',
-					status: 500
-				}
-			},
-			{
-				mock: () =>
-					vi
-						.spyOn(global, 'fetch')
-						.mockImplementationOnce(
-							() =>
-								new Promise((_, reject) =>
-									setTimeout(() => reject(new Error('Request timeout')), 100)
-								)
-						),
-				expectedError: {
-					error: 'Failed to fetch recipes',
-					message: 'Request timeout'
-				}
-			}
-		];
-
-		for (const scenario of errorScenarios) {
-			scenario.mock();
-			const response = await GET(createMockRequest('tomato,cheese'));
-			await TestHelper.assertResponse(response, 500, scenario.expectedError);
+	])(
+		'should return 400 for invalid ingredient parameters when URL is "%s"',
+		async ({ url, expectedError }) => {
+			const response = await GET(TestHelper.createMockRequestEvent(url));
+			await TestHelper.assertResponse(response, 400, { error: expectedError });
 		}
-	});
+	);
 
-	it('should handle no results scenarios', async () => {
-		const noResultsScenarios = [
-			{
-				mock: () =>
-					TestHelper.setupMockFetch(
-						TestHelper.createMockResponse(
-							[{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }],
-							200
-						)
+	it.each([
+		{
+			mock: () =>
+				TestHelper.setupMockFetch(TestHelper.createMockResponse('External API error', 500)),
+			expectedError: {
+				error: 'Failed to fetch data from RapidAPI',
+				message: '"External API error"',
+				status: 500
+			}
+		},
+		{
+			mock: () =>
+				vi
+					.spyOn(global, 'fetch')
+					.mockImplementationOnce(
+						() =>
+							new Promise((_, reject) =>
+								setTimeout(() => reject(new Error('Request timeout')), 100)
+							)
 					),
-				expectedError: { error: 'No recipes found for the provided ingredients' }
-			},
-			{
-				mock: () => TestHelper.setupMockFetch(TestHelper.createMockResponse([], 200)),
-				expectedError: { error: 'No recipes found for the provided ingredients' }
+			expectedError: {
+				error: 'Failed to fetch recipes',
+				message: 'Request timeout'
 			}
-		];
-
-		for (const scenario of noResultsScenarios) {
-			scenario.mock();
-			const response = await GET(createMockRequest('tomato,cheese'));
-			await TestHelper.assertResponse(response, 404, scenario.expectedError);
 		}
+	])('should handle various API error scenarios', async ({ mock, expectedError }) => {
+		mock();
+		await testGetResponse('tomato,cheese', 500, expectedError);
+	});
+
+	it.each([
+		{
+			mock: () =>
+				TestHelper.setupMockFetch(
+					TestHelper.createMockResponse(
+						[{ title: 'Recipe Without ID' }, { title: 'Another Recipe' }],
+						200
+					)
+				),
+			expectedError: { error: 'No recipes found for the provided ingredients' },
+			expectedStatus: 404
+		},
+		{
+			mock: () => TestHelper.setupMockFetch(TestHelper.createMockResponse([], 200)),
+			expectedError: { error: 'No recipes found for the provided ingredients' },
+			expectedStatus: 404
+		}
+	])('should handle no results scenarios', async ({ mock, expectedError, expectedStatus }) => {
+		mock();
+		await testGetResponse('tomato,cheese', expectedStatus, expectedError);
 	});
 
 	it('should return error response if fetching bulk recipe details fails', async () => {
