@@ -40,7 +40,7 @@ describe('/login endpoint', () => {
 		};
 	};
 
-	it('returns undefined on successful login', async () => {
+	it('returns success on successful login', async () => {
 		const fakeUser = await createFakeUser();
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
 
@@ -48,7 +48,7 @@ describe('/login endpoint', () => {
 		const event = createLoginRequestEvent(request);
 
 		const result = await actions.default(event);
-		expect(result).toBeUndefined();
+		expect(result).toEqual({ success: true, message: 'Login successful' });
 	});
 
 	it('returns error if email or password are missing', async () => {
@@ -141,8 +141,8 @@ describe('/login endpoint', () => {
 			actions.default(event2)
 		]);
 
-		expect(result1).toBeUndefined();
-		expect(result2).toBeUndefined();
+		expect(result1).toEqual({ success: true, message: 'Login successful' });
+		expect(result2).toEqual({ success: true, message: 'Login successful' });
 		expect(event1.cookies.set).toHaveBeenCalled();
 		expect(event2.cookies.set).toHaveBeenCalled();
 	});

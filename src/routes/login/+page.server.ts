@@ -35,8 +35,8 @@ export const actions: Actions = {
 			const token = authService.createJwtToken(user);
 			authService.setAuthCookie(cookies, token);
 
-			// Return undefined on successful login
-			return undefined;
+			// Return success on successful login
+			return { success: true, message: 'Login successful' };
 		} catch (error) {
 			console.error(error);
 			return { success: false, message: 'Login failed' };
