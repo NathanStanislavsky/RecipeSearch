@@ -46,15 +46,16 @@ describe('POST /register endpoint', () => {
 		};
 	};
 
+	const mockUser: User = {
+		id: TEST_USER.userId,
+		email: TEST_USER.email,
+		password: 'hashedPassword',
+		name: TEST_USER.name
+	};
+
 	it('should register a new user when the email is unique', async () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
 
-		const mockUser: User = {
-			id: TEST_USER.userId,
-			email: TEST_USER.email,
-			password: 'hashedPassword',
-			name: TEST_USER.name
-		};
 		vi.spyOn(insertModule, 'createUser').mockResolvedValue(mockUser);
 		const mockPasswordHash = vi
 			.spyOn(bcrypt, 'hash')
@@ -74,13 +75,7 @@ describe('POST /register endpoint', () => {
 	});
 
 	it('should return an error when the user already exists', async () => {
-		const existingUser: User = {
-			id: TEST_USER.userId,
-			email: TEST_USER.email,
-			password: 'hashedPassword',
-			name: TEST_USER.name
-		};
-		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(existingUser);
+		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(mockUser);
 
 		const request = createRegisterRequest(createRegisterPayload());
 		const event = createRegisterRequestEvent(request);
