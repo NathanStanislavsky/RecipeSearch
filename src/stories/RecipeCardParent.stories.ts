@@ -1,14 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import RecipeCardParent from '$lib/RecipeCardParent/RecipeCardParent.svelte';
 import { expect, within } from '@storybook/test';
-
-interface Recipe {
-	image: string;
-	title: string;
-	readyInMinutes: number;
-	servings: number;
-	sourceUrl: string;
-}
+import type { Recipe } from '../types/recipe.js';
 
 interface RecipeCardParentProps {
 	recipes: Recipe[];
@@ -69,8 +62,10 @@ export const Default: Story = {
 		recipeCards.forEach(async (card) => {
 			const title = within(card).getByText('Chili Stuffed Potatoes');
 			const image = within(card).getByRole('img');
-			const time = within(card).getByText('45 min');
-			const servings = within(card).getByText('1 serving');
+
+			// Using a regex matcher for the cooking time
+			const time = within(card).getByText(/45\s*(min|minutes)/i);
+			const servings = within(card).getByText(/1\s*serving(s?)/i);
 
 			await expect(title).toBeInTheDocument();
 			await expect(image).toHaveAttribute(

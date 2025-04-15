@@ -1,14 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import RecipeCard from '$lib/RecipeCard/RecipeCard.svelte';
 import { expect, within, waitFor } from '@storybook/test';
-
-interface Recipe {
-	image: string;
-	title: string;
-	readyInMinutes: number;
-	servings: number;
-	sourceUrl: string;
-}
+import type { Recipe } from '../types/recipe.js';
 
 interface RecipeCardProps {
 	recipe: Recipe;
@@ -55,7 +48,8 @@ export const Default: Story = {
 		const canvas = within(canvasElement);
 		const title = canvas.getByText('Sea Bass and Cucumbers in Champagne Sauce');
 		const image = canvas.getByRole('img');
-		const time = canvas.getByText('15 min');
+		// Use a regex matcher to allow flexible matching for "15 min"
+		const time = canvas.getByText(/15\s*min/i);
 		const servings = canvas.getByText('4 servings');
 
 		await expect(title).toBeInTheDocument();

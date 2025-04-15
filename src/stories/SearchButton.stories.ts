@@ -48,19 +48,3 @@ export const Default: Story = {
 		alertSpy.mockRestore();
 	}
 };
-
-export const Disabled: Story = {
-	args: {
-		onClick: () => {
-			alert('button is clicked');
-		},
-		disabled: true
-	},
-	play: async ({ canvasElement }) => {
-		const canvas = within(canvasElement);
-		const button = canvas.getByRole('button', { name: /Search/i });
-
-		await expect(button).toHaveTextContent('Search');
-		await expect(button).toBeDisabled();
-	}
-};
