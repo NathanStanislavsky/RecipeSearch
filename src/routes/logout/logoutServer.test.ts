@@ -11,7 +11,7 @@ type LogoutRequestEvent = RequestEvent & {
 };
 
 describe('logout endpoint', () => {
-	const createLogoutRequestEvent = (user?: User): LogoutRequestEvent => {
+	const createLogoutRequest = () => {
 		const formData = new FormData();
 		const request = new Request('http://localhost/logout', {
 			method: 'POST',
@@ -20,6 +20,11 @@ describe('logout endpoint', () => {
 			},
 			body: formData
 		});
+		return request;
+	};
+
+	const createLogoutRequestEvent = (user?: User): LogoutRequestEvent => {
+		const request = createLogoutRequest();
 		const event = TestHelper.createMockRequestEvent('http://localhost/logout', {
 			user: user || {
 				id: TEST_USER.userId,

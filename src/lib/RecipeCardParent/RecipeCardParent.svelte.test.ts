@@ -4,11 +4,8 @@ import RecipeCardParent from './RecipeCardParent.svelte';
 import { TestHelper } from '$utils/test/testHelper.ts';
 import '@testing-library/jest-dom/vitest';
 
-// Create a mock recipe factory function
-const createMockRecipe = (index: number) => TestHelper.createMockRecipe(index);
-
 // Create mock recipes with varying data
-const mockRecipes = Array.from({ length: 3 }, (_, i) => createMockRecipe(i));
+const mockRecipes = Array.from({ length: 3 }, (_, i) => TestHelper.createMockRecipe(i));
 
 describe('RecipeCardParent', () => {
 	describe('rendering', () => {

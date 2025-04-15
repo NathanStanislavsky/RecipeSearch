@@ -13,14 +13,6 @@ type RegisterRequestEvent = RequestEvent & {
 	route: { id: '/register' };
 };
 
-const createRegisterRequest = (payload: RegisterPayload) => {
-	const formData = new FormData();
-	formData.append('email', payload.email);
-	formData.append('password', payload.password);
-	formData.append('name', payload.name);
-	return createFormDataRequest('http://localhost/register', 'POST', formData);
-};
-
 describe('POST /register endpoint', () => {
 	beforeAll(() => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -36,6 +28,14 @@ describe('POST /register endpoint', () => {
 		name: TEST_USER.name,
 		...overrides
 	});
+
+	const createRegisterRequest = (payload: RegisterPayload) => {
+		const formData = new FormData();
+		formData.append('email', payload.email);
+		formData.append('password', payload.password);
+		formData.append('name', payload.name);
+		return createFormDataRequest('http://localhost/register', 'POST', formData);
+	};
 
 	const createRegisterRequestEvent = (request: Request): RegisterRequestEvent => {
 		const event = TestHelper.createMockRequestEvent(request.url) as RegisterRequestEvent;
