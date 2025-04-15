@@ -40,24 +40,29 @@ async function testErrorScenario(
 	});
 }
 
+function mockWindowLocation() {
+	Object.defineProperty(window, 'location', {
+		configurable: true,
+		writable: true,
+		value: {
+			href: '',
+			assign: vi.fn(),
+			replace: vi.fn(),
+			reload: vi.fn()
+		}
+	});
+}
+
 describe('RegisterForm Integration', () => {
 	let mockFetch: ReturnType<typeof vi.fn>;
+	let user: ReturnType<typeof userEvent.setup>;
 
 	beforeEach(() => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		mockFetch = vi.fn();
 		global.fetch = mockFetch;
-
-		Object.defineProperty(window, 'location', {
-			configurable: true,
-			writable: true,
-			value: {
-				href: '',
-				assign: vi.fn(),
-				replace: vi.fn(),
-				reload: vi.fn()
-			}
-		});
+		mockWindowLocation();
+		user = userEvent.setup();
 	});
 
 	afterEach(() => {
@@ -66,7 +71,6 @@ describe('RegisterForm Integration', () => {
 	});
 
 	it('handles successful registration', async () => {
-		const user = userEvent.setup();
 		const fakeResponse = { message: 'User registered successfully', userId: 1 };
 		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(fakeResponse, 201));
 
@@ -81,8 +85,7 @@ describe('RegisterForm Integration', () => {
 		expect(window.location.href).toBe('/login');
 	});
 
-	it('handles various error scenarios', async () => {
-		const user = userEvent.setup();
+	describe('handles various error scenarios', async () => {
 		const errorScenarios = [
 			{
 				response: TestHelper.createMockResponse({ message: 'Email already registered' }, 409),
@@ -94,16 +97,15 @@ describe('RegisterForm Integration', () => {
 			}
 		];
 
-		for (const scenario of errorScenarios) {
-			mockFetch.mockResolvedValueOnce(scenario.response);
-			await testErrorScenario(user, scenario.response, scenario.errorMessage);
-			cleanup();
-			vi.clearAllMocks();
-		}
+		errorScenarios.forEach(({ response, errorMessage }) => {
+			it(`displays error: ${errorMessage}`, async () => {
+				mockFetch.mockResolvedValueOnce(response);
+				await testErrorScenario(user, response, errorMessage);
+			});
+		});
 	});
 
 	it('handles network errors gracefully', async () => {
-		const user = userEvent.setup();
 		mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
 		const elements = setup();
@@ -116,7 +118,6 @@ describe('RegisterForm Integration', () => {
 	});
 
 	it('validates form inputs', async () => {
-		const user = userEvent.setup();
 		const elements = setup();
 
 		// Test missing fields
