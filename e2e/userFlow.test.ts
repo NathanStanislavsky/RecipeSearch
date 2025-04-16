@@ -51,7 +51,7 @@ test.describe('Complete user journey', () => {
 	test('landing page to register to login to search with successful results', async ({ page }) => {
 		await completeRegistrationAndLogin(page);
 
-		// 5. Set up mock API response for search
+		// Set up mock API response for search
 		await searchHelper.simulateApiResponse(
 			[
 				{
