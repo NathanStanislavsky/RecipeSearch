@@ -55,10 +55,9 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest('', '');
 		const event = createLoginRequestEvent(request);
 
-		const result = await actions.default(event);
-		expect(result).toEqual({
-			success: false,
-			message: 'Email and password required'
+		await expect(actions.default(event)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Email and password required' }
 		});
 	});
 
@@ -67,10 +66,9 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
-		const result = await actions.default(event);
-		expect(result).toEqual({
-			success: false,
-			message: 'Invalid credentials'
+		await expect(actions.default(event)).rejects.toMatchObject({
+			status: 401,
+			body: { message: 'Invalid credentials' }
 		});
 	});
 
@@ -81,10 +79,9 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.wrongPassword);
 		const event = createLoginRequestEvent(request);
 
-		const result = await actions.default(event);
-		expect(result).toEqual({
-			success: false,
-			message: 'Invalid credentials'
+		await expect(actions.default(event)).rejects.toMatchObject({
+			status: 401,
+			body: { message: 'Invalid credentials' }
 		});
 	});
 
@@ -93,10 +90,9 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
-		const result = await actions.default(event);
-		expect(result).toEqual({
-			success: false,
-			message: 'Login failed'
+		await expect(actions.default(event)).rejects.toMatchObject({
+			status: 500,
+			body: { message: 'Login failed' }
 		});
 	});
 
@@ -120,10 +116,9 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest('invalid-email', '');
 		const event = createLoginRequestEvent(request);
 
-		const result = await actions.default(event);
-		expect(result).toEqual({
-			success: false,
-			message: 'Email and password required'
+		await expect(actions.default(event)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Email and password required' }
 		});
 	});
 
