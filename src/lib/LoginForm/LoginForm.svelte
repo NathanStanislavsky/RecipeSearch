@@ -19,7 +19,7 @@
 			const data = await response.json();
 
 			if (!response.ok) {
-				message = data.message || 'Login failed';
+				message = data.error.message || 'Login failed';
 				isLoading = false;
 				return;
 			}

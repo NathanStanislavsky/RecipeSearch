@@ -68,7 +68,7 @@ describe('LoginForm Integration', () => {
 	});
 
 	it('handles invalid credentials', async () => {
-		const errorResponse = { success: false, message: 'Invalid credentials' };
+		const errorResponse = { error: { message: 'Invalid credentials' } };
 		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(errorResponse, 401));
 
 		const elements = setup();
@@ -82,7 +82,8 @@ describe('LoginForm Integration', () => {
 
 	it('handles server errors gracefully', async () => {
 		const user = userEvent.setup();
-		const errorResponse = { success: false, message: 'Internal Server Error' };
+		const errorResponse = { error: { message: 'Internal Server Error' } };
+
 		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(errorResponse, 500));
 
 		const { emailInput, passwordInput, loginButton } = setup();
@@ -137,7 +138,7 @@ describe('LoginForm Integration', () => {
 
 	it('clears error message when form is resubmitted', async () => {
 		const user = userEvent.setup();
-		const errorResponse = { success: false, message: 'Invalid credentials' };
+		const errorResponse = { error: { message: 'Invalid credentials' } };
 		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(errorResponse, 401));
 
 		const { emailInput, passwordInput, loginButton } = setup();

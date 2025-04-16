@@ -68,8 +68,10 @@ describe('LoginForm Component', () => {
 
 		it('shows error message on failed login', async () => {
 			const user = userEvent.setup();
+			const errorResponse = { error: { message: 'Invalid credentials' } };
+
 			vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-				TestHelper.createMockResponse({ message: 'Invalid credentials' }, 401)
+				TestHelper.createMockResponse(errorResponse, 401)
 			);
 
 			await fillAndSubmitForm(user, mockUser.email, 'wrong-password');
