@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
+import type { Actions } from './$types.js';
 
-export const actions = {
+export const actions: Actions = {
 	default: async (event) => {
 		try {
 			event.cookies.delete('jwt', { path: '/' });
@@ -9,4 +10,4 @@ export const actions = {
 		}
 		throw redirect(302, '/');
 	}
-};
+}
