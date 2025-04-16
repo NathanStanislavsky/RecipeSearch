@@ -1,6 +1,5 @@
 import { describe, afterEach, it, expect, vi, beforeEach } from 'vitest';
-import type { RequestEvent } from '@sveltejs/kit';
-import type { Cookies } from '@sveltejs/kit';
+import type { RequestEvent, Cookies } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '$env/static/private';
 import { handle } from './hooks.server.js';
@@ -16,6 +15,13 @@ vi.mock('$env/static/private', () => ({
 
 const BASE_URL = 'http://localhost';
 
+/**
+ * Helper function to create a partial RequestEvent with a mocked cookies object.
+ *
+ * @param token - The JWT token (or undefined)
+ * @param path - The path used for URL and route id
+ * @returns A partial RequestEvent with mocked cookies and other required properties.
+ */
 function createEvent(token: string | undefined, path: string): Partial<RequestEvent> {
 	return {
 		cookies: {
@@ -37,62 +43,70 @@ function createEvent(token: string | undefined, path: string): Partial<RequestEv
 }
 
 describe('hooks.server', () => {
+	let dummyResolve: (args: Partial<RequestEvent>) => Promise<Response>;
+
 	beforeEach(() => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
+		// Define a dummy resolver that simulates successful request handling
+		dummyResolve = vi.fn(() => Promise.resolve(new Response(null, { status: 200 })));
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
 	});
 
-	const dummyResolve = vi.fn(() => Promise.resolve(new Response(null, { status: 200 })));
+	describe('when a valid token is provided', () => {
+		it('attaches the user to event.locals and calls resolve', async () => {
+			const validPayload: UserPayload = { id: 1, email: 'user@example.com', name: 'Test User' };
+			const token = 'valid-token';
+			const event = createEvent(token, '/some-route') as RequestEvent;
 
-	it('attaches user to event.locals when a valid token is provided', async () => {
-		const validPayload: UserPayload = { id: 1, email: 'user@example.com', name: 'Test User' };
-		const token = 'valid-token';
+			// Spy on jwt.verify so that it returns our valid payload
+			const verifySpy = vi.spyOn(jwt, 'verify').mockImplementation(
+				() =>
+					({
+						payload: validPayload
+					}) as jwt.JwtPayload
+			);
 
-		const event = createEvent(token, '/some-route') as unknown as RequestEvent;
+			const response = await handle({ event, resolve: dummyResolve });
 
-		const verifySpy = vi
-			.spyOn(jwt, 'verify')
-			.mockImplementation(() => ({ payload: validPayload }) as jwt.JwtPayload);
-
-		const response = await handle({ event, resolve: dummyResolve });
-		expect(event.locals.user).toEqual(validPayload);
-		expect(dummyResolve).toHaveBeenCalledWith(event);
-		expect(response.status).toBe(200);
-		// Use the imported JWT_SECRET instead of process.env.JWT_SECRET
-		expect(verifySpy).toHaveBeenCalledWith(token, JWT_SECRET);
-	});
-
-	it('redirects to /login when accessing a protected route without a token', async () => {
-		// Create an event for a protected route (/search) with no token
-		const event = createEvent(undefined, '/search') as unknown as RequestEvent;
-		await expect(handle({ event, resolve: dummyResolve })).rejects.toMatchObject({
-			status: 303,
-			location: '/login'
+			expect(event.locals.user).toEqual(validPayload);
+			expect(dummyResolve).toHaveBeenCalledWith(event);
+			expect(response.status).toBe(200);
+			expect(verifySpy).toHaveBeenCalledWith(token, JWT_SECRET);
 		});
 	});
 
-	it('redirects to /login when accessing a protected route with an invalid token', async () => {
-		const token = 'invalid-token';
-		const event = createEvent(token, '/search') as unknown as RequestEvent;
-
-		// Simulate jwt.verify throwing an error for an invalid token
-		const verifySpy = vi.spyOn(jwt, 'verify').mockImplementation(() => {
-			throw new Error('Invalid token');
+	describe('when accessing protected routes', () => {
+		it('redirects to /login if no token is provided', async () => {
+			const event = createEvent(undefined, '/search') as RequestEvent;
+			await expect(handle({ event, resolve: dummyResolve })).rejects.toMatchObject({
+				status: 303,
+				location: '/login'
+			});
 		});
 
-		await expect(handle({ event, resolve: dummyResolve })).rejects.toMatchObject({
-			status: 303,
-			location: '/login'
+		it('redirects to /login if an invalid token is provided', async () => {
+			const token = 'invalid-token';
+			const event = createEvent(token, '/search') as RequestEvent;
+			const verifySpy = vi.spyOn(jwt, 'verify').mockImplementation(() => {
+				throw new Error('Invalid token');
+			});
+
+			await expect(handle({ event, resolve: dummyResolve })).rejects.toMatchObject({
+				status: 303,
+				location: '/login'
+			});
+			expect(verifySpy).toHaveBeenCalledWith(token, JWT_SECRET);
 		});
-		expect(verifySpy).toHaveBeenCalledWith(token, JWT_SECRET);
 	});
 
-	it('does not redirect for non-protected routes even if no token is provided', async () => {
-		const event = createEvent(undefined, '/not-protected') as unknown as RequestEvent;
-		const response = await handle({ event, resolve: dummyResolve });
-		expect(response.status).toBe(200);
+	describe('when accessing non-protected routes', () => {
+		it('does not redirect if no token is provided', async () => {
+			const event = createEvent(undefined, '/not-protected') as RequestEvent;
+			const response = await handle({ event, resolve: dummyResolve });
+			expect(response.status).toBe(200);
+		});
 	});
 });
