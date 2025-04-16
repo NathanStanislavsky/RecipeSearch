@@ -67,4 +67,5 @@ export declare class TestHelper {
 	 * @param responses - The responses to return in sequence
 	 */
 	static setupMockFetchSequence(responses: Response[]): void;
+	static mockWindowLocation(mockLocation?: Partial<Location>): void;
 }

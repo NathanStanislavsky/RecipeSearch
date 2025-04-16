@@ -6,16 +6,7 @@ import { createFakeUser } from '../../utils/test/userTestUtils.js';
 
 describe('navigation bar', () => {
 	beforeEach(() => {
-		Object.defineProperty(window, 'location', {
-			configurable: true,
-			writable: true,
-			value: {
-				href: '',
-				assign: vi.fn(),
-				replace: vi.fn(),
-				reload: vi.fn()
-			}
-		});
+		TestHelper.mockWindowLocation();
 	});
 
 	describe('rendering', () => {

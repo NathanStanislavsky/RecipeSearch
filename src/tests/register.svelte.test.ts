@@ -40,19 +40,6 @@ async function testErrorScenario(
 	});
 }
 
-function mockWindowLocation() {
-	Object.defineProperty(window, 'location', {
-		configurable: true,
-		writable: true,
-		value: {
-			href: '',
-			assign: vi.fn(),
-			replace: vi.fn(),
-			reload: vi.fn()
-		}
-	});
-}
-
 describe('RegisterForm Integration', () => {
 	let mockFetch: ReturnType<typeof vi.fn>;
 	let user: ReturnType<typeof userEvent.setup>;
@@ -61,7 +48,7 @@ describe('RegisterForm Integration', () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		mockFetch = vi.fn();
 		global.fetch = mockFetch;
-		mockWindowLocation();
+		TestHelper.mockWindowLocation();
 		user = userEvent.setup();
 	});
 

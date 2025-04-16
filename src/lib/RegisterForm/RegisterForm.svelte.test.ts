@@ -139,10 +139,7 @@ describe('RegisterForm Component', () => {
 
 			// Mock window.location
 			const mockLocation = { href: '' };
-			Object.defineProperty(window, 'location', {
-				value: mockLocation,
-				writable: true
-			});
+			TestHelper.mockWindowLocation(mockLocation);
 
 			// Fill in the form
 			await user.type(screen.getByLabelText(/username/i), TEST_USER.name);

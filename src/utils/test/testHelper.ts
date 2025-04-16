@@ -134,4 +134,20 @@ export class TestHelper {
 		const spy = vi.spyOn(global, 'fetch');
 		responses.forEach((response) => spy.mockResolvedValueOnce(response));
 	}
+
+	static mockWindowLocation(mockLocation?: Partial<Location>): void {
+		if (mockLocation) {
+			Object.assign(window.location, mockLocation);
+		}
+		Object.defineProperty(window, 'location', {
+			configurable: true,
+			writable: true,
+			value: {
+				href: '',
+				assign: vi.fn(),
+				replace: vi.fn(),
+				reload: vi.fn()
+			}
+		});
+	}
 }

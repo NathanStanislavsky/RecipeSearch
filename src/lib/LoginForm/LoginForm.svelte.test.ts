@@ -122,11 +122,7 @@ describe('LoginForm Component', () => {
 
 		it('redirects to /search on successful login', async () => {
 			const user = userEvent.setup();
-			Object.defineProperty(window, 'location', {
-				configurable: true,
-				writable: true,
-				value: { href: '' }
-			});
+			TestHelper.mockWindowLocation();
 
 			vi.spyOn(global, 'fetch').mockResolvedValueOnce(
 				TestHelper.createMockResponse({ success: true }, 200)

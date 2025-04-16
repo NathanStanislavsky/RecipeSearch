@@ -14,19 +14,6 @@ function setup() {
 	return { emailInput, passwordInput, loginButton };
 }
 
-function mockWindowLocation() {
-	Object.defineProperty(window, 'location', {
-		configurable: true,
-		writable: true,
-		value: {
-			href: '',
-			assign: vi.fn(),
-			replace: vi.fn(),
-			reload: vi.fn()
-		}
-	});
-}
-
 async function simulateLogin(
 	user: ReturnType<typeof userEvent.setup>,
 	elements: ReturnType<typeof setup>,
@@ -46,7 +33,7 @@ describe('LoginForm Integration', () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		mockFetch = vi.fn();
 		global.fetch = mockFetch;
-		mockWindowLocation();
+		TestHelper.mockWindowLocation();
 		user = userEvent.setup();
 	});
 
