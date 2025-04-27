@@ -3,6 +3,11 @@ import { userEvent } from '@testing-library/user-event';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestHelper } from '../utils/test/testHelper.ts';
+import * as navigation from '$app/navigation';
+
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn()
+}));
 
 // Helper: Renders the register form and returns key elements.
 function setup() {
@@ -57,7 +62,7 @@ describe('RegisterForm Integration', () => {
 		cleanup();
 	});
 
-	it('handles successful registration', async () => {
+	it('handles successful registration and navigates to /login', async () => {
 		const fakeResponse = { message: 'User registered successfully', userId: 1 };
 		mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(fakeResponse, 201));
 
@@ -66,10 +71,8 @@ describe('RegisterForm Integration', () => {
 		await user.click(elements.registerButton);
 
 		await waitFor(() => {
-			expect(screen.getByText(/User registered successfully/i)).toBeInTheDocument();
+			expect(navigation.goto).toHaveBeenCalledWith('/login');
 		});
-
-		expect(window.location.href).toBe('/login');
 	});
 
 	describe('handles various error scenarios', async () => {

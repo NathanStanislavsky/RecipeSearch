@@ -4,6 +4,11 @@ import LoginForm from '$lib/LoginForm/LoginForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestHelper } from '../utils/test/testHelper.ts';
 import { TEST_USER } from '../utils/test/testConstants.js';
+import * as navigation from '$app/navigation';
+
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn()
+}));
 
 // Helper: Render component and return key elements.
 function setup() {
@@ -50,8 +55,10 @@ describe('LoginForm Integration', () => {
 		await simulateLogin(user, elements, TEST_USER.email, TEST_USER.correctPassword);
 
 		await waitFor(() => {
-			expect(window.location.href).toBe('/search');
+			expect(navigation.goto).toHaveBeenCalledWith('/search');
 		});
+
+		expect(mockFetch).toHaveBeenCalledTimes(1);
 	});
 
 	it('shows loading state during login', async () => {
@@ -60,11 +67,14 @@ describe('LoginForm Integration', () => {
 
 		const elements = setup();
 
-		await simulateLogin(user, elements, TEST_USER.email, TEST_USER.correctPassword);
+		const loginPromise = simulateLogin(user, elements, TEST_USER.email, TEST_USER.correctPassword);
 
-		// Immediately after clicking, the login button should be disabled and show a loading state
-		expect(elements.loginButton).toBeDisabled();
-		expect(elements.loginButton).toHaveTextContent('Logging in...');
+		await waitFor(() => {
+			expect(elements.loginButton).toBeDisabled();
+			expect(elements.loginButton).toHaveTextContent(/logging in.../i);
+		});
+
+		await loginPromise;
 	});
 
 	it('handles invalid credentials', async () => {

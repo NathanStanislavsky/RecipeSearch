@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	let message: string = '';
 	let isLoading = false;
 
@@ -24,7 +25,7 @@
 				return;
 			}
 
-			window.location.href = '/search';
+			await goto('/search');
 		} catch (error) {
 			console.error(error);
 			message = 'An error occurred during login';

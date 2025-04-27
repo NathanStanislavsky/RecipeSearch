@@ -1,8 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
+import { userEvent } from '@testing-library/user-event';
 import Navbar from './Navbar.svelte';
 import { TestHelper } from '../../utils/test/testHelper.ts';
 import { createFakeUser } from '../../utils/test/userTestUtils.js';
+import * as navigation from '$app/navigation';
+
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn()
+}));
 
 describe('navigation bar', () => {
 	beforeEach(() => {
@@ -96,41 +102,47 @@ describe('navigation bar', () => {
 		});
 
 		it('handles logout successfully', async () => {
+			const mockGoto = vi.spyOn(navigation, 'goto');
+			const user = userEvent.setup();
 			const mockFetch = vi
 				.spyOn(global, 'fetch')
 				.mockResolvedValueOnce(TestHelper.createMockResponse(null, 200));
 
 			render(Navbar, { user: mockUser });
 			const logoutButton = screen.getByRole('button', { name: /logout/i });
-			await fireEvent.click(logoutButton);
+			await user.click(logoutButton);
 
 			expect(mockFetch).toHaveBeenCalledWith('/logout', {
 				method: 'POST',
 				body: expect.any(FormData)
 			});
-			expect(window.location.href).toBe('/');
+			expect(mockGoto).toHaveBeenCalledWith('/');
 		});
 
 		it('handles logout error gracefully', async () => {
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+			const mockGoto = vi.spyOn(navigation, 'goto');
 			vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('Network error'));
 
 			render(Navbar, { user: mockUser });
 			const logoutButton = screen.getByRole('button', { name: /logout/i });
-			await fireEvent.click(logoutButton);
+			const user = userEvent.setup();
+			await user.click(logoutButton);
 
 			expect(consoleSpy).toHaveBeenCalledWith('Logout error:', expect.any(Error));
-			expect(window.location.href).not.toBe('/');
+			expect(mockGoto).not.toHaveBeenCalled();
 		});
 
 		it('does not redirect on failed logout response', async () => {
+			const mockGoto = vi.spyOn(navigation, 'goto');
 			vi.spyOn(global, 'fetch').mockResolvedValueOnce(TestHelper.createMockResponse(null, 500));
 
 			render(Navbar, { user: mockUser });
 			const logoutButton = screen.getByRole('button', { name: /logout/i });
-			await fireEvent.click(logoutButton);
+			const user = userEvent.setup();
+			await user.click(logoutButton);
 
-			expect(window.location.href).not.toBe('/');
+			expect(mockGoto).not.toHaveBeenCalled();
 		});
 	});
 });

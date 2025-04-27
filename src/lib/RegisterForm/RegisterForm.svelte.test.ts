@@ -1,12 +1,17 @@
 import { describe, beforeEach, it, expect, vi } from 'vitest';
 import type { Mock } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, waitFor, within } from '@testing-library/svelte';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
-import { userEvent } from '@storybook/test';
+import { userEvent } from '@testing-library/user-event';
 import { TestHelper } from '../../utils/test/testHelper.ts';
 import { TEST_USER } from '../../utils/test/testConstants.js';
+import * as navigation from '$app/navigation';
 
 type MockFetch = Mock;
+
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn()
+}));
 
 describe('RegisterForm Component', () => {
 	let mockFetch: MockFetch;
@@ -132,25 +137,30 @@ describe('RegisterForm Component', () => {
 			expect(await screen.findByText('Internal Server Error')).toBeInTheDocument();
 		});
 
-		it('redirects to login page on successful registration', async () => {
+		it('handles successful registration and navigates to /login', async () => {
+			const mockGoto = vi.spyOn(navigation, 'goto');
 			const user = userEvent.setup();
-			const mockResponse = { message: 'Registration successful' };
-			mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(mockResponse, 200));
 
-			// Mock window.location
-			const mockLocation = { href: '' };
-			TestHelper.mockWindowLocation(mockLocation);
+			const form = screen.getByTestId('register-form');
 
 			// Fill in the form
-			await user.type(screen.getByLabelText(/username/i), TEST_USER.name);
-			await user.type(screen.getByLabelText(/email/i), TEST_USER.email);
-			await user.type(screen.getByLabelText(/password/i), TEST_USER.correctPassword);
+			await user.type(screen.getByLabelText(/name/i), 'Test User');
+			await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+			await user.type(screen.getByLabelText(/password/i), 'password123');
+
+			// Mock successful response
+			global.fetch = vi.fn().mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({ message: 'User registered successfully' })
+			});
 
 			// Submit the form
-			await user.click(screen.getByRole('button', { name: /register/i }));
+			await user.click(within(form).getByRole('button', { name: /register/i }));
 
-			// Verify redirect
-			expect(window.location.href).toBe('/login');
+			// Wait for navigation
+			await waitFor(() => {
+				expect(mockGoto).toHaveBeenCalledWith('/login');
+			});
 		});
 
 		it('displays server response message', async () => {

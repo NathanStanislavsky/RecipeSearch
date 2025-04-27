@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	let name: string = '';
 	let email: string = '';
 	let password: string = '';
@@ -23,7 +24,7 @@
 			message = data.message;
 
 			if (res.ok) {
-				window.location.href = '/login';
+				await goto('/login');
 			}
 		} catch (error) {
 			console.error(error);

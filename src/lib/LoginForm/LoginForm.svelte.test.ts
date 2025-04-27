@@ -3,6 +3,11 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 import LoginForm from '$lib/LoginForm/LoginForm.svelte';
 import { userEvent } from '@storybook/test';
 import { TestHelper } from '../../utils/test/testHelper.ts';
+import * as navigation from '$app/navigation';
+
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn()
+}));
 
 describe('LoginForm Component', () => {
 	const mockUser = {
@@ -122,18 +127,26 @@ describe('LoginForm Component', () => {
 			expect(formData.get('password')).toBe(mockUser.password);
 		});
 
-		it('redirects to /search on successful login', async () => {
+		it('handles successful login and navigates to /search', async () => {
+			const mockGoto = vi.spyOn(navigation, 'goto');
 			const user = userEvent.setup();
-			TestHelper.mockWindowLocation();
 
-			vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-				TestHelper.createMockResponse({ success: true }, 200)
-			);
+			// Fill in the form
+			await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+			await user.type(screen.getByLabelText(/password/i), 'password123');
 
-			await fillAndSubmitForm(user);
+			// Mock successful response
+			global.fetch = vi.fn().mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({ success: true })
+			});
 
+			// Submit the form
+			await user.click(screen.getByRole('button', { name: /login/i }));
+
+			// Wait for navigation
 			await waitFor(() => {
-				expect(window.location.href).toBe('/search');
+				expect(mockGoto).toHaveBeenCalledWith('/search');
 			});
 		});
 	});

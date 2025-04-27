@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	export let user = page.data.user;
 	export let currentPath = page.url.pathname || '';
@@ -12,7 +13,7 @@
 				body: formData
 			});
 			if (response.ok) {
-				window.location.href = '/';
+				await goto('/');
 			}
 		} catch (error) {
 			console.error('Logout error:', error);
