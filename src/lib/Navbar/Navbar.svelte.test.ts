@@ -11,10 +11,6 @@ vi.mock('$app/navigation', () => ({
 }));
 
 describe('navigation bar', () => {
-	beforeEach(() => {
-		TestHelper.mockWindowLocation();
-	});
-
 	describe('rendering', () => {
 		it('renders the website name', () => {
 			render(Navbar);
@@ -97,8 +93,6 @@ describe('navigation bar', () => {
 
 		beforeEach(async () => {
 			mockUser = await createFakeUser();
-
-			window.location.href = '';
 		});
 
 		it('handles logout successfully', async () => {

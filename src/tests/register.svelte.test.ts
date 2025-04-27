@@ -53,7 +53,6 @@ describe('RegisterForm Integration', () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		mockFetch = vi.fn();
 		global.fetch = mockFetch;
-		TestHelper.mockWindowLocation();
 		user = userEvent.setup();
 	});
 
