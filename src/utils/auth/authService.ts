@@ -76,21 +76,20 @@ export class AuthService {
 				throw new AuthError('Invalid token payload format');
 			}
 
-			// Handle different token formats
-			if ('payload' in decoded) {
-				const payload = (decoded as { payload: UserPayload }).payload;
-				if (!this.isValidUserPayload(payload)) {
+			// Type guard for payload format
+			if (this.isPayloadFormat(decoded)) {
+				if (!this.isValidUserPayload(decoded.payload)) {
 					throw new AuthError('Invalid user payload structure');
 				}
-				return payload;
+				return decoded.payload;
 			}
 
-			// Handle login token format
-			if ('userId' in decoded && 'email' in decoded) {
+			// Type guard for login token format
+			if (this.isLoginTokenFormat(decoded)) {
 				const payload: UserPayload = {
-					id: (decoded as { userId: number }).userId,
-					email: (decoded as { email: string }).email,
-					name: (decoded as { name: string }).name || 'User'
+					id: decoded.userId,
+					email: decoded.email,
+					name: decoded.name || 'User'
 				};
 				if (!this.isValidUserPayload(payload)) {
 					throw new AuthError('Invalid user payload structure');
@@ -98,12 +97,12 @@ export class AuthService {
 				return payload;
 			}
 
-			// Handle direct user payload format
-			const userPayload = decoded as UserPayload;
-			if (!this.isValidUserPayload(userPayload)) {
-				throw new AuthError('Invalid user payload structure');
+			// Type guard for direct user payload
+			if (this.isValidUserPayload(decoded)) {
+				return decoded;
 			}
-			return userPayload;
+
+			throw new AuthError('Invalid token payload format');
 		} catch (error) {
 			if (error instanceof jwt.JsonWebTokenError) {
 				throw new AuthError(`JWT verification failed: ${error.message}`);
@@ -113,6 +112,29 @@ export class AuthService {
 			}
 			throw new AuthError('Unknown error during token verification');
 		}
+	}
+
+	/**
+	 * Type guard for payload format
+	 */
+	private isPayloadFormat(decoded: object): decoded is { payload: UserPayload } {
+		return (
+			'payload' in decoded && this.isValidUserPayload((decoded as { payload: unknown }).payload)
+		);
+	}
+
+	/**
+	 * Type guard for login token format
+	 */
+	private isLoginTokenFormat(
+		decoded: object
+	): decoded is { userId: number; email: string; name?: string } {
+		return (
+			'userId' in decoded &&
+			'email' in decoded &&
+			typeof (decoded as { userId: unknown }).userId === 'number' &&
+			typeof (decoded as { email: unknown }).email === 'string'
+		);
 	}
 
 	/**

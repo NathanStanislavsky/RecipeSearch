@@ -1,7 +1,22 @@
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent, Cookies } from '@sveltejs/kit';
 import type { Recipe } from '../../types/recipe.ts';
 import { expect, vi } from 'vitest';
-import { TEST_USER } from './testConstants.js';
+import type { JwtPayload } from 'jsonwebtoken';
+
+interface User {
+	id: number;
+	name: string;
+	email: string;
+}
+
+interface MockRequestEventOptions {
+	url?: string;
+	cookies?: Partial<Cookies>;
+	locals?: {
+		user: User;
+		[key: string]: unknown;
+	};
+}
 
 export class TestHelper {
 	/**
@@ -11,40 +26,56 @@ export class TestHelper {
 	 * @returns A mock RequestEvent
 	 */
 	static createMockRequestEvent(
-		url: string,
-		options: {
-			method?: string;
-			user?: { id: number; name: string; email: string } | null;
-			cookies?: Record<string, string>;
-		} = {}
+		url: string = 'http://localhost:3000',
+		options: MockRequestEventOptions = {}
 	): RequestEvent {
-		const defaultUser = {
-			id: TEST_USER.userId,
-			name: TEST_USER.name,
-			email: TEST_USER.email
+		const defaultUser: User = {
+			id: 1,
+			name: 'Test User',
+			email: 'test@example.com'
 		};
 
 		return {
-			request: new Request(url, { method: options.method || 'GET' }),
+			request: new Request(url),
 			url: new URL(url),
 			params: {},
-			route: { id: 'test' },
+			route: { id: null },
+			cookies: this.createMockCookies(options.cookies),
+			locals: {
+				user: options.locals?.user || defaultUser,
+				...options.locals
+			},
+			platform: undefined,
+			fetch: global.fetch,
+			setHeaders: vi.fn(),
+			getClientAddress: vi.fn().mockReturnValue('127.0.0.1'),
 			isDataRequest: false,
-			fetch: async () => new Response(),
-			setHeaders: () => {},
-			depends: () => {},
-			platform: 'node',
-			locals: { user: options.user ?? defaultUser },
-			cookies: {
-				get: vi.fn((key) => options.cookies?.[key]),
-				set: vi.fn(),
-				delete: vi.fn(),
-				getAll: vi.fn(() =>
-					Object.entries(options.cookies || {}).map(([name, value]) => ({ name, value }))
-				),
-				serialize: vi.fn()
-			}
-		} as unknown as RequestEvent;
+			isSubRequest: false
+		};
+	}
+
+	static createMockCookies(partialCookies: Partial<Cookies> = {}): Cookies {
+		return {
+			get: vi.fn(),
+			set: vi.fn(),
+			delete: vi.fn(),
+			getAll: vi.fn(),
+			serialize: vi.fn(),
+			...partialCookies
+		};
+	}
+
+	static createMockJwtPayload(partialPayload: Partial<JwtPayload> = {}): JwtPayload {
+		return {
+			iss: 'test',
+			sub: 'test',
+			aud: 'test',
+			exp: Math.floor(Date.now() / 1000) + 3600,
+			nbf: Math.floor(Date.now() / 1000),
+			iat: Math.floor(Date.now() / 1000),
+			jti: 'test',
+			...partialPayload
+		};
 	}
 
 	/**
@@ -66,21 +97,15 @@ export class TestHelper {
 	 * Creates a mock API response with the specified data and status
 	 * @param data - The response data
 	 * @param status - The HTTP status code (default: 200)
-	 * @param headers - Optional headers to include in the response
 	 * @returns A Response object
 	 */
-	static createMockResponse<T>(
-		data: T,
-		status: number = 200,
-		headers: Record<string, string> = {}
-	): Response {
-		const defaultHeaders = {
-			'Content-Type':
-				typeof data === 'string' || data instanceof FormData ? 'text/plain' : 'application/json'
-		};
-		const finalHeaders = { ...defaultHeaders, ...headers };
-		const responseBody = data instanceof FormData ? data : JSON.stringify(data);
-		return new Response(responseBody, { status, headers: finalHeaders });
+	static createMockResponse<T>(data: T, status: number = 200): Response {
+		return new Response(JSON.stringify(data), {
+			status,
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
 	}
 
 	/**
@@ -91,16 +116,14 @@ export class TestHelper {
 	 * @returns The parsed response data
 	 */
 	static async assertResponse<T>(
-		response: Response | undefined,
-		status: number,
-		expected: object
-	): Promise<T | undefined> {
-		expect(response).toBeDefined();
-		if (response) {
-			expect(response.status).toBe(status);
-			const json = await response.json();
-			expect(json).toStrictEqual(expected);
-			return json;
+		response: Response,
+		expectedStatus: number,
+		expectedData?: T
+	): Promise<void> {
+		expect(response.status).toBe(expectedStatus);
+		if (expectedData) {
+			const data = await response.json();
+			expect(data).toEqual(expectedData);
 		}
 	}
 

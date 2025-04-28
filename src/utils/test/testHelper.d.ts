@@ -1,5 +1,19 @@
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent, Cookies } from '@sveltejs/kit';
 import type { Recipe } from '../../types/recipe.ts';
+import type { JwtPayload } from 'jsonwebtoken';
+interface User {
+	id: number;
+	name: string;
+	email: string;
+}
+interface MockRequestEventOptions {
+	url?: string;
+	cookies?: Partial<Cookies>;
+	locals?: {
+		user: User;
+		[key: string]: unknown;
+	};
+}
 export declare class TestHelper {
 	/**
 	 * Creates a mock RequestEvent with the specified URL and method
@@ -7,18 +21,9 @@ export declare class TestHelper {
 	 * @param options - Additional options for the request event
 	 * @returns A mock RequestEvent
 	 */
-	static createMockRequestEvent(
-		url: string,
-		options?: {
-			method?: string;
-			user?: {
-				id: number;
-				name: string;
-				email: string;
-			} | null;
-			cookies?: Record<string, string>;
-		}
-	): RequestEvent;
+	static createMockRequestEvent(url?: string, options?: MockRequestEventOptions): RequestEvent;
+	static createMockCookies(partialCookies?: Partial<Cookies>): Cookies;
+	static createMockJwtPayload(partialPayload?: Partial<JwtPayload>): JwtPayload;
 	/**
 	 * Creates a mock recipe object with the specified ID
 	 * @param id - The recipe ID
@@ -29,14 +34,9 @@ export declare class TestHelper {
 	 * Creates a mock API response with the specified data and status
 	 * @param data - The response data
 	 * @param status - The HTTP status code (default: 200)
-	 * @param headers - Optional headers to include in the response
 	 * @returns A Response object
 	 */
-	static createMockResponse<T>(
-		data: T,
-		status?: number,
-		headers?: Record<string, string>
-	): Response;
+	static createMockResponse<T>(data: T, status?: number): Response;
 	/**
 	 * Asserts that a response matches the expected status and data
 	 * @param response - The response to assert
@@ -45,10 +45,10 @@ export declare class TestHelper {
 	 * @returns The parsed response data
 	 */
 	static assertResponse<T>(
-		response: Response | undefined,
-		status: number,
-		expected: object
-	): Promise<T | undefined>;
+		response: Response,
+		expectedStatus: number,
+		expectedData?: T
+	): Promise<void>;
 	/**
 	 * Creates a test request with the specified URL, method, and body
 	 * @param url - The request URL
@@ -68,3 +68,4 @@ export declare class TestHelper {
 	 */
 	static setupMockFetchSequence(responses: Response[]): void;
 }
+export {};
