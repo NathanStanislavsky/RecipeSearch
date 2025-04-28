@@ -1,58 +1,66 @@
-# create-svelte
+# PantryChef
 
-Everything you need to build a Svelte library, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+PantryChef helps you discover recipes you can make with the ingredients you already have in your pantry! Enter your ingredients, and it fetches relevant recipes using the [Spoonacular API](https://rapidapi.com/spoonacular/api/recipe-food-nutrition)..
 
-Read more about creating a library [in the docs](https://svelte.dev/docs/kit/packaging).
+Built with SvelteKit, Node.js, TypeScript, Neon Serverless PostgreSQL, and Tailwind CSS.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+* Search for recipes by listing available ingredients.
+* View detailed recipe information: image, link to recipe, preparation time, yield
 
-```bash
-# create a new project in the current directory
-npx sv create
+## Tech Stack
 
-# create a new project in my-app
-npx sv create my-app
-```
+* Frontend: SvelteKit, Tailwind CSS
+* Backend: Node.js (within SvelteKit endpoints), TypeScript
+* Database: Neon Serverless PostgreSQL
+* API: Spoonacular (via RapidAPI)
 
-## Developing
+## Getting Started
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Prerequisites
 
-```bash
-npm run dev
+* Node.js (v20 or newer recommended)
+* npm (or yarn/pnpm)
+* Git
+* A free account on [RapidAPI](https://rapidapi.com/hub) to get a Spoonacular API key.
+* A free account and database setup on [Neon](https://neon.tech/).
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+### Installation & Setup
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/NathanStanislavsky/RecipeSearch.git](https://github.com/NathanStanislavsky/RecipeSearch.git)
+    cd pantrychef
+    ```
 
-## Building
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    # or yarn install / pnpm install
+    ```
 
-To build your library:
+3.  **Set up environment variables:**
+    * Create a `.env` file
+    * Open the `.env` file and add your credentials:
+        * `RAPIDAPI_KEY_2`: Your API key from [RapidAPI Hub](https://rapidapi.com/hub) for the Spoonacular API.
+        * `DATABASE_URL`: Your database connection string (pooled connection recommended) from [Neon](https://neon.tech/).
+        * `JWT_SECRET`: A long, random, secret string of your choice for encrypting session tokens.
 
-```bash
-npm run package
-```
+4.  **Database Migration:**
+    * Migrate databse: `npx prisma migrate dev`
 
-To create a production version of your showcase app:
+5.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    The application should now be running on `http://localhost:5173` (or the port specified).
 
-```bash
-npm run build
-```
+## Available Scripts
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-
-## Publishing
-
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
-
-To publish your library to [npm](https://www.npmjs.com):
-
-```bash
-npm publish
-```
+* `npm run dev`: Starts the development server.
+* `npm test`: Runs tests
+* `npm test:unit`: Runs unit tests
+* `npm test:e2e`: Runs e2e tests
+* `npm run lint`: Lints the codebase.
+* `npm run format`: Formats the codebase.
