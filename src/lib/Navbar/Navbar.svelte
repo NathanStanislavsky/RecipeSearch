@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 
-	export let user = page.data.user;
-	export let currentPath = page.url.pathname || '';
+	export let user;
+	export let currentPath;
 
 	async function handleLogout() {
 		try {
