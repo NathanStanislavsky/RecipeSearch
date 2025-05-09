@@ -57,9 +57,7 @@ describe('Search server integration tests', () => {
 				TestHelper.setupMockFetch(TestHelper.createMockResponse('External API error', 500)),
 			expectedError: {
 				error: 'ApiError',
-				message: '"External API error"',
-				code: 'API_ERROR',
-				status: 500
+				message: 'Failed to fetch recipes by ingredients'
 			}
 		},
 		{
@@ -74,9 +72,7 @@ describe('Search server integration tests', () => {
 					),
 			expectedError: {
 				error: 'ApiError',
-				message: 'Request timeout',
-				code: 'API_ERROR',
-				status: 500
+				message: 'Failed to fetch recipes by ingredients'
 			}
 		}
 	])('should handle various API error scenarios', async ({ mock, expectedError }) => {
@@ -111,11 +107,10 @@ describe('Search server integration tests', () => {
 			{ id: 1, title: 'Tomato Soup', image: 'tomato_soup.jpg' },
 			{ id: 2, title: 'Tomato Salad', image: 'tomato_salad.jpg' }
 		];
-		const errorText = 'Bulk API error';
 
 		TestHelper.setupMockFetchSequence([
 			TestHelper.createMockResponse(mockIngredientsRecipes, 200),
-			new Response(errorText, {
+			new Response('Bulk API error', {
 				status: 500,
 				headers: { 'Content-Type': 'text/plain' }
 			})
@@ -125,9 +120,7 @@ describe('Search server integration tests', () => {
 
 		await TestHelper.assertResponse(response, 500, {
 			error: 'ApiError',
-			message: errorText,
-			code: 'API_ERROR',
-			status: 500
+			message: 'Failed to fetch detailed recipe information'
 		});
 	});
 

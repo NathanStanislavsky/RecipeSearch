@@ -11,6 +11,7 @@ import {
 	constructApiUrl
 } from '$utils/search/recipeByIngredients/recipeByIngredientsUtils.js';
 import { createJsonResponse } from '$utils/api/apiUtils.js';
+import { ApiError, handleError } from '$utils/errors/AppError.js';
 
 /**
  * GET handler for the search endpoint
@@ -34,7 +35,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		// 3. Fetch recipes based on ingredients
 		const ingredientSearchResponse = await fetchRecipeByIngredients(recipeByIngredientsUrl);
 		if (!ingredientSearchResponse.ok) {
-			return ingredientSearchResponse;
+			throw new ApiError('Failed to fetch recipes by ingredients', ingredientSearchResponse.status);
 		}
 
 		// 4. Extract recipe IDs from the fetched recipes
@@ -55,20 +56,20 @@ export const GET: RequestHandler = async ({ url }) => {
 		// 6. Fetch detailed recipe information using the bulk API URL
 		const bulkResponse = await fetchBulkRecipeInformation(bulkApiUrl);
 		if (!bulkResponse.ok) {
-			return bulkResponse;
+			throw new ApiError('Failed to fetch detailed recipe information', bulkResponse.status);
 		}
 
 		// 7. Filter the detailed recipe information
 		const finalResponse = await filterInformationBulkReponse(bulkResponse);
 		return finalResponse;
 	} catch (error) {
-		console.error('Error in search endpoint:', error);
+		const errorResponse = handleError(error, 'Recipe Search');
 		return createJsonResponse(
 			{
-				error: 'Failed to search recipes',
-				message: error instanceof Error ? error.message : 'Unknown error'
+				error: errorResponse.error,
+				message: errorResponse.message
 			},
-			500
+			errorResponse.status
 		);
 	}
 };
