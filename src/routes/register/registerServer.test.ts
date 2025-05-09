@@ -90,7 +90,7 @@ describe('POST /register endpoint', () => {
 
 	it('should return a 500 error when an exception is thrown', async () => {
 		vi.spyOn(selectModule, 'getUserByEmail').mockImplementation(() => {
-			throw new Error('Simulated DB error');
+			throw new Error('An unexpected error occurred');
 		});
 
 		const request = createRegisterRequest(createRegisterPayload());
@@ -100,7 +100,7 @@ describe('POST /register endpoint', () => {
 
 		expect(result).toEqual({
 			success: false,
-			message: 'Failed to register'
+			message: 'An unexpected error occurred'
 		});
 	});
 
@@ -137,6 +137,18 @@ describe('POST /register endpoint', () => {
 		expect(result).toEqual({
 			success: false,
 			message: 'Name is required'
+		});
+	});
+
+	it('should handle ValidationError properly', async () => {
+		const request = createRegisterRequest(createRegisterPayload({ email: '' }));
+		const event = createRegisterRequestEvent(request);
+
+		const result = await actions.default(event);
+
+		expect(result).toEqual({
+			success: false,
+			message: 'Email is required'
 		});
 	});
 });
