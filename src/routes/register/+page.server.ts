@@ -3,7 +3,7 @@ import { getUserByEmail } from '../../queries/user/select.js';
 import bcrypt from 'bcryptjs';
 import { createUser } from '../../queries/user/insert.js';
 import { type RequestEvent } from '@sveltejs/kit';
-import { ValidationError, handleError } from '../../utils/errors/AppError.js';
+import { ValidationError, AuthError, handleError } from '../../utils/errors/AppError.js';
 
 export const actions: Actions = {
 	default: async ({ request }: RequestEvent) => {
@@ -24,7 +24,7 @@ export const actions: Actions = {
 
 			const existingUser = await getUserByEmail(email);
 			if (existingUser) {
-				return { success: false, message: 'Email already registered' };
+				throw new AuthError('Email already registered');
 			}
 
 			const hashedPassword = await bcrypt.hash(password, 10);
