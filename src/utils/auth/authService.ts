@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '$env/static/private';
 import type { JWTPayload, UserPayload, User } from '../../types/user.ts';
 import type { Cookies } from '@sveltejs/kit';
 
@@ -15,27 +14,16 @@ class AuthError extends Error {
 }
 
 /**
- * Singleton service handling all authentication-related operations
+ * Service handling all authentication-related operations
  */
 export class AuthService {
-	private static instance: AuthService;
 	private jwtSecret: string;
 
-	private constructor() {
-		if (!JWT_SECRET) {
-			throw new AuthError('JWT_SECRET environment variable is not set');
+	constructor(jwtSecret: string) {
+		if (!jwtSecret) {
+			throw new AuthError('JWT secret is required');
 		}
-		this.jwtSecret = JWT_SECRET;
-	}
-
-	/**
-	 * Gets the singleton instance of AuthService
-	 */
-	public static getInstance(): AuthService {
-		if (!AuthService.instance) {
-			AuthService.instance = new AuthService();
-		}
-		return AuthService.instance;
+		this.jwtSecret = jwtSecret;
 	}
 
 	/**
@@ -78,10 +66,10 @@ export class AuthService {
 
 			// Type guard for payload format
 			if (this.isPayloadFormat(decoded)) {
-				if (!this.isValidUserPayload(decoded.payload)) {
+				if (!this.isValidUserPayload((decoded as { payload: unknown }).payload)) {
 					throw new AuthError('Invalid user payload structure');
 				}
-				return decoded.payload;
+				return (decoded as { payload: UserPayload }).payload;
 			}
 
 			// Type guard for login token format

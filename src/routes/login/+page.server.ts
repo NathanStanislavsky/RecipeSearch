@@ -3,6 +3,7 @@ import { getUserByEmail } from '../../queries/user/select.js';
 import type { RequestEvent } from '@sveltejs/kit';
 import { AuthService } from '../../utils/auth/authService.js';
 import { error } from '@sveltejs/kit';
+import { JWT_SECRET } from '$env/static/private';
 
 interface HttpError {
 	status: number;
@@ -12,7 +13,7 @@ interface HttpError {
 export const actions: Actions = {
 	default: async ({ request, cookies }: RequestEvent) => {
 		try {
-			const authService = AuthService.getInstance();
+			const authService = new AuthService(JWT_SECRET);
 
 			// Get form data.
 			const formData = await request.formData();

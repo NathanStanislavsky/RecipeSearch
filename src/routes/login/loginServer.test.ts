@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { actions } from './+page.server.js';
 import * as selectModule from '../../queries/user/select.js';
-import { TestHelper } from '../../utils/test/testHelper.ts';
+import { TestHelper } from '../../utils/test/testHelper.js';
 import { createFakeUser } from '../../utils/test/userTestUtils.js';
 import { TEST_USER } from '../../utils/test/testConstants.js';
 
