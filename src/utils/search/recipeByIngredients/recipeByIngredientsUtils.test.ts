@@ -4,20 +4,23 @@ import {
 	fetchRecipeByIngredients,
 	constructApiUrl
 } from './recipeByIngredientsUtils.js';
+import { TestHelper } from '$utils/test/testHelper.js';
 
 const createTestURL = (urlString: string) => new URL(urlString);
 
 describe('_parseIngredients', () => {
 	describe('when ingredients parameter is missing', () => {
 		it('returns 400 error if ingredients are missing', async () => {
-			const url = createTestURL('http://localhost/api/getRecipe');
+			const url = new URL('http://localhost/api/getRecipe');
 			const response = parseIngredients(url);
-
-			expect((response as Response).status).toBe(400);
-			expect(response).toBeInstanceOf(Response);
-
+			expect(response instanceof Response).toBe(true);
 			const json = await (response as Response).json();
-			expect(json).toEqual({ error: 'Missing required parameter: ingredients' });
+			expect(json).toEqual({
+				error: 'ValidationError',
+				message: 'Missing required parameter: ingredients',
+				code: 'VALIDATION_ERROR',
+				status: 400
+			});
 		});
 	});
 
@@ -79,18 +82,14 @@ describe('_fetchRecipeByIngredients', () => {
 
 	describe('when API returns error status', () => {
 		it('should return an error response for a failed fetch', async () => {
-			global.fetch = vi.fn().mockResolvedValue({
-				ok: false,
-				status: 500,
-				text: async () => 'Internal Server Error'
-			});
-
+			TestHelper.setupMockFetch(TestHelper.createMockResponse('Internal Server Error', 500));
 			const response = await fetchRecipeByIngredients(TEST_URL);
 			expect(response.ok).toBe(false);
 			expect(await response.json()).toEqual({
-				error: 'Failed to fetch data from RapidAPI',
-				status: 500,
-				message: 'Internal Server Error'
+				error: 'ApiError',
+				message: '"Internal Server Error"',
+				code: 'API_ERROR',
+				status: 500
 			});
 		});
 	});

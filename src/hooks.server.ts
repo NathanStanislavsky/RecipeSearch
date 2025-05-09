@@ -1,7 +1,8 @@
-import { AuthService } from '$utils/auth/authService.ts';
+import { AuthService } from '$utils/auth/authService.js';
 import type { Handle } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { JWT_SECRET } from '$env/static/private';
+import { handleError } from '$utils/errors/AppError.js';
 
 /**
  * Constants for protected routes and cookie settings
@@ -20,10 +21,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const decoded = authService.verifyToken(token);
 			event.locals.user = decoded;
 		} catch (error) {
-			console.error(
-				'JWT verification failed:',
-				error instanceof Error ? error.message : 'Unknown error'
-			);
+			handleError(error, 'JWT Verification');
 			// Clear the invalid token
 			event.cookies.delete('jwt', { path: '/' });
 		}
@@ -36,5 +34,5 @@ export const handle: Handle = async ({ event, resolve }) => {
 		throw redirect(303, '/login');
 	}
 
-	return await resolve(event);
+	return resolve(event);
 };

@@ -4,6 +4,7 @@ import {
 	getSpoonacularHeaders,
 	handleApiResponse
 } from '$utils/api/apiUtils.js';
+import { ValidationError, ApiError, handleError } from '$utils/errors/AppError.js';
 
 /**
  * Parses ingredients from the request URL
@@ -13,12 +14,8 @@ import {
 export const parseIngredients = (url: URL): string | Response => {
 	const ingredients = url.searchParams.get('ingredients');
 	if (!ingredients) {
-		return createJsonResponse(
-			{
-				error: 'Missing required parameter: ingredients'
-			},
-			400
-		);
+		const error = new ValidationError('Missing required parameter: ingredients');
+		return createJsonResponse(handleError(error, 'Parse Ingredients'), 400);
 	}
 	return ingredients;
 };
@@ -49,13 +46,7 @@ export const fetchRecipeByIngredients = async (apiUrl: URL): Promise<Response> =
 		});
 		return handleApiResponse(response);
 	} catch (error) {
-		console.error('Error fetching recipes by ingredients:', error);
-		return createJsonResponse(
-			{
-				error: 'Failed to fetch recipes',
-				message: error instanceof Error ? error.message : 'Network error'
-			},
-			500
-		);
+		const apiError = new ApiError(error instanceof Error ? error.message : 'Network error', 500);
+		return createJsonResponse(handleError(apiError, 'Fetch Recipes'), 500);
 	}
 };

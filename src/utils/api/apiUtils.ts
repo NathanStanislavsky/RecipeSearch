@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import { ConfigError, ApiError, handleError } from '../errors/AppError.js';
 
 /** Base URL for the Spoonacular API */
 export const SPOONACULAR_BASE_URL = 'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com';
@@ -6,14 +7,15 @@ export const SPOONACULAR_BASE_URL = 'https://spoonacular-recipe-food-nutrition-v
 /**
  * Gets the headers required for Spoonacular API requests
  * @returns Headers object with API key and content type
+ * @throws ConfigError if API key is not set
  */
 export const getSpoonacularHeaders = (): Record<string, string> => {
 	if (!env.RAPIDAPI_KEY_2) {
-		console.error('RAPIDAPI_KEY_2 environment variable is not set');
+		throw new ConfigError('RAPIDAPI_KEY_2 environment variable is not set');
 	}
 
 	return {
-		'x-rapidapi-key': env.RAPIDAPI_KEY_2 || '',
+		'x-rapidapi-key': env.RAPIDAPI_KEY_2,
 		'x-rapidapi-host': 'spoonacular-recipe-food-nutrition-v1.p.rapidapi.com',
 		'Content-Type': 'application/json'
 	};
@@ -46,14 +48,8 @@ export const handleApiResponse = async (response: Response): Promise<Response> =
 			errorMessage = 'Could not parse error response';
 		}
 
-		return createJsonResponse(
-			{
-				error: 'Failed to fetch data from RapidAPI',
-				status: response.status,
-				message: errorMessage
-			},
-			response.status
-		);
+		const error = new ApiError(errorMessage, response.status);
+		return createJsonResponse(handleError(error, 'API Response'), response.status);
 	}
 	return response;
 };
@@ -61,7 +57,7 @@ export const handleApiResponse = async (response: Response): Promise<Response> =
 /**
  * Creates a standardized JSON response
  * @param data - The data to include in the response
- * @param status - HTTP status code (default: 200)
+ * @param status - The HTTP status code
  * @param headers - Additional headers to include
  * @returns A Response object with JSON content
  */

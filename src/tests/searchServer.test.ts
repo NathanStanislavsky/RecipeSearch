@@ -27,17 +27,27 @@ describe('Search server integration tests', () => {
 	it.each([
 		{
 			url: 'http://localhost/api/getRecipe',
-			expectedError: 'Missing required parameter: ingredients'
+			expectedError: {
+				error: 'ValidationError',
+				message: 'Missing required parameter: ingredients',
+				code: 'VALIDATION_ERROR',
+				status: 400
+			}
 		},
 		{
 			url: 'http://localhost/api/getRecipe?ingredients=',
-			expectedError: 'Missing required parameter: ingredients'
+			expectedError: {
+				error: 'ValidationError',
+				message: 'Missing required parameter: ingredients',
+				code: 'VALIDATION_ERROR',
+				status: 400
+			}
 		}
 	])(
 		'should return 400 for invalid ingredient parameters when URL is "%s"',
 		async ({ url, expectedError }) => {
 			const response = await GET(TestHelper.createMockRequestEvent(url));
-			await TestHelper.assertResponse(response, 400, { error: expectedError });
+			await TestHelper.assertResponse(response, 400, expectedError);
 		}
 	);
 
@@ -46,8 +56,9 @@ describe('Search server integration tests', () => {
 			mock: () =>
 				TestHelper.setupMockFetch(TestHelper.createMockResponse('External API error', 500)),
 			expectedError: {
-				error: 'Failed to fetch data from RapidAPI',
+				error: 'ApiError',
 				message: '"External API error"',
+				code: 'API_ERROR',
 				status: 500
 			}
 		},
@@ -62,8 +73,10 @@ describe('Search server integration tests', () => {
 							)
 					),
 			expectedError: {
-				error: 'Failed to fetch recipes',
-				message: 'Request timeout'
+				error: 'ApiError',
+				message: 'Request timeout',
+				code: 'API_ERROR',
+				status: 500
 			}
 		}
 	])('should handle various API error scenarios', async ({ mock, expectedError }) => {
@@ -111,9 +124,10 @@ describe('Search server integration tests', () => {
 		const response = await GET(createMockRequest('tomato,cheese'));
 
 		await TestHelper.assertResponse(response, 500, {
-			error: 'Failed to fetch data from RapidAPI',
-			status: 500,
-			message: errorText
+			error: 'ApiError',
+			message: errorText,
+			code: 'API_ERROR',
+			status: 500
 		});
 	});
 

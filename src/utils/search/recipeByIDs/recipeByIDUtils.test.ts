@@ -26,7 +26,7 @@ describe('recipeByIDsUtils', () => {
 		])('when %s', (_, sampleData) => {
 			it('returns an error response', async () => {
 				const result = extractRecipeIds(sampleData);
-				await TestHelper.assertResponse(result.errorResponse, 404, {
+				await TestHelper.assertResponse(result.errorResponse as Response, 404, {
 					error: 'No recipes found for the provided ingredients'
 				});
 			});
@@ -84,22 +84,19 @@ describe('recipeByIDsUtils', () => {
 		});
 
 		it('returns error response when bulk API call fails', async () => {
-			// Simulate a failing fetch call with plain text error message.
 			const errorText = 'Bulk API error';
-			const failingResponse = new Response(errorText, {
-				status: 500,
-				headers: { 'Content-Type': 'text/plain' }
-			});
-			mockFetch.mockResolvedValueOnce(failingResponse);
+			const mockResponse = TestHelper.createMockResponse(errorText, 500);
+			mockFetch.mockResolvedValueOnce(mockResponse);
 
 			const response = await fetchBulkRecipeInformation(testUrl);
-			expect(response.status).toBe(500);
+			expect(response.ok).toBe(false);
 
 			const json = await response.json();
 			expect(json).toEqual({
-				error: 'Failed to fetch data from RapidAPI',
-				status: 500,
-				message: errorText
+				error: 'ApiError',
+				message: `"${errorText}"`,
+				code: 'API_ERROR',
+				status: 500
 			});
 		});
 	});

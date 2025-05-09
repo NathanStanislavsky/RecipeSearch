@@ -86,13 +86,13 @@ describe('/login endpoint', () => {
 	});
 
 	it('handles database errors gracefully', async () => {
-		vi.spyOn(selectModule, 'getUserByEmail').mockRejectedValue(new Error('Database error'));
+		vi.spyOn(selectModule, 'getUserByEmail').mockRejectedValueOnce(new Error('Database error'));
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
 		await expect(actions.default(event)).rejects.toMatchObject({
 			status: 500,
-			body: { message: 'Login failed' }
+			body: { message: 'Database error' }
 		});
 	});
 

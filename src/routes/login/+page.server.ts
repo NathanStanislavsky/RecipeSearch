@@ -4,11 +4,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { AuthService } from '../../utils/auth/authService.js';
 import { error } from '@sveltejs/kit';
 import { JWT_SECRET } from '$env/static/private';
-
-interface HttpError {
-	status: number;
-	body: { message: string };
-}
+import { ValidationError, AuthError, handleError } from '$utils/errors/AppError.js';
 
 export const actions: Actions = {
 	default: async ({ request, cookies }: RequestEvent) => {
@@ -23,19 +19,19 @@ export const actions: Actions = {
 			// Validate input.
 			const validation = authService.validateLoginForm(email, password);
 			if (!validation.isValid) {
-				throw error(400, 'Email and password required');
+				throw new ValidationError('Email and password required');
 			}
 
 			// Look up the user by email.
 			const user = await getUserByEmail(email);
 			if (!user) {
-				throw error(401, 'Invalid credentials');
+				throw new AuthError('Invalid credentials');
 			}
 
 			// Validate credentials.
 			const isValid = await authService.validateCredentials(user, password);
 			if (!isValid) {
-				throw error(401, 'Invalid credentials');
+				throw new AuthError('Invalid credentials');
 			}
 
 			// Create and set JWT token.
@@ -45,19 +41,8 @@ export const actions: Actions = {
 			// Return success on successful login.
 			return { success: true, message: 'Login successful' };
 		} catch (err: unknown) {
-			console.error(err);
-			// if error has a `status` property, assume it is an HttpError.
-			if (
-				err &&
-				typeof err === 'object' &&
-				'status' in err &&
-				'body' in err &&
-				typeof (err as HttpError).status === 'number'
-			) {
-				throw err;
-			}
-			// For any unexpected errors, throw a 500 error.
-			throw error(500, 'Login failed');
+			const errorResponse = handleError(err, 'Login');
+			throw error(errorResponse.status, errorResponse.message);
 		}
 	}
 };
