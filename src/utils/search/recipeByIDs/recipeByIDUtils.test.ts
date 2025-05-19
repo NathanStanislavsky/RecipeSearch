@@ -6,8 +6,18 @@ import {
 	filterInformationBulkReponse
 } from './recipeByIDUtils.js';
 import { TestHelper } from '../../test/testHelper.ts';
+import { ApiError, ConfigError } from '../../errors/AppError.js';
 
 describe('recipeByIDsUtils', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		TestHelper.mockRateLimiter(true); // Allow API requests by default
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	describe('extractRecipeIds', () => {
 		it('extracts recipe IDs from valid data', () => {
 			const sampleData = [
@@ -66,9 +76,6 @@ describe('recipeByIDsUtils', () => {
 		beforeEach(() => {
 			mockFetch = vi.spyOn(global, 'fetch');
 		});
-		afterEach(() => {
-			vi.restoreAllMocks();
-		});
 
 		it('returns a successful response when API returns 200', async () => {
 			const mockData = [{ id: 123, title: 'Recipe One' }];
@@ -88,16 +95,35 @@ describe('recipeByIDsUtils', () => {
 			const mockResponse = TestHelper.createMockResponse(errorText, 500);
 			mockFetch.mockResolvedValueOnce(mockResponse);
 
-			const response = await fetchBulkRecipeInformation(testUrl);
-			expect(response.ok).toBe(false);
+			// Mock the RateLimiter before the test
+			TestHelper.mockRateLimiter(true);
 
-			const json = await response.json();
-			expect(json).toEqual({
-				error: 'ApiError',
-				message: `"${errorText}"`,
-				code: 'API_ERROR',
-				status: 500
-			});
+			try {
+				await fetchBulkRecipeInformation(testUrl);
+				// Should not reach here
+				expect(true).toBe(false);
+			} catch (error) {
+				expect(error).toBeInstanceOf(ApiError);
+				const apiError = error as ApiError;
+				expect(apiError.name).toBe('ApiError');
+				expect(apiError.status).toBe(500);
+			}
+		});
+
+		it('handles rate limit exceeded', async () => {
+			// Mock the RateLimiter to deny requests
+			TestHelper.mockRateLimiter(false);
+
+			try {
+				await fetchBulkRecipeInformation(testUrl);
+				// Should not reach here
+				expect(true).toBe(false);
+			} catch (error) {
+				expect(error).toBeInstanceOf(ConfigError);
+				const configError = error as ConfigError;
+				expect(configError.name).toBe('ConfigError');
+				expect(configError.message).toBe('Daily API request limit reached');
+			}
 		});
 	});
 

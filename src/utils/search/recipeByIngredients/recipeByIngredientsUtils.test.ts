@@ -5,6 +5,7 @@ import {
 	constructApiUrl
 } from './recipeByIngredientsUtils.js';
 import { TestHelper } from '$utils/test/testHelper.js';
+import { ApiError, ConfigError } from '../../errors/AppError.js';
 
 const createTestURL = (urlString: string) => new URL(urlString);
 
@@ -61,6 +62,7 @@ describe('_fetchRecipeByIngredients', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		global.fetch = vi.fn();
+		TestHelper.mockRateLimiter(true); // Allow API requests by default
 	});
 
 	describe('when API responds successfully', () => {
@@ -83,14 +85,32 @@ describe('_fetchRecipeByIngredients', () => {
 	describe('when API returns error status', () => {
 		it('should return an error response for a failed fetch', async () => {
 			TestHelper.setupMockFetch(TestHelper.createMockResponse('Internal Server Error', 500));
-			const response = await fetchRecipeByIngredients(TEST_URL);
-			expect(response.ok).toBe(false);
-			expect(await response.json()).toEqual({
-				error: 'ApiError',
-				message: '"Internal Server Error"',
-				code: 'API_ERROR',
-				status: 500
-			});
+
+			try {
+				await fetchRecipeByIngredients(TEST_URL);
+				// Should not reach here
+				expect(true).toBe(false);
+			} catch (error) {
+				expect(error).toBeInstanceOf(ApiError);
+				const apiError = error as ApiError;
+				expect(apiError.name).toBe('ApiError');
+				expect(apiError.status).toBe(500);
+			}
+		});
+
+		it('should handle rate limit exceeded', async () => {
+			TestHelper.mockRateLimiter(false); // Simulate rate limit exceeded
+
+			try {
+				await fetchRecipeByIngredients(TEST_URL);
+				// Should not reach here
+				expect(true).toBe(false);
+			} catch (error) {
+				expect(error).toBeInstanceOf(ConfigError);
+				const configError = error as ConfigError;
+				expect(configError.name).toBe('ConfigError');
+				expect(configError.message).toBe('Daily API request limit reached');
+			}
 		});
 	});
 });

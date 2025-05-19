@@ -1,8 +1,4 @@
-import {
-	createApiUrl,
-	createJsonResponse,
-	handleApiResponse
-} from '$utils/api/apiUtils.js';
+import { createApiUrl, createJsonResponse, handleApiResponse } from '$utils/api/apiUtils.js';
 import type { ExtractRecipeIdsResult } from '../../../types/recipe.ts';
 import type { BasicRecipe } from '../../../types/recipe.ts';
 import type { DetailedRecipe } from '../../../types/recipe.ts';

@@ -30,9 +30,9 @@ export const favorites = pgTable('favorites', {
 });
 
 export const apiRequests = pgTable('api_requests', {
-    id: serial('id').primaryKey(),
-    date: text('date').notNull().unique(),
-    count: integer('count').notNull().default(0)
+	id: serial('id').primaryKey(),
+	date: text('date').notNull().unique(),
+	count: integer('count').notNull().default(0)
 });
 
 export const schema = { users, recipes, favorites, apiRequests };
