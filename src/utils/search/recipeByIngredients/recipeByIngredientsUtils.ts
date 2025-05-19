@@ -40,11 +40,7 @@ export const constructApiUrl = (ingredients: string, limit: number = 100): URL =
  */
 export const fetchRecipeByIngredients = async (apiUrl: URL): Promise<Response> => {
 	try {
-		const response = await fetch(apiUrl.toString(), {
-			method: 'GET',
-			headers: getSpoonacularHeaders()
-		});
-		return handleApiResponse(response);
+		return handleApiResponse(apiUrl.toString());
 	} catch (error) {
 		const apiError = new ApiError(error instanceof Error ? error.message : 'Network error', 500);
 		return createJsonResponse(handleError(apiError, 'Fetch Recipes'), 500);

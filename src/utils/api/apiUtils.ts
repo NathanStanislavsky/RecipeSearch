@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/private';
-import { ConfigError, ApiError, handleError } from '../errors/AppError.js';
+import { ConfigError, ApiError } from '../errors/AppError.js';
+import { RateLimiter } from './rateLimiter.ts';
 
 /** Base URL for the Spoonacular API */
 export const SPOONACULAR_BASE_URL = 'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com';
@@ -38,19 +39,22 @@ export const createApiUrl = (endpoint: string): URL => {
  * @param response - The fetch Response object
  * @returns Either the original response or an error response
  */
-export const handleApiResponse = async (response: Response): Promise<Response> => {
-	if (!response.ok) {
-		let errorMessage = '';
-		try {
-			const errorText = await response.text();
-			errorMessage = errorText;
-		} catch {
-			errorMessage = 'Could not parse error response';
-		}
+export const handleApiResponse = async (apiURLString: string): Promise<Response> => {
+	const canMakeRequest = await RateLimiter.checkAndIncrement();
 
-		const error = new ApiError(errorMessage, response.status);
-		return createJsonResponse(handleError(error, 'API Response'), response.status);
+	if (!canMakeRequest) {
+		throw new ConfigError('Daily API request limit reached');
 	}
+
+	const response = await fetch(apiURLString, {
+		method: 'GET',
+		headers: getSpoonacularHeaders()
+	});
+
+	if (!response.ok) {
+		throw new ApiError(response.statusText, response.status);
+	}
+
 	return response;
 };
 

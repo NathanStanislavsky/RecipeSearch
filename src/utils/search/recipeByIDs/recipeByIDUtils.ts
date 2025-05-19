@@ -1,7 +1,6 @@
 import {
 	createApiUrl,
 	createJsonResponse,
-	getSpoonacularHeaders,
 	handleApiResponse
 } from '$utils/api/apiUtils.js';
 import type { ExtractRecipeIdsResult } from '../../../types/recipe.ts';
@@ -35,12 +34,8 @@ export function constructBulkApiURL(recipeIds: number[]): Response | URL {
 	return bulkUrl;
 }
 
-export async function fetchBulkRecipeInformation(url: URL): Promise<Response> {
-	const response = await fetch(url.toString(), {
-		method: 'GET',
-		headers: getSpoonacularHeaders()
-	});
-	return handleApiResponse(response);
+export async function fetchBulkRecipeInformation(apiUrl: URL): Promise<Response> {
+	return handleApiResponse(apiUrl.toString());
 }
 
 export async function filterInformationBulkReponse(bulkResponse: Response): Promise<Response> {
