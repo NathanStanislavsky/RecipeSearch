@@ -17,6 +17,9 @@ const config = {
 		adapter: adapter(),
 		alias: {
 			$utils: join(__dirname, 'src/utils')
+		},
+		csrf: {
+			checkOrigin: false
 		}
 	},
 
