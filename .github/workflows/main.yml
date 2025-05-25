@@ -33,7 +33,7 @@ jobs:
       - name: Run tests inside container
         run: |
           docker run --rm \
-            -e DATABASE_URL=${{ secrets.NEON_DATABASE_URL }} \
+            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
             -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
             -e RAPIDAPI_KEY_2=${{ secrets.RAPIDAPI_KEY_2 }} \
             recipe-search:latest \
@@ -42,7 +42,7 @@ jobs:
       - name: Build assets inside container
         run: |
           docker run --rm \
-            -e DATABASE_URL=${{ secrets.NEON_DATABASE_URL }} \
+            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
             -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
             -e RAPIDAPI_KEY_2=${{ secrets.RAPIDAPI_KEY_2 }} \
             recipe-search:latest \
