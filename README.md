@@ -68,3 +68,43 @@ Built with SvelteKit, Node.js, TypeScript, Neon Serverless PostgreSQL, and Tailw
 - `npm test:e2e`: Runs e2e tests
 - `npm run lint`: Lints the codebase.
 - `npm run format`: Formats the codebase.
+
+## Docker
+
+The application is containerized using Docker. 
+
+### Building a Docker image
+
+Use the following command to build your Docker image using the secrets from your env:
+
+```
+DOCKER_BUILDKIT=1 \
+JWT_SECRET=<JWT_SECRET> \
+DATABASE_URL=<DATABASE_URL> \
+RAPIDAPI_KEY_2=<RAPIDAPI_KEY_2> \
+docker build \
+  --secret id=jwt,env=JWT_SECRET \
+  --secret id=dburl,env=DATABASE_URL \
+  --secret id=rapidapi_key,env=RAPIDAPI_KEY_2 \
+  -t recipe-search .
+```
+
+### Running your Docker Container
+
+Use the following command to run your Docker container using the secrets from your env:
+
+```
+docker run -d \
+  --name recipe-search \
+  -p 3000:3000 \
+  -e DATABASE_URL=<DATABASE_URL> \
+  -e JWT_SECRET=<JWT_SECRET> \
+  -e RAPIDAPI_KEY_2=<RAPIDAPI_KEY_2> \
+  recipe-search
+```
+
+Make sure that you've built your Docker image prior to running the container. After running the container using the above command you can find your site at http://localhost:3000/
+
+## Deployment
+
+The application is currently deployed on Vercel at https://recipe-search-psi.vercel.app/
