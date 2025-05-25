@@ -24,20 +24,17 @@ jobs:
         with:
           context: .
           load: true
+          tags: recipe-search:latest
           secrets: |
             jwt=${{ secrets.JWT_SECRET }}
             dburl=${{ secrets.DATABASE_URL }}
             rapidapi_key_2=${{ secrets.RAPIDAPI_KEY_2 }}
 
       - name: Run tests inside container
-        run: |
-          docker run --rm your-app:latest \
-            npm test
+        run: docker run --rm recipe-search:latest npm test
 
       - name: Build assets inside container
-        run: |
-          docker run --rm your-app:latest \
-            npm run build
+        run: docker run --rm recipe-search:latest npm run build
 
       - name: Upload build output
         uses: actions/upload-artifact@v4
