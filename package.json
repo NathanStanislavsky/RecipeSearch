@@ -82,6 +82,7 @@
 	},
 	"dependencies": {
 		"@neondatabase/serverless": "^0.10.4",
+		"@sveltejs/adapter-vercel": "^5.7.2",
 		"bcryptjs": "^3.0.2",
 		"dotenv": "^16.4.7",
 		"drizzle-orm": "^0.38.4",
