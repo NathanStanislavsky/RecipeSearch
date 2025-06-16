@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, timestamp } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
 	id: serial('id').primaryKey(),
@@ -33,6 +33,13 @@ export const apiRequests = pgTable('api_requests', {
 	id: serial('id').primaryKey(),
 	date: text('date').notNull().unique(),
 	count: integer('count').notNull().default(0)
+});
+
+export const ingredientSearches = pgTable('ingredient_searches', {
+    id: serial('id').primaryKey(),
+    ingredients: text('ingredients').notNull().unique(),
+    recipeIds: text('recipe_ids').notNull(),
+    createdAt: timestamp('created_at').defaultNow()
 });
 
 export const schema = { users, recipes, favorites, apiRequests };
