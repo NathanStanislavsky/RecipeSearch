@@ -17,17 +17,33 @@ import { ingredientSearches, recipes } from '$lib/server/db/schema.js';
 import { eq, inArray } from 'drizzle-orm';
 import type { RecipeResponse } from '../../types/recipe.ts';
 
+function normalizeIngredients(ingredients: string): string {
+	return ingredients
+		.split(',')
+		.map(ingredient => ingredient.trim().toLowerCase())
+		.sort()
+		.join(',');
+}
+
 async function getCachedRecipeIds(ingredients: string) {
-	const recipeIds = await db
+	const normalizedIngredients = normalizeIngredients(ingredients);
+	const result = await db
 		.select()
 		.from(ingredientSearches)
-		.where(eq(ingredientSearches.ingredients, ingredients));
-	return recipeIds;
+		.where(eq(ingredientSearches.ingredients, normalizedIngredients))
+		.limit(1);
+	
+	if (result.length === 0) {
+		return null;
+	}
+	
+	return result[0].recipeIds.split(',').map(Number);
 }
 
 async function cacheIngredientSearch(ingredients: string, recipeIds: number[]) {
+	const normalizedIngredients = normalizeIngredients(ingredients);
 	await db.insert(ingredientSearches).values({
-		ingredients,
+		ingredients: normalizedIngredients,
 		recipeIds: recipeIds.join(',')
 	});
 }
@@ -60,7 +76,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		let recipeIds: number[] = [];
 
 		if (cachedRecipeIds) {
-			recipeIds = cachedRecipeIds.map((recipe) => parseInt(recipe.recipeIds));
+			recipeIds = cachedRecipeIds;
 		} else {
 			const recipeByIngredientsUrl = constructApiUrl(ingredients);
 
