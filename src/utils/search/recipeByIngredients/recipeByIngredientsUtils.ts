@@ -1,8 +1,4 @@
-import {
-	createApiUrl,
-	createJsonResponse,
-	handleApiResponse
-} from '$utils/api/apiUtils.js';
+import { createApiUrl, createJsonResponse, handleApiResponse } from '$utils/api/apiUtils.js';
 import { ValidationError, ApiError, handleError } from '$utils/errors/AppError.js';
 
 /**
@@ -25,7 +21,7 @@ export const parseIngredients = (url: URL): string | Response => {
  * @param limit - The maximum number of recipes to return (default: 20)
  * @returns The constructed API URL
  */
-export const constructApiUrl = (ingredients: string, limit: number = 100): URL => {
+export const constructApiUrl = (ingredients: string, limit: number = 10): URL => {
 	const apiUrl = createApiUrl('/recipes/findByIngredients');
 	apiUrl.searchParams.append('ingredients', ingredients);
 	apiUrl.searchParams.append('number', limit.toString());

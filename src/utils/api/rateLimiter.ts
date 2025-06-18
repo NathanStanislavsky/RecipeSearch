@@ -34,7 +34,7 @@ export class RateLimiter {
 		const result = await db
 			.update(apiRequests)
 			.set({
-				count: sql`count + 1`
+				count: sql`count + 11`
 			})
 			.where(eq(apiRequests.date, today))
 			.returning();
