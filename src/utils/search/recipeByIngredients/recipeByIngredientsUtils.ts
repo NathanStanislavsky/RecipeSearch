@@ -1,7 +1,6 @@
 import {
 	createApiUrl,
 	createJsonResponse,
-	getSpoonacularHeaders,
 	handleApiResponse
 } from '$utils/api/apiUtils.js';
 import { ValidationError, ApiError, handleError } from '$utils/errors/AppError.js';

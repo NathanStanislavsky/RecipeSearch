@@ -1,8 +1,10 @@
 import { describe, it, vi, afterEach, beforeEach, expect } from 'vitest';
 import { GET } from '../routes/search/+server.ts';
 import { TestHelper } from '../utils/test/testHelper.ts';
+import { db } from '$lib/server/db/index.js';
+import { ingredientSearches, recipes } from '$lib/server/db/schema.js';
+import { eq } from 'drizzle-orm';
 
-// Creates a mock request event with ingredients
 function createMockRequest(ingredients: string) {
 	return TestHelper.createMockRequestEvent(
 		`http://localhost/api/getRecipe?ingredients=${ingredients}`
@@ -18,7 +20,6 @@ async function testGetResponse(
 	const data = await response.json();
 	expect(response.status).toBe(expectedStatus);
 	if (expectedBody) {
-		// Only compare the properties we care about
 		Object.keys(expectedBody).forEach((key) => {
 			expect(data[key]).toBe(expectedBody[key]);
 		});
@@ -29,11 +30,13 @@ describe('Search server integration tests', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.spyOn(console, 'error').mockImplementation(() => {});
-		TestHelper.mockRateLimiter(true); // Allow API requests by default
+		TestHelper.mockRateLimiter(true);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		vi.restoreAllMocks();
+		await db.delete(ingredientSearches);
+		await db.delete(recipes);
 	});
 
 	it.each([
@@ -188,14 +191,150 @@ describe('Search server integration tests', () => {
 	});
 
 	it('should handle rate limit exceeded', async () => {
-		TestHelper.mockRateLimiter(false); // Simulate rate limit exceeded
+		TestHelper.mockRateLimiter(false);
 
-		// The error thrown by RateLimiter is a ConfigError with status 500, but
-		// our test was expecting 429. Let's adjust our expectation.
 		const response = await GET(createMockRequest('tomato,cheese'));
 		expect(response.status).toBe(500);
 		const data = await response.json();
 		expect(data.error).toBe('ConfigError');
 		expect(data.message).toBe('Daily API request limit reached');
+	});
+
+	describe('Recipe caching', () => {
+		it('should cache and retrieve recipes for the same ingredients in different order', async () => {
+			const mockIngredientsRecipes = [
+				{ id: 1, title: 'Tomato Soup', image: 'tomato_soup.jpg' },
+				{ id: 2, title: 'Tomato Salad', image: 'tomato_salad.jpg' }
+			];
+
+			const mockDetailedRecipes = [
+				{
+					id: 1,
+					image: 'tomato_soup.jpg',
+					title: 'Tomato Soup',
+					readyInMinutes: 30,
+					servings: 4,
+					sourceUrl: 'http://recipe1.com'
+				},
+				{
+					id: 2,
+					image: 'tomato_salad.jpg',
+					title: 'Tomato Salad',
+					readyInMinutes: 20,
+					servings: 2,
+					sourceUrl: 'http://recipe2.com'
+				}
+			];
+
+			TestHelper.setupMockFetchSequence([
+				TestHelper.createMockResponse(mockIngredientsRecipes, 200),
+				TestHelper.createMockResponse(mockDetailedRecipes, 200)
+			]);
+
+			const firstResponse = await GET(createMockRequest('tomato,cheese'));
+			expect(firstResponse.status).toBe(200);
+			const firstData = await firstResponse.json();
+			expect(firstData).toHaveLength(2);
+
+			const secondResponse = await GET(createMockRequest('cheese,tomato'));
+			expect(secondResponse.status).toBe(200);
+			const secondData = await secondResponse.json();
+			expect(secondData).toHaveLength(2);
+			expect(secondData).toEqual(firstData);
+
+			expect(global.fetch).toHaveBeenCalledTimes(2);
+		});
+
+		it('should cache and retrieve recipes with different ingredient cases', async () => {
+			const mockIngredientsRecipes = [{ id: 1, title: 'Tomato Soup', image: 'tomato_soup.jpg' }];
+
+			const mockDetailedRecipes = [
+				{
+					id: 1,
+					image: 'tomato_soup.jpg',
+					title: 'Tomato Soup',
+					readyInMinutes: 30,
+					servings: 4,
+					sourceUrl: 'http://recipe1.com'
+				}
+			];
+
+			TestHelper.setupMockFetchSequence([
+				TestHelper.createMockResponse(mockIngredientsRecipes, 200),
+				TestHelper.createMockResponse(mockDetailedRecipes, 200)
+			]);
+
+			const firstResponse = await GET(createMockRequest('Tomato,Cheese'));
+			expect(firstResponse.status).toBe(200);
+
+			const secondResponse = await GET(createMockRequest('tomato,cheese'));
+			expect(secondResponse.status).toBe(200);
+			const secondData = await secondResponse.json();
+			expect(secondData).toHaveLength(1);
+
+			expect(global.fetch).toHaveBeenCalledTimes(2);
+		});
+
+		it('should handle partial cache hits', async () => {
+			await db.insert(recipes).values({
+				id: 1,
+				image: 'cached_soup.jpg',
+				title: 'Cached Soup',
+				readyInMinutes: 30,
+				servings: 4,
+				sourceUrl: 'http://cached.com'
+			});
+
+			await db.insert(ingredientSearches).values({
+				ingredients: 'tomato,cheese',
+				recipeIds: '1,2'
+			});
+
+			const mockIngredientsRecipes = [
+				{ id: 1, title: 'Cached Soup', image: 'cached_soup.jpg' },
+				{ id: 2, title: 'New Salad', image: 'new_salad.jpg' }
+			];
+
+			const mockDetailedRecipes = [
+				{
+					id: 2,
+					image: 'new_salad.jpg',
+					title: 'New Salad',
+					readyInMinutes: 20,
+					servings: 2,
+					sourceUrl: 'http://new.com'
+				}
+			];
+
+			TestHelper.setupMockFetchSequence([
+				TestHelper.createMockResponse(mockIngredientsRecipes, 200),
+				TestHelper.createMockResponse(mockDetailedRecipes, 200)
+			]);
+
+			const response = await GET(createMockRequest('tomato,cheese'));
+			expect(response.status).toBe(200);
+			const data = await response.json();
+			expect(data).toHaveLength(2);
+			expect(data[0].title).toBe('Cached Soup');
+			expect(data[1].title).toBe('New Salad');
+		});
+
+		it('should handle empty cache and no results', async () => {
+			TestHelper.setupMockFetchSequence([
+				TestHelper.createMockResponse([], 200),
+				TestHelper.createMockResponse([], 200)
+			]);
+
+			const response = await GET(createMockRequest('nonexistent,ingredients'));
+			expect(response.status).toBe(404);
+			const data = await response.json();
+			expect(data.error).toBe('No recipes found for the provided ingredients');
+
+			const cachedSearch = await db
+				.select()
+				.from(ingredientSearches)
+				.where(eq(ingredientSearches.ingredients, 'nonexistent,ingredients'));
+			expect(cachedSearch.length).toBe(0);
+		});
 	});
 });

@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   pull_request:
-    branches: [ '**' ]
+    branches: ['**']
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-and-test:
@@ -36,7 +36,7 @@ jobs:
             -e RAPIDAPI_KEY_2=${{ secrets.RAPIDAPI_KEY_2 }} \
             recipe-search:latest \
             npm test
-            
+
       - name: Build assets inside container
         run: |
           docker run --rm \
@@ -56,7 +56,7 @@ jobs:
         uses: amondnet/vercel-action@v20
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id:  ${{ secrets.VERCEL_ORG_ID }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args:      '--prod'
           working-directory: .
