@@ -246,9 +246,7 @@ describe('Search server integration tests', () => {
 		});
 
 		it('should cache and retrieve recipes with different ingredient cases', async () => {
-			const mockIngredientsRecipes = [
-				{ id: 1, title: 'Tomato Soup', image: 'tomato_soup.jpg' }
-			];
+			const mockIngredientsRecipes = [{ id: 1, title: 'Tomato Soup', image: 'tomato_soup.jpg' }];
 
 			const mockDetailedRecipes = [
 				{

@@ -20,7 +20,7 @@ import type { RecipeResponse } from '../../types/recipe.ts';
 function normalizeIngredients(ingredients: string): string {
 	return ingredients
 		.split(',')
-		.map(ingredient => ingredient.trim().toLowerCase())
+		.map((ingredient) => ingredient.trim().toLowerCase())
 		.sort()
 		.join(',');
 }
@@ -32,11 +32,11 @@ async function getCachedRecipeIds(ingredients: string) {
 		.from(ingredientSearches)
 		.where(eq(ingredientSearches.ingredients, normalizedIngredients))
 		.limit(1);
-	
+
 	if (result.length === 0) {
 		return null;
 	}
-	
+
 	return result[0].recipeIds.split(',').map(Number);
 }
 
@@ -54,14 +54,14 @@ async function getRecipesFromDb(recipeIds: number[]) {
 }
 
 async function cacheRecipes(recipesToSave: RecipeResponse[]): Promise<void> {
-    const existingRecipes = await getRecipesFromDb(recipesToSave.map(recipe => recipe.id));
-    const existingIds = new Set(existingRecipes.map(recipe => recipe.id));
-    
-    const newRecipes = recipesToSave.filter(recipe => !existingIds.has(recipe.id));
-    
-    if (newRecipes.length > 0) {
-        await db.insert(recipes).values(newRecipes);
-    }
+	const existingRecipes = await getRecipesFromDb(recipesToSave.map((recipe) => recipe.id));
+	const existingIds = new Set(existingRecipes.map((recipe) => recipe.id));
+
+	const newRecipes = recipesToSave.filter((recipe) => !existingIds.has(recipe.id));
+
+	if (newRecipes.length > 0) {
+		await db.insert(recipes).values(newRecipes);
+	}
 }
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -114,26 +114,25 @@ export const GET: RequestHandler = async ({ url }) => {
 			(id) => !cachedRecipes.some((recipe) => recipe.id === id)
 		);
 
+		let finalRecipes = [...cachedRecipes];
 
-        let finalRecipes = [...cachedRecipes];
+		if (missingRecipeIds.length > 0) {
+			const bulkApiUrlResponse = constructBulkApiURL(missingRecipeIds);
+			const bulkApiUrl = bulkApiUrlResponse as URL;
 
-        if (missingRecipeIds.length > 0) {
-            const bulkApiUrlResponse = constructBulkApiURL(missingRecipeIds);
-            const bulkApiUrl = bulkApiUrlResponse as URL;
+			const bulkResponse = await fetchBulkRecipeInformation(bulkApiUrl);
+			if (!bulkResponse.ok) {
+				throw new ApiError('Failed to fetch detailed recipe information', bulkResponse.status);
+			}
 
-            const bulkResponse = await fetchBulkRecipeInformation(bulkApiUrl);
-            if (!bulkResponse.ok) {
-                throw new ApiError('Failed to fetch detailed recipe information', bulkResponse.status);
-            }
+			const missingRecipesResponse = await filterInformationBulkReponse(bulkResponse);
+			const missingRecipes = await missingRecipesResponse.json();
 
-            const missingRecipesResponse = await filterInformationBulkReponse(bulkResponse);
-            const missingRecipes = await missingRecipesResponse.json();
+			await cacheRecipes(missingRecipes);
+			finalRecipes = [...finalRecipes, ...missingRecipes];
+		}
 
-            await cacheRecipes(missingRecipes);
-            finalRecipes = [...finalRecipes, ...missingRecipes];
-        }
-
-        return createJsonResponse(finalRecipes, 200);
+		return createJsonResponse(finalRecipes, 200);
 	} catch (error) {
 		const errorResponse = handleError(error, 'Recipe Search');
 		return createJsonResponse(

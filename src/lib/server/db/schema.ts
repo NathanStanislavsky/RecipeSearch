@@ -36,10 +36,10 @@ export const apiRequests = pgTable('api_requests', {
 });
 
 export const ingredientSearches = pgTable('ingredient_searches', {
-    id: serial('id').primaryKey(),
-    ingredients: text('ingredients').notNull().unique(),
-    recipeIds: text('recipe_ids').notNull(),
-    createdAt: timestamp('created_at').defaultNow()
+	id: serial('id').primaryKey(),
+	ingredients: text('ingredients').notNull().unique(),
+	recipeIds: text('recipe_ids').notNull(),
+	createdAt: timestamp('created_at').defaultNow()
 });
 
 export const schema = { users, recipes, favorites, apiRequests };

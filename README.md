@@ -71,7 +71,7 @@ Built with SvelteKit, Node.js, TypeScript, Neon Serverless PostgreSQL, and Tailw
 
 ## Docker
 
-The application is containerized using Docker. 
+The application is containerized using Docker.
 
 ### Building a Docker image
 
