@@ -1,11 +1,14 @@
 import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI || "";
-const client = new MongoClient(uri);
-
+let client: MongoClient | null = null;
 let isConnected = false;
 
-export async function connectToMongo() {
+export async function connectToMongo(): Promise<MongoClient> {
+  if (!client) {
+    client = new MongoClient(uri);
+  }
+  
   if (!isConnected) {
     try {
       await client.connect();
@@ -16,21 +19,12 @@ export async function connectToMongo() {
       throw error;
     }
   }
+  
   return client;
 }
 
-export async function closeMongoConnection() {
-  if (isConnected) {
-    try {
-      await client.close();
-      isConnected = false;
-      console.log('Disconnected from MongoDB');
-    } catch (error) {
-      console.error('Error closing MongoDB connection:', error);
-    }
-  }
-}
-
-export function getMongoClient() {
+export function getMongoClient(): MongoClient | null {
   return client;
 }
+
+connectToMongo().catch(console.error);
