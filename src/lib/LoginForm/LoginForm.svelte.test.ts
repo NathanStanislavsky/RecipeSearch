@@ -97,7 +97,6 @@ describe('LoginForm Component', () => {
 		});
 
 		it('shows error message on failed login', async () => {
-			const user = userEvent.setup();
 			const form = screen
 				.getByRole('button', { name: /login/i })
 				.closest('form') as HTMLFormElement & { __enhance_handler?: EnhanceHandler };
@@ -118,7 +117,6 @@ describe('LoginForm Component', () => {
 		});
 
 		it('shows generic error message on network error', async () => {
-			const user = userEvent.setup();
 			const form = screen
 				.getByRole('button', { name: /login/i })
 				.closest('form') as HTMLFormElement & { __enhance_handler?: EnhanceHandler };
@@ -139,7 +137,6 @@ describe('LoginForm Component', () => {
 		});
 
 		it('resets loading state after error', async () => {
-			const user = userEvent.setup();
 			const form = screen
 				.getByRole('button', { name: /login/i })
 				.closest('form') as HTMLFormElement & { __enhance_handler?: EnhanceHandler };
@@ -178,7 +175,6 @@ describe('LoginForm Component', () => {
 		});
 
 		it('handles successful login and redirects', async () => {
-			const user = userEvent.setup();
 			const form = screen
 				.getByRole('button', { name: /login/i })
 				.closest('form') as HTMLFormElement & { __enhance_handler?: EnhanceHandler };

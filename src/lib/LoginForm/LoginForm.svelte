@@ -6,7 +6,7 @@
 	let message: string = '';
 	let isLoading = false;
 
-	const handleSubmit: SubmitFunction = ({ formData, cancel }) => {
+	const handleSubmit: SubmitFunction = () => {
 		isLoading = true;
 		message = '';
 
