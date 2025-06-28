@@ -8,7 +8,7 @@ type EnhanceHandler = (input: {
 	formData: FormData;
 	cancel: () => void;
 }) => (result: {
-	result: 
+	result:
 		| { type: 'error'; error?: { message: string } }
 		| { type: 'failure'; data?: { message: string } }
 		| { type: 'redirect'; location: string }

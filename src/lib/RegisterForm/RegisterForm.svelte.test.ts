@@ -6,8 +6,11 @@ import { TEST_USER } from '../../utils/test/testConstants.js';
 
 // Type definitions for form enhancement
 interface EnhanceHandler {
-	(input: { formData: FormData; cancel: () => void }): (result: {
-		result: 
+	(input: {
+		formData: FormData;
+		cancel: () => void;
+	}): (result: {
+		result:
 			| { type: 'error'; error?: { message: string } }
 			| { type: 'failure'; data?: { message: string } }
 			| { type: 'redirect'; location: string }
