@@ -58,7 +58,7 @@ describe('Ingredient Search API', () => {
 	});
 
 	it('should return search results for valid query', async () => {
-		const url = new URL('http://localhost:5173/ingredientSearch?ingredients=chicken');
+		const url = new URL('http://localhost:5173/search?ingredients=chicken');
 		const request = new Request(url);
 
 		const response = await GET({ url, request } as RequestEvent);
@@ -71,7 +71,7 @@ describe('Ingredient Search API', () => {
 	});
 
 	it('should return 400 error when ingredients query is missing', async () => {
-		const url = new URL('http://localhost:5173/ingredientSearch');
+		const url = new URL('http://localhost:5173/search');
 		const request = new Request(url);
 
 		const response = await GET({ url, request } as RequestEvent);

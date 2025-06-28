@@ -2,7 +2,7 @@
 	import SearchButton from '$lib/SearchButton/SearchButton.svelte';
 	import SearchBar from '$lib/SearchBar/SearchBar.svelte';
 	import RecipeCardParent from '$lib/RecipeCardParent/RecipeCardParent.svelte';
-	import type { Recipe } from '../../types/recipe.js';
+	import type { Recipe } from '../../types/recipe.ts';
 	import Navbar from '$lib/Navbar/Navbar.svelte';
 	let ingredients = '';
 	let recipes: Recipe[] = [];
@@ -19,7 +19,7 @@
 
 			isLoading = true;
 			hasSearched = true;
-			const response = await fetch(`/ingredientSearch?ingredients=${ingredients}`);
+			const response = await fetch(`/search?ingredients=${ingredients}`);
 			const data = await response.json();
 
 			console.log(data);
@@ -32,7 +32,7 @@
 	}
 </script>
 
-<Navbar user={true} currentPath={'/ingredientSearch'} />
+<Navbar user={true} currentPath={'/search'} />
 
 <div class="flex min-h-screen flex-col items-center bg-slate-100 pt-20 font-serif">
 	<div class="mb-10 w-full max-w-4xl text-center">

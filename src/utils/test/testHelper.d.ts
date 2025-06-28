@@ -67,10 +67,5 @@ export declare class TestHelper {
 	 * @param responses - The responses to return in sequence
 	 */
 	static setupMockFetchSequence(responses: Response[]): void;
-	/**
-	 * Mocks the RateLimiter to allow or deny requests
-	 * @param shouldAllow - Whether the rate limiter should allow the request (default: true)
-	 */
-	static mockRateLimiter(shouldAllow?: boolean): void;
 }
 export {};
