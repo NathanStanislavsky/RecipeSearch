@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/svelte';
-import { describe, it, expect } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/svelte';
+import { describe, it, expect, afterEach } from 'vitest';
 import RecipeCardParent from './RecipeCardParent.svelte';
 import type { TransformedRecipe } from '../../types/recipe.js';
 import '@testing-library/jest-dom/vitest';
@@ -39,6 +39,10 @@ const mockRecipes: TransformedRecipe[] = [
 ];
 
 describe('RecipeCardParent', () => {
+	afterEach(() => {
+		cleanup();
+	});
+
 	describe('rendering', () => {
 		it('renders recipe cards with correct names', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
@@ -55,8 +59,13 @@ describe('RecipeCardParent', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
 			mockRecipes.forEach((recipe) => {
-				expect(screen.getByText(`${recipe.minutes} minutes`)).toBeInTheDocument();
+				// Check for the individual components instead of the combined text
+				expect(screen.getByText(recipe.minutes.toString())).toBeInTheDocument();
 			});
+			
+			// Also check that "minutes" text appears (should be multiple times)
+			const minutesTexts = screen.getAllByText('minutes');
+			expect(minutesTexts.length).toBe(mockRecipes.length);
 		});
 
 		it('renders recipe descriptions', () => {
@@ -145,7 +154,8 @@ describe('RecipeCardParent', () => {
 			render(RecipeCardParent, { props: { recipes: singleRecipe } });
 
 			expect(screen.getByText(singleRecipe[0].name)).toBeInTheDocument();
-			expect(screen.getByText(`${singleRecipe[0].minutes} minutes`)).toBeInTheDocument();
+			expect(screen.getByText(singleRecipe[0].minutes.toString())).toBeInTheDocument();
+			expect(screen.getByText('minutes')).toBeInTheDocument();
 			expect(screen.getAllByRole('article')).toHaveLength(1);
 		});
 
@@ -164,7 +174,8 @@ describe('RecipeCardParent', () => {
 			render(RecipeCardParent, { props: { recipes: [minimalRecipe] } });
 
 			expect(screen.getByText(minimalRecipe.name)).toBeInTheDocument();
-			expect(screen.getByText(`${minimalRecipe.minutes} minutes`)).toBeInTheDocument();
+			expect(screen.getByText(minimalRecipe.minutes.toString())).toBeInTheDocument();
+			expect(screen.getByText('minutes')).toBeInTheDocument();
 			expect(screen.getByText(minimalRecipe.description)).toBeInTheDocument();
 			expect(screen.getByText('ingredient 1')).toBeInTheDocument();
 			expect(screen.getByText('ingredient 2')).toBeInTheDocument();
