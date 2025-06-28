@@ -96,7 +96,9 @@ describe('Ingredient Search API', () => {
 		expect(firstRecipe.minutes).toBe(40);
 		expect(firstRecipe.nutrition).toBe('[500, 25, 30, 15, 10, 20, 5]');
 		expect(firstRecipe.steps).toBe('Step 1: Prepare ingredients. Step 2: Cook steak.');
-		expect(firstRecipe.description).toBe('This is a recipe for Chicken Fried Steak with delicious cream gravy.');
+		expect(firstRecipe.description).toBe(
+			'This is a recipe for Chicken Fried Steak with delicious cream gravy.'
+		);
 		expect(firstRecipe.ingredients).toBe('shortening, seasoned flour, eggs, milk, chicken');
 		expect(firstRecipe.score).toBe(0.95);
 
@@ -125,7 +127,7 @@ describe('Ingredient Search API', () => {
 		// Re-mock for this specific test case
 		const { getMongoClient } = await vi.importMock('$lib/server/mongo/index.js');
 		const mockClient = getMongoClient as ReturnType<typeof vi.fn>;
-		
+
 		mockClient.mockReturnValue({
 			db: vi.fn().mockReturnValue({
 				collection: vi.fn().mockReturnValue({

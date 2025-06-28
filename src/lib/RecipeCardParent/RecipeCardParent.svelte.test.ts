@@ -31,7 +31,8 @@ const mockRecipes: TransformedRecipe[] = [
 		name: 'chocolate chip cookies',
 		minutes: 45,
 		nutrition: '[280.5, 45.0, 60.0, 15.0, 25.0, 55.0, 35.0]',
-		steps: '["cream butter and sugar", "add eggs and vanilla", "mix in flour", "add chocolate chips", "bake for 12 minutes"]',
+		steps:
+			'["cream butter and sugar", "add eggs and vanilla", "mix in flour", "add chocolate chips", "bake for 12 minutes"]',
 		description: 'soft and chewy homemade chocolate chip cookies',
 		ingredients: '["flour", "butter", "sugar", "eggs", "vanilla", "chocolate chips"]',
 		score: 1.87654321
@@ -62,7 +63,7 @@ describe('RecipeCardParent', () => {
 				// Check for the individual components instead of the combined text
 				expect(screen.getByText(recipe.minutes.toString())).toBeInTheDocument();
 			});
-			
+
 			// Also check that "minutes" text appears (should be multiple times)
 			const minutesTexts = screen.getAllByText('minutes');
 			expect(minutesTexts.length).toBe(mockRecipes.length);
@@ -82,7 +83,7 @@ describe('RecipeCardParent', () => {
 			// Check that nutrition labels are present (one for each recipe)
 			const nutritionHeadings = screen.getAllByText('Nutrition');
 			expect(nutritionHeadings).toHaveLength(mockRecipes.length);
-			
+
 			// Check that calories are displayed for each recipe
 			expect(screen.getByText('792')).toBeInTheDocument(); // First recipe calories
 			expect(screen.getByText('450')).toBeInTheDocument(); // Second recipe calories
@@ -95,7 +96,7 @@ describe('RecipeCardParent', () => {
 			// Check that ingredients headings are present
 			const ingredientsHeadings = screen.getAllByText('Ingredients');
 			expect(ingredientsHeadings).toHaveLength(mockRecipes.length);
-			
+
 			// Check some specific ingredients
 			expect(screen.getByText('boneless chicken')).toBeInTheDocument();
 			expect(screen.getByText('pasta')).toBeInTheDocument();
@@ -108,7 +109,7 @@ describe('RecipeCardParent', () => {
 			// Check that instructions headings are present
 			const instructionsHeadings = screen.getAllByText('Instructions');
 			expect(instructionsHeadings).toHaveLength(mockRecipes.length);
-			
+
 			// Check that step numbers are rendered
 			const stepNumbers = screen.getAllByText('1');
 			expect(stepNumbers.length).toBeGreaterThanOrEqual(mockRecipes.length);
@@ -132,9 +133,15 @@ describe('RecipeCardParent', () => {
 
 			const cards = screen.getAllByRole('article');
 			expect(cards).toHaveLength(mockRecipes.length);
-			
+
 			cards.forEach((card) => {
-				expect(card).toHaveClass('max-w-sm', 'overflow-hidden', 'rounded-lg', 'bg-white', 'shadow-lg');
+				expect(card).toHaveClass(
+					'max-w-sm',
+					'overflow-hidden',
+					'rounded-lg',
+					'bg-white',
+					'shadow-lg'
+				);
 				expect(card).toHaveClass('transition-transform', 'hover:scale-105');
 			});
 		});
@@ -170,7 +177,7 @@ describe('RecipeCardParent', () => {
 				ingredients: '["ingredient 1", "ingredient 2"]',
 				score: 1.0
 			};
-			
+
 			render(RecipeCardParent, { props: { recipes: [minimalRecipe] } });
 
 			expect(screen.getByText(minimalRecipe.name)).toBeInTheDocument();
@@ -192,7 +199,7 @@ describe('RecipeCardParent', () => {
 				description: 'recipe with malformed json data',
 				score: 0.5
 			};
-			
+
 			render(RecipeCardParent, { props: { recipes: [recipeWithBadData] } });
 
 			// Should still render without crashing

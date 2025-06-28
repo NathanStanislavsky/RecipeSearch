@@ -11,14 +11,14 @@
 		}
 	}
 
-	function parseNutrition(nutritionString: string): { 
-		calories: number; 
-		totalFat: number; 
-		sugar: number; 
-		sodium: number; 
-		protein: number; 
-		saturatedFat: number; 
-		carbs: number; 
+	function parseNutrition(nutritionString: string): {
+		calories: number;
+		totalFat: number;
+		sugar: number;
+		sodium: number;
+		protein: number;
+		saturatedFat: number;
+		carbs: number;
 	} {
 		try {
 			const values = JSON.parse(nutritionString);
@@ -32,7 +32,15 @@
 				carbs: Math.round(values[6] || 0)
 			};
 		} catch {
-			return { calories: 0, totalFat: 0, sugar: 0, sodium: 0, protein: 0, saturatedFat: 0, carbs: 0 };
+			return {
+				calories: 0,
+				totalFat: 0,
+				sugar: 0,
+				sodium: 0,
+				protein: 0,
+				saturatedFat: 0,
+				carbs: 0
+			};
 		}
 	}
 
@@ -55,40 +63,46 @@
 
 	<div class="px-6 py-4">
 		<div class="mb-4">
-			<h3 class="mb-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">Description</h3>
-			<p class="text-sm text-gray-600 leading-relaxed">{recipe.description}</p>
+			<h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Description</h3>
+			<p class="text-sm leading-relaxed text-gray-600">{recipe.description}</p>
 		</div>
 
 		<div class="mb-4">
-			<h3 class="mb-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">Nutrition</h3>
+			<h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Nutrition</h3>
 			<div class="grid grid-cols-2 gap-2 text-xs">
-				<div class="bg-gray-50 rounded px-2 py-1">
-					<span class="font-medium">Calories:</span> {nutritionInfo.calories}
+				<div class="rounded bg-gray-50 px-2 py-1">
+					<span class="font-medium">Calories:</span>
+					{nutritionInfo.calories}
 				</div>
-				<div class="bg-gray-50 rounded px-2 py-1">
-					<span class="font-medium">Protein:</span> {nutritionInfo.protein}% DV
+				<div class="rounded bg-gray-50 px-2 py-1">
+					<span class="font-medium">Protein:</span>
+					{nutritionInfo.protein}% DV
 				</div>
-				<div class="bg-gray-50 rounded px-2 py-1">
-					<span class="font-medium">Total Fat:</span> {nutritionInfo.totalFat}% DV
+				<div class="rounded bg-gray-50 px-2 py-1">
+					<span class="font-medium">Total Fat:</span>
+					{nutritionInfo.totalFat}% DV
 				</div>
-				<div class="bg-gray-50 rounded px-2 py-1">
-					<span class="font-medium">Sat. Fat:</span> {nutritionInfo.saturatedFat}% DV
+				<div class="rounded bg-gray-50 px-2 py-1">
+					<span class="font-medium">Sat. Fat:</span>
+					{nutritionInfo.saturatedFat}% DV
 				</div>
-				<div class="bg-gray-50 rounded px-2 py-1">
-					<span class="font-medium">Sugar:</span> {nutritionInfo.sugar}% DV
+				<div class="rounded bg-gray-50 px-2 py-1">
+					<span class="font-medium">Sugar:</span>
+					{nutritionInfo.sugar}% DV
 				</div>
-				<div class="bg-gray-50 rounded px-2 py-1">
-					<span class="font-medium">Sodium:</span> {nutritionInfo.sodium}% DV
+				<div class="rounded bg-gray-50 px-2 py-1">
+					<span class="font-medium">Sodium:</span>
+					{nutritionInfo.sodium}% DV
 				</div>
 			</div>
 		</div>
 
 		<div class="mb-4">
-			<h3 class="mb-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">Ingredients</h3>
-			<ul class="text-sm text-gray-600 space-y-1">
+			<h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Ingredients</h3>
+			<ul class="space-y-1 text-sm text-gray-600">
 				{#each parsedIngredients as ingredient}
 					<li class="flex items-start">
-						<span class="text-blue-500 mr-2">•</span>
+						<span class="mr-2 text-blue-500">•</span>
 						<span class="capitalize">{ingredient}</span>
 					</li>
 				{/each}
@@ -96,14 +110,16 @@
 		</div>
 
 		<div class="mb-4">
-			<h3 class="mb-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">Instructions</h3>
-			<ol class="text-sm text-gray-600 space-y-2">
+			<h3 class="mb-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">Instructions</h3>
+			<ol class="space-y-2 text-sm text-gray-600">
 				{#each parsedSteps as step, index}
 					<li class="flex items-start">
-						<span class="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">
+						<span
+							class="mt-0.5 mr-3 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white"
+						>
 							{index + 1}
 						</span>
-						<span class="capitalize leading-relaxed">{step}</span>
+						<span class="leading-relaxed capitalize">{step}</span>
 					</li>
 				{/each}
 			</ol>

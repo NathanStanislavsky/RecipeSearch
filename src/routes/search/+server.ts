@@ -15,12 +15,16 @@ async function transformResults(results: Recipe[]): Promise<TransformedRecipe[]>
 			steps: result.steps,
 			description: result.description,
 			ingredients: result.ingredients,
-			score: result.score,
+			score: result.score
 		};
 	});
 }
 
-async function searchRecipes(searchQuery: string, limit = 50, skip = 0): Promise<TransformedRecipe[]> {
+async function searchRecipes(
+	searchQuery: string,
+	limit = 50,
+	skip = 0
+): Promise<TransformedRecipe[]> {
 	const client = getMongoClient();
 
 	if (!client) {

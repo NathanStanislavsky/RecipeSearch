@@ -83,7 +83,7 @@ export class SearchHelper {
 	async verifyRecipeDetails(recipeName: string, description: string, ingredients: string[]) {
 		// Get the specific recipe card first
 		const recipeCard = this.page.locator(`[aria-label="Recipe card for ${recipeName}"]`);
-		
+
 		// Verify description section within this card - use more specific selector
 		await expect(recipeCard.locator('h3:has-text("Description")')).toBeVisible();
 		await expect(recipeCard.locator(`text=${description}`)).toBeVisible();
@@ -91,7 +91,7 @@ export class SearchHelper {
 		// Verify ingredients section within this card - use more specific selector
 		await expect(recipeCard.locator('h3:has-text("Ingredients")')).toBeVisible();
 		const ingredientsList = recipeCard.locator('ul.text-sm.text-gray-600');
-		
+
 		for (const ingredient of ingredients) {
 			// Look for ingredient within the ingredients list only
 			await expect(ingredientsList.locator(`text=${ingredient}`)).toBeVisible();
@@ -101,7 +101,7 @@ export class SearchHelper {
 	async verifyNutritionInfo(recipeName: string, calories: number) {
 		// Get the specific recipe card first
 		const recipeCard = this.page.locator(`[aria-label="Recipe card for ${recipeName}"]`);
-		
+
 		// Verify nutrition section within this card - use more specific selector
 		await expect(recipeCard.locator('h3:has-text("Nutrition")')).toBeVisible();
 		await expect(recipeCard.locator('text=Calories:')).toBeVisible();

@@ -3,10 +3,7 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 import LoginForm from '$lib/LoginForm/LoginForm.svelte';
 import { userEvent } from '@storybook/test';
 
-type EnhanceHandler = (input: {
-	formData: FormData;
-	cancel: () => void;
-}) => (result: {
+type EnhanceHandler = (input: { formData: FormData; cancel: () => void }) => (result: {
 	result: {
 		type: string;
 		error?: { message: string };

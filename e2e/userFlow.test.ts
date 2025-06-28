@@ -58,8 +58,10 @@ test.describe('Complete user journey', () => {
 			name: '4-ingredient carrot raisin salad',
 			minutes: 15,
 			nutrition: '[180.5, 25.0, 35.0, 12.0, 18.0, 8.0, 22.0]',
-			steps: '["wash and peel carrots", "grate carrots into bowl", "add raisins and mix", "dress with mayo and serve"]',
-			description: 'A simple and refreshing carrot raisin salad perfect for lunch or as a side dish.',
+			steps:
+				'["wash and peel carrots", "grate carrots into bowl", "add raisins and mix", "dress with mayo and serve"]',
+			description:
+				'A simple and refreshing carrot raisin salad perfect for lunch or as a side dish.',
 			ingredients: '["carrots", "raisins", "mayonnaise", "lemon juice"]',
 			score: 0.95
 		};
@@ -78,11 +80,12 @@ test.describe('Complete user journey', () => {
 		await searchHelper.verifyRecipeCard(mockRecipe.name, mockRecipe.minutes);
 
 		// Verify recipe details
-		await searchHelper.verifyRecipeDetails(
-			mockRecipe.name,
-			mockRecipe.description,
-			['carrots', 'raisins', 'mayonnaise', 'lemon juice']
-		);
+		await searchHelper.verifyRecipeDetails(mockRecipe.name, mockRecipe.description, [
+			'carrots',
+			'raisins',
+			'mayonnaise',
+			'lemon juice'
+		]);
 
 		// Verify nutrition information shows
 		await searchHelper.verifyNutritionInfo(mockRecipe.name, 181); // Rounded calories
