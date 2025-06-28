@@ -1,70 +1,118 @@
-import { render, screen } from '@testing-library/svelte';
-import { describe, it, expect } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/svelte';
+import { describe, it, expect, afterEach } from 'vitest';
 import RecipeCardParent from './RecipeCardParent.svelte';
-import { TestHelper } from '$utils/test/testHelper.ts';
+import type { TransformedRecipe } from '../../types/recipe.js';
 import '@testing-library/jest-dom/vitest';
 
 // Create mock recipes with varying data
-const mockRecipes = Array.from({ length: 3 }, (_, i) => TestHelper.createMockRecipe(i));
+const mockRecipes: TransformedRecipe[] = [
+	{
+		id: 388939,
+		name: 'crock pot shredded chicken sandwiches',
+		minutes: 125,
+		nutrition: '[792.1, 73.0, 15.0, 46.0, 116.0, 67.0, 9.0]',
+		steps: '["empty can of chicken into large bowl", "mix with large spoon", "place in crockpot"]',
+		description: 'fast and easy, tastes great!',
+		ingredients: '["boneless chicken", "chicken flavor stuffing mix", "cream of chicken soup"]',
+		score: 1.504440426826477
+	},
+	{
+		id: 567234,
+		name: 'easy pasta carbonara',
+		minutes: 30,
+		nutrition: '[450.2, 35.0, 8.0, 25.0, 80.0, 45.0, 12.0]',
+		steps: '["boil pasta", "cook bacon", "mix eggs and cheese", "combine all ingredients"]',
+		description: 'classic italian pasta dish with creamy sauce',
+		ingredients: '["pasta", "bacon", "eggs", "parmesan cheese", "black pepper"]',
+		score: 2.1234567
+	},
+	{
+		id: 123456,
+		name: 'chocolate chip cookies',
+		minutes: 45,
+		nutrition: '[280.5, 45.0, 60.0, 15.0, 25.0, 55.0, 35.0]',
+		steps:
+			'["cream butter and sugar", "add eggs and vanilla", "mix in flour", "add chocolate chips", "bake for 12 minutes"]',
+		description: 'soft and chewy homemade chocolate chip cookies',
+		ingredients: '["flour", "butter", "sugar", "eggs", "vanilla", "chocolate chips"]',
+		score: 1.87654321
+	}
+];
 
 describe('RecipeCardParent', () => {
+	afterEach(() => {
+		cleanup();
+	});
+
 	describe('rendering', () => {
-		it('renders recipe cards with correct titles', () => {
+		it('renders recipe cards with correct names', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
 			const recipeHeadings = screen.getAllByRole('heading', { level: 2 });
 			expect(recipeHeadings).toHaveLength(mockRecipes.length);
 
 			mockRecipes.forEach((recipe) => {
-				expect(screen.getByText(recipe.title)).toBeInTheDocument();
+				expect(screen.getByText(recipe.name)).toBeInTheDocument();
 			});
 		});
 
-		it('renders recipe cards with correct images', () => {
-			render(RecipeCardParent, { props: { recipes: mockRecipes } });
-
-			const images = screen.getAllByRole('img');
-			expect(images).toHaveLength(mockRecipes.length);
-
-			images.forEach((img, index) => {
-				expect(img).toHaveAttribute('src', mockRecipes[index].image);
-				expect(img).toHaveAttribute('alt', `Image of ${mockRecipes[index].title}`);
-				expect(img).toHaveAttribute('loading', 'lazy');
-			});
-		});
-
-		it('renders recipe cards with correct cooking time and servings', () => {
+		it('renders recipe cards with correct cooking times', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
 			mockRecipes.forEach((recipe) => {
-				const cookingTimeElements = screen.getAllByText((content, element) => {
-					return element?.textContent === `Ready in ${recipe.readyInMinutes} minutes`;
-				});
-				expect(cookingTimeElements.length).toBeGreaterThan(0);
+				// Check for the individual components instead of the combined text
+				expect(screen.getByText(recipe.minutes.toString())).toBeInTheDocument();
+			});
 
-				const minutesSpan = screen.getAllByText(`${recipe.readyInMinutes} minutes`);
-				expect(minutesSpan.length).toBeGreaterThan(0);
-				minutesSpan.forEach((span) => {
-					expect(span).toHaveClass('font-semibold');
-				});
+			// Also check that "minutes" text appears (should be multiple times)
+			const minutesTexts = screen.getAllByText('minutes');
+			expect(minutesTexts.length).toBe(mockRecipes.length);
+		});
 
-				expect(screen.getAllByText(`${recipe.servings} servings`).length).toBeGreaterThan(0);
+		it('renders recipe descriptions', () => {
+			render(RecipeCardParent, { props: { recipes: mockRecipes } });
+
+			mockRecipes.forEach((recipe) => {
+				expect(screen.getByText(recipe.description)).toBeInTheDocument();
 			});
 		});
 
-		it('renders recipe cards with correct source links', () => {
+		it('renders nutrition information for all recipes', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
-			const links = screen.getAllByRole('link');
-			expect(links).toHaveLength(mockRecipes.length);
+			// Check that nutrition labels are present (one for each recipe)
+			const nutritionHeadings = screen.getAllByText('Nutrition');
+			expect(nutritionHeadings).toHaveLength(mockRecipes.length);
 
-			links.forEach((link, index) => {
-				expect(link).toHaveAttribute('href', mockRecipes[index].sourceUrl);
-				expect(link).toHaveAttribute('target', '_blank');
-				expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-				expect(link).toHaveTextContent('View Recipe');
-				expect(link).toHaveAttribute('aria-label', `View recipe for ${mockRecipes[index].title}`);
-			});
+			// Check that calories are displayed for each recipe
+			expect(screen.getByText('792')).toBeInTheDocument(); // First recipe calories
+			expect(screen.getByText('450')).toBeInTheDocument(); // Second recipe calories
+			expect(screen.getByText('281')).toBeInTheDocument(); // Third recipe calories (rounded)
+		});
+
+		it('renders ingredients for all recipes', () => {
+			render(RecipeCardParent, { props: { recipes: mockRecipes } });
+
+			// Check that ingredients headings are present
+			const ingredientsHeadings = screen.getAllByText('Ingredients');
+			expect(ingredientsHeadings).toHaveLength(mockRecipes.length);
+
+			// Check some specific ingredients
+			expect(screen.getByText('boneless chicken')).toBeInTheDocument();
+			expect(screen.getByText('pasta')).toBeInTheDocument();
+			expect(screen.getByText('chocolate chips')).toBeInTheDocument();
+		});
+
+		it('renders instructions for all recipes', () => {
+			render(RecipeCardParent, { props: { recipes: mockRecipes } });
+
+			// Check that instructions headings are present
+			const instructionsHeadings = screen.getAllByText('Instructions');
+			expect(instructionsHeadings).toHaveLength(mockRecipes.length);
+
+			// Check that step numbers are rendered
+			const stepNumbers = screen.getAllByText('1');
+			expect(stepNumbers.length).toBeGreaterThanOrEqual(mockRecipes.length);
 		});
 	});
 
@@ -84,8 +132,16 @@ describe('RecipeCardParent', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
 			const cards = screen.getAllByRole('article');
+			expect(cards).toHaveLength(mockRecipes.length);
+
 			cards.forEach((card) => {
-				expect(card).toHaveClass('max-w-sm', 'overflow-hidden', 'rounded', 'bg-white', 'shadow-lg');
+				expect(card).toHaveClass(
+					'max-w-sm',
+					'overflow-hidden',
+					'rounded-lg',
+					'bg-white',
+					'shadow-lg'
+				);
 				expect(card).toHaveClass('transition-transform', 'hover:scale-105');
 			});
 		});
@@ -97,36 +153,59 @@ describe('RecipeCardParent', () => {
 
 			const recipeHeadings = screen.queryAllByRole('heading', { level: 2 });
 			expect(recipeHeadings).toHaveLength(0);
-			expect(screen.queryByRole('img')).not.toBeInTheDocument();
-			expect(screen.queryByRole('link')).not.toBeInTheDocument();
+			expect(screen.queryByRole('article')).not.toBeInTheDocument();
 		});
 
 		it('handles single recipe correctly', () => {
 			const singleRecipe = [mockRecipes[0]];
 			render(RecipeCardParent, { props: { recipes: singleRecipe } });
 
-			expect(screen.getByText(singleRecipe[0].title)).toBeInTheDocument();
-			expect(screen.getAllByRole('img')).toHaveLength(1);
-			expect(screen.getAllByRole('link')).toHaveLength(1);
+			expect(screen.getByText(singleRecipe[0].name)).toBeInTheDocument();
+			expect(screen.getByText(singleRecipe[0].minutes.toString())).toBeInTheDocument();
+			expect(screen.getByText('minutes')).toBeInTheDocument();
+			expect(screen.getAllByRole('article')).toHaveLength(1);
 		});
 
-		it('handles recipes with missing optional fields', () => {
-			const incompleteRecipe = {
-				title: 'Incomplete Recipe',
-				readyInMinutes: 30,
-				servings: 2,
-				sourceUrl: 'https://example.com/incomplete'
+		it('handles recipes with minimal data', () => {
+			const minimalRecipe: TransformedRecipe = {
+				id: 999999,
+				name: 'minimal recipe',
+				minutes: 15,
+				nutrition: '[200, 10, 5, 8, 15, 12, 20]',
+				steps: '["step 1", "step 2"]',
+				description: 'simple recipe',
+				ingredients: '["ingredient 1", "ingredient 2"]',
+				score: 1.0
 			};
-			render(RecipeCardParent, { props: { recipes: [incompleteRecipe] } });
 
-			expect(screen.getByText(incompleteRecipe.title)).toBeInTheDocument();
-			expect(
-				screen.getAllByText(`${incompleteRecipe.readyInMinutes} minutes`).length
-			).toBeGreaterThan(0);
-			expect(screen.getAllByText(`${incompleteRecipe.servings} servings`).length).toBeGreaterThan(
-				0
-			);
-			expect(screen.getByRole('link')).toHaveAttribute('href', incompleteRecipe.sourceUrl);
+			render(RecipeCardParent, { props: { recipes: [minimalRecipe] } });
+
+			expect(screen.getByText(minimalRecipe.name)).toBeInTheDocument();
+			expect(screen.getByText(minimalRecipe.minutes.toString())).toBeInTheDocument();
+			expect(screen.getByText('minutes')).toBeInTheDocument();
+			expect(screen.getByText(minimalRecipe.description)).toBeInTheDocument();
+			expect(screen.getByText('ingredient 1')).toBeInTheDocument();
+			expect(screen.getByText('ingredient 2')).toBeInTheDocument();
+		});
+
+		it('handles malformed JSON in recipe data gracefully', () => {
+			const recipeWithBadData: TransformedRecipe = {
+				id: 888888,
+				name: 'recipe with bad data',
+				minutes: 20,
+				nutrition: 'invalid json',
+				steps: 'invalid json',
+				ingredients: 'invalid json',
+				description: 'recipe with malformed json data',
+				score: 0.5
+			};
+
+			render(RecipeCardParent, { props: { recipes: [recipeWithBadData] } });
+
+			// Should still render without crashing
+			expect(screen.getByText(recipeWithBadData.name)).toBeInTheDocument();
+			expect(screen.getByText(recipeWithBadData.description)).toBeInTheDocument();
+			expect(screen.getByRole('article')).toBeInTheDocument();
 		});
 	});
 });

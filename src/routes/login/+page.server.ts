@@ -2,9 +2,9 @@ import type { Actions } from './$types.js';
 import { getUserByEmail } from '../../queries/user/select.js';
 import type { RequestEvent } from '@sveltejs/kit';
 import { AuthService } from '../../utils/auth/authService.js';
-import { error } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { JWT_SECRET } from '$env/static/private';
-import { ValidationError, AuthError, handleError } from '$utils/errors/AppError.js';
+import { handleError } from '$utils/errors/AppError.js';
 
 export const actions: Actions = {
 	default: async ({ request, cookies }: RequestEvent) => {
@@ -19,30 +19,36 @@ export const actions: Actions = {
 			// Validate input.
 			const validation = authService.validateLoginForm(email, password);
 			if (!validation.isValid) {
-				throw new ValidationError('Email and password required');
+				return fail(400, { message: 'Email and password required' });
 			}
 
 			// Look up the user by email.
 			const user = await getUserByEmail(email);
 			if (!user) {
-				throw new AuthError('Invalid credentials');
+				return fail(401, { message: 'Invalid credentials' });
 			}
 
 			// Validate credentials.
 			const isValid = await authService.validateCredentials(user, password);
 			if (!isValid) {
-				throw new AuthError('Invalid credentials');
+				return fail(401, { message: 'Invalid credentials' });
 			}
 
 			// Create and set JWT token.
 			const token = authService.createJwtToken(user);
 			authService.setAuthCookie(cookies, token);
 
-			// Return success on successful login.
-			return { success: true, message: 'Login successful' };
+			// Redirect to search page on successful login.
+			throw redirect(303, '/search');
 		} catch (err: unknown) {
+			// Handle redirect throws (these are expected)
+			if (err && typeof err === 'object' && 'status' in err && err.status === 303) {
+				throw err;
+			}
+
+			// Handle other errors
 			const errorResponse = handleError(err, 'Login');
-			throw error(errorResponse.status, errorResponse.message);
+			return fail(errorResponse.status, { message: errorResponse.message });
 		}
 	}
 };

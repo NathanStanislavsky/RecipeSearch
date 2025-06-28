@@ -87,6 +87,7 @@
 		"dotenv": "^16.4.7",
 		"drizzle-orm": "^0.38.4",
 		"jsonwebtoken": "^9.0.2",
+		"mongodb": "^6.17.0",
 		"pg": "^8.13.3"
 	}
 }

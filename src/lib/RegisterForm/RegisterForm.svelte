@@ -1,42 +1,41 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 	import { goto } from '$app/navigation';
+
 	let name: string = '';
 	let email: string = '';
 	let password: string = '';
 	let message: string = '';
+	let isLoading = false;
 
-	async function handleSubmit(event: SubmitEvent): Promise<void> {
-		event.preventDefault();
+	const handleSubmit: SubmitFunction = () => {
+		isLoading = true;
+		message = '';
 
-		const target = event.target as HTMLFormElement;
-		if (!target.checkValidity()) {
-			return;
-		}
+		return async ({ result, update }) => {
+			isLoading = false;
 
-		try {
-			const formData = new FormData(target);
-			const res = await fetch('/register', {
-				method: 'POST',
-				body: formData
-			});
-			const data = await res.json();
-
-			message = data.message;
-
-			if (res.ok) {
-				await goto('/login');
+			if (result.type === 'redirect') {
+				goto(result.location, { replaceState: true });
+				return;
+			} else if (result.type === 'error') {
+				message = result.error?.message || 'Registration failed';
+				await update();
+			} else if (result.type === 'failure') {
+				message = result.data?.message || 'Registration failed';
+				await update();
+			} else {
+				await update();
 			}
-		} catch (error) {
-			console.error(error);
-			message = 'Internal Server Error';
-		}
-	}
+		};
+	};
 </script>
 
 <div class="flex h-full items-center justify-center">
 	<div class="w-full max-w-md rounded-md bg-white p-6 shadow-md">
 		<h1 class="mb-6 text-center text-2xl font-bold">Register</h1>
-		<form data-testid="register-form" class="space-y-4" on:submit={handleSubmit}>
+		<form data-testid="register-form" method="POST" use:enhance={handleSubmit} class="space-y-4">
 			<div>
 				<label for="name" class="block text-sm font-medium text-gray-700">Username</label>
 				<input
@@ -76,9 +75,10 @@
 			<div>
 				<button
 					type="submit"
-					class="w-full rounded-md bg-blue-500 px-4 py-2 font-semibold text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					disabled={isLoading}
+					class="w-full rounded-md bg-blue-500 px-4 py-2 font-semibold text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
 				>
-					Register
+					{isLoading ? 'Registering...' : 'Register'}
 				</button>
 			</div>
 		</form>

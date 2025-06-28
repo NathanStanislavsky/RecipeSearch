@@ -1,8 +1,8 @@
 <script lang="ts">
 	import RecipeCard from '$lib/RecipeCard/RecipeCard.svelte';
-	import type { Recipe } from '../../types/recipe.js';
+	import type { TransformedRecipe } from '../../types/recipe.js';
 
-	export let recipes: Recipe[];
+	export let recipes: TransformedRecipe[];
 </script>
 
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

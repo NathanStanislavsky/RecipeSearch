@@ -5,6 +5,7 @@ import type { User } from '../types/user.js';
 
 interface NavbarProps {
 	user: User | null;
+	currentPath: string;
 }
 
 const meta = {
@@ -25,7 +26,8 @@ type Story = StoryObj<typeof meta>;
 
 export const LoggedOut: Story = {
 	args: {
-		user: null
+		user: null,
+		currentPath: '/'
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
@@ -39,7 +41,8 @@ export const LoggedOut: Story = {
 
 export const LoggedIn: Story = {
 	args: {
-		user: { id: 1, email: 'test@example.com', name: 'Test User' }
+		user: { id: 1, email: 'test@example.com', name: 'Test User' },
+		currentPath: '/'
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);

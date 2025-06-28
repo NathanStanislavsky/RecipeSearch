@@ -2,7 +2,6 @@ import type { RequestEvent, Cookies } from '@sveltejs/kit';
 import type { Recipe } from '../../types/recipe.ts';
 import { expect, vi } from 'vitest';
 import type { JwtPayload } from 'jsonwebtoken';
-import { RateLimiter } from '../api/rateLimiter.js';
 
 interface User {
 	id: number;
@@ -86,11 +85,20 @@ export class TestHelper {
 	 */
 	static createMockRecipe(id: number): Recipe {
 		return {
-			title: `Test Recipe ${id}`,
-			image: `https://example.com/recipe${id}.jpg`,
-			servings: 4,
-			readyInMinutes: 30,
-			sourceUrl: `https://example.com/recipe${id}`
+			_id: `recipe_${id}`,
+			name: `Test Recipe ${id}`,
+			id: id,
+			minutes: 30,
+			contributor_id: 1,
+			submitted: '2023-01-01',
+			tags: '["test", "mock"]',
+			nutrition: '[200, 10, 5, 300, 20, 3, 25]',
+			n_steps: 3,
+			steps: '["Step 1", "Step 2", "Step 3"]',
+			description: `This is a test recipe ${id} for testing purposes`,
+			ingredients: '["ingredient 1", "ingredient 2", "ingredient 3"]',
+			n_ingredients: 3,
+			score: 4.5
 		};
 	}
 
@@ -157,13 +165,5 @@ export class TestHelper {
 	static setupMockFetchSequence(responses: Response[]): void {
 		const spy = vi.spyOn(global, 'fetch');
 		responses.forEach((response) => spy.mockResolvedValueOnce(response));
-	}
-
-	/**
-	 * Mocks the RateLimiter to allow or deny requests
-	 * @param shouldAllow - Whether the rate limiter should allow the request (default: true)
-	 */
-	static mockRateLimiter(shouldAllow: boolean = true): void {
-		vi.spyOn(RateLimiter, 'checkAndIncrement').mockResolvedValue(shouldAllow);
 	}
 }

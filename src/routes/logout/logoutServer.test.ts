@@ -26,10 +26,12 @@ describe('logout endpoint', () => {
 	const createLogoutRequestEvent = (user?: User): LogoutRequestEvent => {
 		const request = createLogoutRequest();
 		const event = TestHelper.createMockRequestEvent('http://localhost/logout', {
-			user: user || {
-				id: TEST_USER.userId,
-				name: TEST_USER.name,
-				email: TEST_USER.email
+			locals: {
+				user: user || {
+					id: TEST_USER.userId,
+					name: TEST_USER.name,
+					email: TEST_USER.email
+				}
 			}
 		}) as LogoutRequestEvent;
 		return {

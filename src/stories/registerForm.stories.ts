@@ -2,12 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { expect, within, waitFor } from '@storybook/test';
 
-interface RegisterFormProps {
-	username?: string;
-	email?: string;
-	password?: string;
-	onSubmit?: (username: string, email: string, password: string) => void;
-}
+interface RegisterFormProps {}
 
 const meta = {
 	title: 'Components/RegisterForm',
@@ -37,19 +32,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-	args: {
-		username: '',
-		email: '',
-		password: ''
-	}
+	args: {}
 };
 
 export const Interactive: Story = {
-	args: {
-		username: '',
-		email: '',
-		password: ''
-	},
+	args: {},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
 

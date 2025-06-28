@@ -47,17 +47,20 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
-		const result = await actions.default(event);
-		expect(result).toEqual({ success: true, message: 'Login successful' });
+		await expect(actions.default(event)).rejects.toMatchObject({
+			status: 303,
+			location: '/search'
+		});
 	});
 
 	it('returns error if email or password are missing', async () => {
 		const request = createLoginRequest('', '');
 		const event = createLoginRequestEvent(request);
 
-		await expect(actions.default(event)).rejects.toMatchObject({
+		const result = await actions.default(event);
+		expect(result).toMatchObject({
 			status: 400,
-			body: { message: 'Email and password required' }
+			data: { message: 'Email and password required' }
 		});
 	});
 
@@ -66,9 +69,10 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
-		await expect(actions.default(event)).rejects.toMatchObject({
+		const result = await actions.default(event);
+		expect(result).toMatchObject({
 			status: 401,
-			body: { message: 'Invalid credentials' }
+			data: { message: 'Invalid credentials' }
 		});
 	});
 
@@ -79,9 +83,10 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.wrongPassword);
 		const event = createLoginRequestEvent(request);
 
-		await expect(actions.default(event)).rejects.toMatchObject({
+		const result = await actions.default(event);
+		expect(result).toMatchObject({
 			status: 401,
-			body: { message: 'Invalid credentials' }
+			data: { message: 'Invalid credentials' }
 		});
 	});
 
@@ -90,9 +95,10 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
-		await expect(actions.default(event)).rejects.toMatchObject({
+		const result = await actions.default(event);
+		expect(result).toMatchObject({
 			status: 500,
-			body: { message: 'Database error' }
+			data: { message: 'Database error' }
 		});
 	});
 
@@ -103,7 +109,10 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
-		await actions.default(event);
+		await expect(actions.default(event)).rejects.toMatchObject({
+			status: 303,
+			location: '/search'
+		});
 		expect(event.cookies.set).toHaveBeenCalledWith('jwt', expect.any(String), {
 			path: '/',
 			httpOnly: true,
@@ -116,9 +125,10 @@ describe('/login endpoint', () => {
 		const request = createLoginRequest('invalid-email', '');
 		const event = createLoginRequestEvent(request);
 
-		await expect(actions.default(event)).rejects.toMatchObject({
+		const result = await actions.default(event);
+		expect(result).toMatchObject({
 			status: 400,
-			body: { message: 'Email and password required' }
+			data: { message: 'Email and password required' }
 		});
 	});
 
@@ -131,13 +141,14 @@ describe('/login endpoint', () => {
 		const event1 = createLoginRequestEvent(request1);
 		const event2 = createLoginRequestEvent(request2);
 
-		const [result1, result2] = await Promise.all([
-			actions.default(event1),
-			actions.default(event2)
-		]);
+		// Both should succeed and throw redirects
+		const results = await Promise.allSettled([actions.default(event1), actions.default(event2)]);
 
-		expect(result1).toEqual({ success: true, message: 'Login successful' });
-		expect(result2).toEqual({ success: true, message: 'Login successful' });
+		// Both results should be rejected with redirects
+		expect(results[0].status).toBe('rejected');
+		expect(results[1].status).toBe('rejected');
+
+		// Verify both set cookies
 		expect(event1.cookies.set).toHaveBeenCalled();
 		expect(event2.cookies.set).toHaveBeenCalled();
 	});

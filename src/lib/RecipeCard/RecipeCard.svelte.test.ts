@@ -1,152 +1,112 @@
-import { render, screen, fireEvent } from '@testing-library/svelte';
-import { describe, it, beforeEach, expect } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/svelte';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import RecipeCard from './RecipeCard.svelte';
+import type { TransformedRecipe } from '../../types/recipe.js';
 
-const recipe = {
-	image: 'https://img.spoonacular.com/recipes/987-556x370.jpg',
-	title: 'Sea Bass and Cucumbers in Champagne Sauce',
-	readyInMinutes: 15,
-	servings: 4,
-	sourceUrl: 'http://www.myrecipes.com/recipe/sea-bass-cucumbers-champagne-sauce-10000000640888/'
+const mockRecipe: TransformedRecipe = {
+	id: 388939,
+	name: 'crock pot shredded chicken sandwiches',
+	minutes: 125,
+	nutrition: '[792.1, 73.0, 15.0, 46.0, 116.0, 67.0, 9.0]',
+	steps:
+		'["empty can of chicken into large bowl or even crockpot container , do not drain", "open stuffing and can of cream of chicken , mix with large spoon or use clean hands to break up meat and throughly mix ingredients", "place in crockpot", "cook on medium for approx 2 hours or until warmed thru , stir as needed"]',
+	description:
+		'fast and easy, tastes great! been at almost every pot-luck in our family for years!',
+	ingredients:
+		'["boneless chicken", "chicken flavor stuffing mix", "cream of chicken soup", "chicken broth"]',
+	score: 1.504440426826477
 };
 
 describe('RecipeCard', () => {
-	describe('when not loading', () => {
-		beforeEach(() => {
-			render(RecipeCard, {
-				props: {
-					recipe
-				}
-			});
-		});
+	afterEach(() => {
+		cleanup();
+	});
 
-		it('renders the recipe card with all elements', () => {
-			expect(screen.getByRole('img')).toHaveAttribute('src', recipe.image);
-			expect(screen.getByText(recipe.title)).toBeInTheDocument();
-			expect(screen.getByText('Ready in')).toBeInTheDocument();
-			expect(screen.getByText(`${recipe.readyInMinutes} minutes`)).toBeInTheDocument();
-			expect(screen.getByText(`${recipe.servings} servings`)).toBeInTheDocument();
-			expect(screen.getByRole('link', { name: /view recipe/i })).toHaveAttribute(
-				'href',
-				recipe.sourceUrl
-			);
-		});
-
-		it('has proper accessibility attributes', () => {
-			const card = screen.getByRole('article');
-			expect(card).toHaveAttribute('aria-label', `Recipe card for ${recipe.title}`);
-
-			const image = screen.getByRole('img');
-			expect(image).toHaveAttribute('alt', `Image of ${recipe.title}`);
-			expect(image).toHaveAttribute('loading', 'lazy');
-		});
-
-		it('has proper link attributes', () => {
-			const link = screen.getByRole('link', { name: /view recipe/i });
-			expect(link).toHaveAttribute('target', '_blank');
-			expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-		});
-
-		it('applies correct styling to the card', () => {
-			const card = screen.getByRole('article');
-			expect(card).toHaveClass(
-				'max-w-sm',
-				'overflow-hidden',
-				'rounded',
-				'bg-white',
-				'shadow-lg',
-				'transition-transform',
-				'hover:scale-105'
-			);
-		});
-
-		it('applies correct styling to the image', () => {
-			const image = screen.getByRole('img');
-			expect(image).toHaveClass('h-48', 'w-full', 'object-cover');
-		});
-
-		it('applies correct styling to the link', () => {
-			const link = screen.getByRole('link', { name: /view recipe/i });
-			expect(link).toHaveClass(
-				'block',
-				'rounded',
-				'bg-blue-500',
-				'px-4',
-				'py-2',
-				'text-center',
-				'font-bold',
-				'text-white',
-				'transition-colors',
-				'hover:bg-blue-700',
-				'focus:ring-2',
-				'focus:ring-blue-500',
-				'focus:ring-offset-2',
-				'focus:outline-none'
-			);
-		});
-
-		it('handles image loading error', async () => {
-			const image = screen.getByRole('img');
-			await fireEvent.error(image);
-			expect(image).toHaveAttribute('src', recipe.image);
+	beforeEach(() => {
+		render(RecipeCard, {
+			props: {
+				recipe: mockRecipe
+			}
 		});
 	});
 
-	describe('when loading', () => {
-		beforeEach(() => {
-			render(RecipeCard, {
-				props: {
-					recipe,
-					loading: true
-				}
-			});
-		});
+	it('renders the recipe card with basic information', () => {
+		expect(screen.getByRole('article')).toBeInTheDocument();
+		expect(screen.getByText('crock pot shredded chicken sandwiches')).toBeInTheDocument();
 
-		it('shows loading state', () => {
-			expect(screen.getByTestId('loading-placeholder')).toHaveClass('animate-pulse');
-			expect(screen.queryByRole('img')).not.toBeInTheDocument();
-		});
-
-		it('still shows recipe information', () => {
-			expect(screen.getByText(recipe.title)).toBeInTheDocument();
-			expect(screen.getByText('Ready in')).toBeInTheDocument();
-			expect(screen.getByText(`${recipe.readyInMinutes} minutes`)).toBeInTheDocument();
-			expect(screen.getByText(`${recipe.servings} servings`)).toBeInTheDocument();
-		});
-
-		it('applies correct styling to the loading placeholder', () => {
-			const placeholder = screen.getByTestId('loading-placeholder');
-			expect(placeholder).toHaveClass('h-48', 'w-full', 'animate-pulse', 'bg-gray-200');
-		});
+		// Use more flexible text matching for the minutes
+		expect(screen.getByText('125')).toBeInTheDocument();
+		expect(screen.getByText('minutes')).toBeInTheDocument();
 	});
 
-	describe('interaction states', () => {
-		beforeEach(() => {
-			render(RecipeCard, {
-				props: {
-					recipe
-				}
-			});
-		});
+	it('renders the description section', () => {
+		expect(screen.getByText('Description')).toBeInTheDocument();
+		expect(screen.getByText(mockRecipe.description)).toBeInTheDocument();
+	});
 
-		it('applies hover effect to the card', () => {
-			const card = screen.getByRole('article');
-			expect(card).toHaveClass('hover:scale-105');
-		});
+	it('renders nutrition information correctly', () => {
+		expect(screen.getByText('Nutrition')).toBeInTheDocument();
 
-		it('applies hover effect to the link', () => {
-			const link = screen.getByRole('link', { name: /view recipe/i });
-			expect(link).toHaveClass('hover:bg-blue-700');
-		});
+		// Check calories (first value in nutrition array)
+		expect(screen.getByText('792')).toBeInTheDocument();
 
-		it('applies focus styles to the link', () => {
-			const link = screen.getByRole('link', { name: /view recipe/i });
-			expect(link).toHaveClass(
-				'focus:ring-2',
-				'focus:ring-blue-500',
-				'focus:ring-offset-2',
-				'focus:outline-none'
-			);
-		});
+		// Check PDV values
+		expect(screen.getByText('73% DV')).toBeInTheDocument(); // Total Fat
+		expect(screen.getByText('15% DV')).toBeInTheDocument(); // Sugar
+		expect(screen.getByText('46% DV')).toBeInTheDocument(); // Sodium
+		expect(screen.getByText('116% DV')).toBeInTheDocument(); // Protein
+		expect(screen.getByText('67% DV')).toBeInTheDocument(); // Saturated Fat
+
+		// Check labels
+		expect(screen.getByText('Calories:')).toBeInTheDocument();
+		expect(screen.getByText('Total Fat:')).toBeInTheDocument();
+		expect(screen.getByText('Sugar:')).toBeInTheDocument();
+		expect(screen.getByText('Sodium:')).toBeInTheDocument();
+		expect(screen.getByText('Protein:')).toBeInTheDocument();
+		expect(screen.getByText('Sat. Fat:')).toBeInTheDocument();
+	});
+
+	it('renders ingredients list correctly', () => {
+		expect(screen.getByText('Ingredients')).toBeInTheDocument();
+
+		// Check individual ingredients
+		expect(screen.getByText('boneless chicken')).toBeInTheDocument();
+		expect(screen.getByText('chicken flavor stuffing mix')).toBeInTheDocument();
+		expect(screen.getByText('cream of chicken soup')).toBeInTheDocument();
+		expect(screen.getByText('chicken broth')).toBeInTheDocument();
+	});
+
+	it('renders instructions correctly', () => {
+		expect(screen.getByText('Instructions')).toBeInTheDocument();
+
+		// Check that numbered steps are rendered
+		expect(screen.getByText('1')).toBeInTheDocument();
+		expect(screen.getByText('2')).toBeInTheDocument();
+		expect(screen.getByText('3')).toBeInTheDocument();
+		expect(screen.getByText('4')).toBeInTheDocument();
+
+		// Check step content
+		expect(screen.getByText(/empty can of chicken into large bowl/)).toBeInTheDocument();
+		expect(screen.getByText(/open stuffing and can of cream of chicken/)).toBeInTheDocument();
+		expect(screen.getByText(/place in crockpot/)).toBeInTheDocument();
+		expect(screen.getByText(/cook on medium for approx 2 hours/)).toBeInTheDocument();
+	});
+
+	it('has proper accessibility attributes', () => {
+		const card = screen.getByRole('article');
+		expect(card).toHaveAttribute('aria-label', `Recipe card for ${mockRecipe.name}`);
+	});
+
+	it('applies correct styling classes', () => {
+		const card = screen.getByRole('article');
+		expect(card).toHaveClass(
+			'max-w-sm',
+			'overflow-hidden',
+			'rounded-lg',
+			'bg-white',
+			'shadow-lg',
+			'transition-transform',
+			'hover:scale-105'
+		);
 	});
 });
