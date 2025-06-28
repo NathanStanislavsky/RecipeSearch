@@ -16,6 +16,7 @@
 			isLoading = false;
 
 			if (result.type === 'redirect') {
+				await update();
 				return;
 			} else if (result.type === 'error') {
 				message = result.error?.message || 'Registration failed';
