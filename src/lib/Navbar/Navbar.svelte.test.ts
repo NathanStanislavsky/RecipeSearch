@@ -27,6 +27,11 @@ vi.mock('$app/forms', () => ({
 	})
 }));
 
+// Mock $app/navigation
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn().mockResolvedValue(undefined)
+}));
+
 describe('navigation bar', () => {
 	describe('rendering', () => {
 		it('renders the website name', () => {

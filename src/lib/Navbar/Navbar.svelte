@@ -1,14 +1,19 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
+	import { goto } from '$app/navigation';
 
 	export let user;
 	export let currentPath;
 
 	const handleLogout: SubmitFunction = () => {
-		return async ({ result }) => {
+		return async ({ result, update }) => {
 			if (result.type === 'redirect') {
+				// Handle redirect manually to avoid navigation intent issues
+				goto(result.location, { replaceState: true });
 				return;
+			} else {
+				await update();
 			}
 		};
 	};

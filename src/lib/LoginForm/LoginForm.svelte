@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
+	import { goto } from '$app/navigation';
 
 	let message: string = '';
 	let isLoading = false;
@@ -13,12 +14,16 @@
 			isLoading = false;
 
 			if (result.type === 'redirect') {
-				await update();
+				goto(result.location, { replaceState: true });
 				return;
 			} else if (result.type === 'error') {
 				message = result.error?.message || 'Login failed';
+				await update();
 			} else if (result.type === 'failure') {
 				message = result.data?.message || 'Login failed';
+				await update();
+			} else {
+				await update();
 			}
 		};
 	};

@@ -17,6 +17,11 @@ vi.mock('$app/forms', () => ({
 	})
 }));
 
+// Mock $app/navigation
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn().mockResolvedValue(undefined)
+}));
+
 describe('RegisterForm Component', () => {
 	beforeEach(() => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
