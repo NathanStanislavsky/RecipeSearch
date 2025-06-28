@@ -9,6 +9,7 @@
 
 	let isLoading = false;
 	let hasSearched = false;
+	let searchError = '';
 
 	async function searchRecipes() {
 		try {
@@ -19,13 +20,31 @@
 
 			isLoading = true;
 			hasSearched = true;
-			const response = await fetch(`/search?ingredients=${ingredients}`);
+			searchError = '';
+
+			const response = await fetch(`/search?ingredients=${encodeURIComponent(ingredients)}`);
+
+			if (!response.ok) {
+				throw new Error(`Search failed: ${response.statusText}`);
+			}
+
 			const data = await response.json();
 
-			console.log(data);
-			recipes = data;
+			console.log('Search response:', data);
+
+			// Handle the new API response format
+			if (data.results) {
+				recipes = data.results;
+			} else if (Array.isArray(data)) {
+				// Fallback for direct array response
+				recipes = data;
+			} else {
+				recipes = [];
+			}
 		} catch (error) {
 			console.error('Error fetching recipes:', error);
+			searchError = error instanceof Error ? error.message : 'An error occurred during search';
+			recipes = [];
 		} finally {
 			isLoading = false;
 		}
@@ -43,6 +62,10 @@
 
 	{#if isLoading}
 		<p>Loading...</p>
+	{:else if searchError}
+		<div class="text-center text-red-600">
+			<p>Error: {searchError}</p>
+		</div>
 	{:else if recipes.length > 0}
 		<div class="w-full max-w-4xl px-4">
 			<RecipeCardParent {recipes} />
