@@ -4,12 +4,28 @@ import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { userEvent } from '@testing-library/user-event';
 import { TEST_USER } from '../../utils/test/testConstants.js';
 
+// Type definitions for form enhancement
+interface EnhanceHandler {
+	(input: { formData: FormData; cancel: () => void }): (result: {
+		result: 
+			| { type: 'error'; error?: { message: string } }
+			| { type: 'failure'; data?: { message: string } }
+			| { type: 'redirect'; location: string }
+			| { type: 'success'; data?: { message: string } };
+		update: () => void;
+	}) => Promise<void>;
+}
+
+interface EnhancedFormElement extends HTMLFormElement {
+	__enhance_handler?: EnhanceHandler;
+}
+
 // Mock $app/forms
 vi.mock('$app/forms', () => ({
 	enhance: vi.fn((form, handler) => {
 		// Mock enhance by storing the handler for later use in tests
 		if (handler) {
-			(form as any).__enhance_handler = handler;
+			(form as EnhancedFormElement).__enhance_handler = handler;
 		}
 		return {
 			destroy: vi.fn()
@@ -127,8 +143,8 @@ describe('RegisterForm Component', () => {
 		});
 
 		it('handles server error gracefully', async () => {
-			const form = screen.getByTestId('register-form');
-			const handler = (form as any).__enhance_handler;
+			const form = screen.getByTestId('register-form') as EnhancedFormElement;
+			const handler = form.__enhance_handler;
 
 			if (handler) {
 				// Simulate form submission with error response
@@ -143,8 +159,8 @@ describe('RegisterForm Component', () => {
 		});
 
 		it('handles successful registration and redirects', async () => {
-			const form = screen.getByTestId('register-form');
-			const handler = (form as any).__enhance_handler;
+			const form = screen.getByTestId('register-form') as EnhancedFormElement;
+			const handler = form.__enhance_handler;
 
 			if (handler) {
 				// Simulate form submission with redirect response
@@ -159,8 +175,8 @@ describe('RegisterForm Component', () => {
 		});
 
 		it('displays server response message on failure', async () => {
-			const form = screen.getByTestId('register-form');
-			const handler = (form as any).__enhance_handler;
+			const form = screen.getByTestId('register-form') as EnhancedFormElement;
+			const handler = form.__enhance_handler;
 
 			if (handler) {
 				// Simulate form submission with failure response
