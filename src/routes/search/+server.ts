@@ -3,9 +3,24 @@ import { createJsonResponse } from '$utils/api/apiUtils.js';
 import { ApiError, handleError } from '$utils/errors/AppError.js';
 import { getMongoClient } from '$lib/server/mongo/index.js';
 import { MONGODB_DATABASE, MONGODB_COLLECTION, MONGODB_SEARCH_INDEX } from '$env/static/private';
-import type { Recipe } from '../../types/recipe.js';
+import type { Recipe, TransformedRecipe } from '../../types/recipe.js';
 
-async function searchRecipes(searchQuery: string, limit = 50, skip = 0): Promise<Recipe[]> {
+async function transformResults(results: Recipe[]): Promise<TransformedRecipe[]> {
+	return results.map((result) => {
+		return {
+			id: result.id,
+			name: result.name,
+			minutes: result.minutes,
+			nutrition: result.nutrition,
+			steps: result.steps,
+			description: result.description,
+			ingredients: result.ingredients,
+			score: result.score,
+		};
+	});
+}
+
+async function searchRecipes(searchQuery: string, limit = 50, skip = 0): Promise<TransformedRecipe[]> {
 	const client = getMongoClient();
 
 	if (!client) {
@@ -39,7 +54,7 @@ async function searchRecipes(searchQuery: string, limit = 50, skip = 0): Promise
 			results.push(doc as Recipe);
 		}
 
-		return results;
+		return transformResults(results);
 	} catch (error) {
 		console.error('Error during Atlas Search aggregation:', error);
 		throw error;

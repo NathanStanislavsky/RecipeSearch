@@ -25,16 +25,29 @@ export interface ExtractRecipeIdsResult {
 }
 
 export interface Recipe {
-	/** URL to the recipe image */
-	image: string;
-	/** Recipe title */
-	title: string;
-	/** Time in minutes to prepare the recipe */
-	readyInMinutes: number;
-	/** Number of servings the recipe makes */
-	servings: number;
-	/** URL to the original recipe source */
-	sourceUrl: string;
-	/** Unique identifier for the recipe */
-	id: string;
+	_id: string;
+	name: string;
+	id: number;
+	minutes: number;
+	contributor_id: number;
+	submitted: string;
+	tags: string;
+	nutrition: string;
+	n_steps: number;
+	steps: string;
+	description: string;
+	ingredients: string;
+	n_ingredients: number;
+	score: number;
+}
+
+export interface TransformedRecipe {
+	id: number;
+	name: string;
+	minutes: number;
+	nutrition: string;
+	steps: string;
+	description: string;
+	ingredients: string;
+	score: number;
 }
