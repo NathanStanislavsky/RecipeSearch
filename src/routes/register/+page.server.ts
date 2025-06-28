@@ -2,8 +2,8 @@ import type { Actions } from './$types.js';
 import { getUserByEmail } from '../../queries/user/select.js';
 import bcrypt from 'bcryptjs';
 import { createUser } from '../../queries/user/insert.js';
-import { type RequestEvent } from '@sveltejs/kit';
-import { ValidationError, AuthError, handleError } from '../../utils/errors/AppError.js';
+import { type RequestEvent, fail, redirect } from '@sveltejs/kit';
+import { ValidationError, handleError } from '../../utils/errors/AppError.js';
 
 export const actions: Actions = {
 	default: async ({ request }: RequestEvent) => {
@@ -17,31 +17,32 @@ export const actions: Actions = {
 				validateRegisterPayload({ email, password, name });
 			} catch (error) {
 				if (error instanceof ValidationError) {
-					return { success: false, message: error.message };
+					return fail(400, { message: error.message });
 				}
 				throw error;
 			}
 
 			const existingUser = await getUserByEmail(email);
 			if (existingUser) {
-				throw new AuthError('Email already registered');
+				return fail(409, { message: 'Email already registered' });
 			}
 
 			const hashedPassword = await bcrypt.hash(password, 10);
-			const newUser = await createUser({
+			await createUser({
 				email,
 				name,
 				password: hashedPassword
 			});
 
-			return {
-				success: true,
-				message: 'User registered successfully',
-				userId: newUser.id
-			};
+			throw redirect(303, '/login');
 		} catch (error) {
+			if (error && typeof error === 'object' && 'status' in error && error.status === 303) {
+				throw error;
+			}
+			
+			// Handle other errors
 			const errorResponse = handleError(error, 'Registration');
-			return { success: false, message: errorResponse.message };
+			return fail(errorResponse.status, { message: errorResponse.message });
 		}
 	}
 };

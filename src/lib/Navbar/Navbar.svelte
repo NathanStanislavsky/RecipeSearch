@@ -1,23 +1,17 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
 	export let user;
 	export let currentPath;
 
-	async function handleLogout() {
-		try {
-			const formData = new FormData();
-			const response = await fetch('/logout', {
-				method: 'POST',
-				body: formData
-			});
-			if (response.ok) {
-				await goto('/');
+	const handleLogout: SubmitFunction = () => {
+		return async ({ result }) => {
+			if (result.type === 'redirect') {
+				return;
 			}
-		} catch (error) {
-			console.error('Logout error:', error);
-		}
-	}
+		};
+	};
 </script>
 
 <nav
@@ -42,12 +36,14 @@
 	<!-- Right Column -->
 	<div class="flex flex-1 items-center justify-end">
 		{#if user}
-			<button
-				on:click={handleLogout}
-				class="ml-4 rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
-			>
-				Logout
-			</button>
+			<form method="POST" action="/logout" use:enhance={handleLogout} class="inline">
+				<button
+					type="submit"
+					class="ml-4 rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+				>
+					Logout
+				</button>
+			</form>
 		{:else if currentPath !== '/register' && currentPath !== '/login' && currentPath !== '/search'}
 			<a href="/login" class="text-gray-700 hover:text-gray-900">Sign in</a>
 		{/if}

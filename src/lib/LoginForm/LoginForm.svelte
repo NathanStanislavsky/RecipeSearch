@@ -1,43 +1,32 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
+	
 	let message: string = '';
 	let isLoading = false;
 
-	async function handleSubmit(event: SubmitEvent) {
-		event.preventDefault();
+	const handleSubmit: SubmitFunction = ({ formData, cancel }) => {
 		isLoading = true;
 		message = '';
 
-		const form = event.target as HTMLFormElement;
-		const formData = new FormData(form);
-
-		try {
-			const response = await fetch('/login', {
-				method: 'POST',
-				body: formData
-			});
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				message = data.error.message || 'Login failed';
-				isLoading = false;
-				return;
-			}
-
-			await goto('/search');
-		} catch (error) {
-			console.error(error);
-			message = 'An error occurred during login';
+		return async ({ result, update }) => {
 			isLoading = false;
-		}
-	}
+			
+			if (result.type === 'redirect') {
+				return;
+			} else if (result.type === 'error') {
+				message = result.error?.message || 'Login failed';
+			} else if (result.type === 'failure') {
+				message = result.data?.message || 'Login failed';
+			}
+		};
+	};
 </script>
 
 <div class="flex items-center justify-center">
 	<div class="w-full max-w-md rounded-md bg-white p-6 shadow-md">
 		<h1 class="mb-6 text-center text-2xl font-bold">Login</h1>
-		<form on:submit={handleSubmit} class="space-y-4">
+		<form method="POST" use:enhance={handleSubmit} class="space-y-4">
 			{#if message}
 				<div class="rounded-md bg-red-50 p-4 text-red-700">
 					{message}
