@@ -45,7 +45,7 @@ export const actions: Actions = {
 			if (err && typeof err === 'object' && 'status' in err && err.status === 303) {
 				throw err;
 			}
-			
+
 			// Handle other errors
 			const errorResponse = handleError(err, 'Login');
 			return fail(errorResponse.status, { message: errorResponse.message });

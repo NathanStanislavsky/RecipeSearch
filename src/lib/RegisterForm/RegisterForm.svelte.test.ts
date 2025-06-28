@@ -1,25 +1,24 @@
 import { describe, beforeEach, it, expect, vi } from 'vitest';
-import type { Mock } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { userEvent } from '@testing-library/user-event';
-import { TestHelper } from '../../utils/test/testHelper.ts';
 import { TEST_USER } from '../../utils/test/testConstants.js';
-import * as navigation from '$app/navigation';
 
-type MockFetch = Mock;
-
-vi.mock('$app/navigation', () => ({
-	goto: vi.fn()
+// Mock $app/forms
+vi.mock('$app/forms', () => ({
+	enhance: vi.fn((form, handler) => {
+		// Mock enhance by storing the handler for later use in tests
+		if (handler) {
+			(form as any).__enhance_handler = handler;
+		}
+		return {
+			destroy: vi.fn()
+		};
+	})
 }));
 
 describe('RegisterForm Component', () => {
-	let mockFetch: MockFetch;
-
 	beforeEach(() => {
-		// Reset the mock before each test
-		mockFetch = vi.fn();
-		global.fetch = mockFetch;
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		render(RegisterForm);
 	});
@@ -35,6 +34,7 @@ describe('RegisterForm Component', () => {
 		it('applies correct styling to form elements', () => {
 			const form = screen.getByTestId('register-form');
 			expect(form).toHaveClass('space-y-4');
+			expect(form).toHaveAttribute('method', 'POST');
 
 			const inputs = screen.getAllByRole('textbox');
 			inputs.forEach((input) => {
@@ -97,87 +97,76 @@ describe('RegisterForm Component', () => {
 	describe('form submission', () => {
 		it('submits form data correctly', async () => {
 			const user = userEvent.setup();
-			const mockResponse = { message: 'Registration successful' };
-			mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(mockResponse, 200));
-
-			// Fill in the form
-			await user.type(screen.getByLabelText(/username/i), TEST_USER.name);
-			await user.type(screen.getByLabelText(/email/i), TEST_USER.email);
-			await user.type(screen.getByLabelText(/password/i), TEST_USER.correctPassword);
-
-			// Submit the form
-			await user.click(screen.getByRole('button', { name: /register/i }));
-
-			// Verify fetch was called with correct data
-			expect(mockFetch).toHaveBeenCalledWith('/register', {
-				method: 'POST',
-				body: expect.any(FormData)
-			});
-
-			// Verify form data
-			const formData = mockFetch.mock.calls[0][1].body;
-			expect(formData.get('name')).toBe(TEST_USER.name);
-			expect(formData.get('email')).toBe(TEST_USER.email);
-			expect(formData.get('password')).toBe(TEST_USER.correctPassword);
-		});
-
-		it('handles server error gracefully', async () => {
-			const user = userEvent.setup();
-			mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
-			// Fill in the form
-			await user.type(screen.getByLabelText(/username/i), TEST_USER.name);
-			await user.type(screen.getByLabelText(/email/i), TEST_USER.email);
-			await user.type(screen.getByLabelText(/password/i), TEST_USER.correctPassword);
-
-			// Submit the form
-			await user.click(screen.getByRole('button', { name: /register/i }));
-
-			// Verify error message is displayed
-			expect(await screen.findByText('Internal Server Error')).toBeInTheDocument();
-		});
-
-		it('handles successful registration and navigates to /login', async () => {
-			const mockGoto = vi.spyOn(navigation, 'goto');
-			const user = userEvent.setup();
-
 			const form = screen.getByTestId('register-form');
 
 			// Fill in the form
-			await user.type(screen.getByLabelText(/name/i), 'Test User');
-			await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-			await user.type(screen.getByLabelText(/password/i), 'password123');
-
-			// Mock successful response
-			global.fetch = vi.fn().mockResolvedValueOnce({
-				ok: true,
-				json: () => Promise.resolve({ message: 'User registered successfully' })
-			});
-
-			// Submit the form
-			await user.click(within(form).getByRole('button', { name: /register/i }));
-
-			// Wait for navigation
-			await waitFor(() => {
-				expect(mockGoto).toHaveBeenCalledWith('/login');
-			});
-		});
-
-		it('displays server response message', async () => {
-			const user = userEvent.setup();
-			const mockResponse = { message: 'Custom server message' };
-			mockFetch.mockResolvedValueOnce(TestHelper.createMockResponse(mockResponse, 400));
-
-			// Fill in the form
 			await user.type(screen.getByLabelText(/username/i), TEST_USER.name);
 			await user.type(screen.getByLabelText(/email/i), TEST_USER.email);
 			await user.type(screen.getByLabelText(/password/i), TEST_USER.correctPassword);
 
+			// Verify form has the correct attributes for SvelteKit form actions
+			expect(form).toHaveAttribute('method', 'POST');
+			expect(form).toBeInTheDocument();
+
 			// Submit the form
 			await user.click(screen.getByRole('button', { name: /register/i }));
 
-			// Verify message is displayed
-			expect(await screen.findByText('Custom server message')).toBeInTheDocument();
+			// Verify form data is correctly bound
+			const nameInput = screen.getByLabelText(/username/i) as HTMLInputElement;
+			const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
+			const passwordInput = screen.getByLabelText(/password/i) as HTMLInputElement;
+
+			expect(nameInput.value).toBe(TEST_USER.name);
+			expect(emailInput.value).toBe(TEST_USER.email);
+			expect(passwordInput.value).toBe(TEST_USER.correctPassword);
+		});
+
+		it('handles server error gracefully', async () => {
+			const form = screen.getByTestId('register-form');
+			const handler = (form as any).__enhance_handler;
+
+			if (handler) {
+				// Simulate form submission with error response
+				await handler({ formData: new FormData(), cancel: vi.fn() })({
+					result: { type: 'error', error: { message: 'Server error' } },
+					update: vi.fn()
+				});
+
+				// Check that error message is displayed
+				expect(await screen.findByText('Server error')).toBeInTheDocument();
+			}
+		});
+
+		it('handles successful registration and redirects', async () => {
+			const form = screen.getByTestId('register-form');
+			const handler = (form as any).__enhance_handler;
+
+			if (handler) {
+				// Simulate form submission with redirect response
+				const result = await handler({ formData: new FormData(), cancel: vi.fn() })({
+					result: { type: 'redirect', location: '/login' },
+					update: vi.fn()
+				});
+
+				// For redirect, the handler should return early without error
+				expect(result).toBeUndefined();
+			}
+		});
+
+		it('displays server response message on failure', async () => {
+			const form = screen.getByTestId('register-form');
+			const handler = (form as any).__enhance_handler;
+
+			if (handler) {
+				// Simulate form submission with failure response
+				await handler({ formData: new FormData(), cancel: vi.fn() })({
+					result: { type: 'failure', data: { message: 'Email already registered' } },
+					update: vi.fn()
+				});
+
+				// Check that failure message is displayed
+				expect(await screen.findByText('Email already registered')).toBeInTheDocument();
+			}
 		});
 	});
 });

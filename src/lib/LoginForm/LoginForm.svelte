@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	
+
 	let message: string = '';
 	let isLoading = false;
 
@@ -11,7 +11,7 @@
 
 		return async ({ result, update }) => {
 			isLoading = false;
-			
+
 			if (result.type === 'redirect') {
 				return;
 			} else if (result.type === 'error') {

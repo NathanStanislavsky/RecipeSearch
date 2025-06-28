@@ -64,12 +64,10 @@ describe('POST /register endpoint', () => {
 		const request = createRegisterRequest(createRegisterPayload());
 		const event = createRegisterRequestEvent(request);
 
-		const result = await actions.default(event);
-
-		expect(result).toEqual({
-			success: true,
-			message: 'User registered successfully',
-			userId: mockUser.id
+		// Expect a redirect throw for successful registration
+		await expect(actions.default(event)).rejects.toMatchObject({
+			status: 303,
+			location: '/login'
 		});
 		expect(mockPasswordHash).toHaveBeenCalledWith(TEST_USER.correctPassword, 10);
 	});
@@ -82,9 +80,10 @@ describe('POST /register endpoint', () => {
 
 		const result = await actions.default(event);
 
-		expect(result).toEqual({
-			success: false,
-			message: 'Email already registered'
+		// Expect ActionFailure object
+		expect(result).toMatchObject({
+			status: 409,
+			data: { message: 'Email already registered' }
 		});
 	});
 
@@ -98,9 +97,10 @@ describe('POST /register endpoint', () => {
 
 		const result = await actions.default(event);
 
-		expect(result).toEqual({
-			success: false,
-			message: 'An unexpected error occurred'
+		// Expect ActionFailure object
+		expect(result).toMatchObject({
+			status: 500,
+			data: { message: 'An unexpected error occurred' }
 		});
 	});
 
@@ -110,9 +110,10 @@ describe('POST /register endpoint', () => {
 
 		const result = await actions.default(event);
 
-		expect(result).toEqual({
-			success: false,
-			message: 'Invalid email format'
+		// Expect ActionFailure object
+		expect(result).toMatchObject({
+			status: 400,
+			data: { message: 'Invalid email format' }
 		});
 	});
 
@@ -122,9 +123,10 @@ describe('POST /register endpoint', () => {
 
 		const result = await actions.default(event);
 
-		expect(result).toEqual({
-			success: false,
-			message: 'Password must be at least 6 characters long'
+		// Expect ActionFailure object
+		expect(result).toMatchObject({
+			status: 400,
+			data: { message: 'Password must be at least 6 characters long' }
 		});
 	});
 
@@ -134,9 +136,10 @@ describe('POST /register endpoint', () => {
 
 		const result = await actions.default(event);
 
-		expect(result).toEqual({
-			success: false,
-			message: 'Name is required'
+		// Expect ActionFailure object
+		expect(result).toMatchObject({
+			status: 400,
+			data: { message: 'Name is required' }
 		});
 	});
 
@@ -146,9 +149,10 @@ describe('POST /register endpoint', () => {
 
 		const result = await actions.default(event);
 
-		expect(result).toEqual({
-			success: false,
-			message: 'Email is required'
+		// Expect ActionFailure object
+		expect(result).toMatchObject({
+			status: 400,
+			data: { message: 'Email is required' }
 		});
 	});
 });

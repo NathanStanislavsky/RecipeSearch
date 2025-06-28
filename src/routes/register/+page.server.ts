@@ -39,7 +39,7 @@ export const actions: Actions = {
 			if (error && typeof error === 'object' && 'status' in error && error.status === 303) {
 				throw error;
 			}
-			
+
 			// Handle other errors
 			const errorResponse = handleError(error, 'Registration');
 			return fail(errorResponse.status, { message: errorResponse.message });
