@@ -85,12 +85,20 @@ export class TestHelper {
 	 */
 	static createMockRecipe(id: number): Recipe {
 		return {
-			id: id.toString(),
-			title: `Test Recipe ${id}`,
-			image: `https://example.com/recipe${id}.jpg`,
-			servings: 4,
-			readyInMinutes: 30,
-			sourceUrl: `https://example.com/recipe${id}`
+			_id: `recipe_${id}`,
+			name: `Test Recipe ${id}`,
+			id: id,
+			minutes: 30,
+			contributor_id: 1,
+			submitted: '2023-01-01',
+			tags: '["test", "mock"]',
+			nutrition: '[200, 10, 5, 300, 20, 3, 25]',
+			n_steps: 3,
+			steps: '["Step 1", "Step 2", "Step 3"]',
+			description: `This is a test recipe ${id} for testing purposes`,
+			ingredients: '["ingredient 1", "ingredient 2", "ingredient 3"]',
+			n_ingredients: 3,
+			score: 4.5
 		};
 	}
 

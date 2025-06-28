@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import RecipeCardParent from '$lib/RecipeCardParent/RecipeCardParent.svelte';
 import { expect, within } from '@storybook/test';
-import type { Recipe } from '../types/recipe.js';
+import type { TransformedRecipe } from '../types/recipe.js';
 
 interface RecipeCardParentProps {
-	recipes: Recipe[];
+	recipes: TransformedRecipe[];
 }
 
 const meta = {
@@ -15,18 +15,20 @@ const meta = {
 		recipes: {
 			control: 'object',
 			description:
-				'Array of recipe objects containing image, title, readyInMinutes, servings, and sourceUrl'
+				'Array of recipe objects containing name, minutes, nutrition, steps, description, ingredients, and score'
 		}
 	},
 	args: {
 		recipes: [
 			{
-				id: '1421065',
-				image: 'https://img.spoonacular.com/recipes/1421065-556x370.jpeg',
-				readyInMinutes: 45,
-				servings: 1,
-				sourceUrl: 'https://fountainavenuekitchen.com/chili-stuffed-potatoes/',
-				title: 'Chili Stuffed Potatoes'
+				id: 1421065,
+				name: 'Chili Stuffed Potatoes',
+				minutes: 45,
+				nutrition: '[350, 15, 8, 450, 25, 5, 40]',
+				steps: '["Bake potatoes", "Prepare chili", "Stuff potatoes with chili", "Serve hot"]',
+				description: 'Delicious baked potatoes stuffed with hearty chili',
+				ingredients: '["potatoes", "ground beef", "beans", "tomatoes", "onions", "spices"]',
+				score: 4.2
 			}
 		]
 	}
@@ -39,20 +41,24 @@ export const Default: Story = {
 	args: {
 		recipes: [
 			{
-				id: '1421065',
-				image: 'https://img.spoonacular.com/recipes/1421065-556x370.jpeg',
-				readyInMinutes: 45,
-				servings: 1,
-				sourceUrl: 'https://fountainavenuekitchen.com/chili-stuffed-potatoes/',
-				title: 'Chili Stuffed Potatoes'
+				id: 1421065,
+				name: 'Chili Stuffed Potatoes',
+				minutes: 45,
+				nutrition: '[350, 15, 8, 450, 25, 5, 40]',
+				steps: '["Bake potatoes", "Prepare chili", "Stuff potatoes with chili", "Serve hot"]',
+				description: 'Delicious baked potatoes stuffed with hearty chili',
+				ingredients: '["potatoes", "ground beef", "beans", "tomatoes", "onions", "spices"]',
+				score: 4.2
 			},
 			{
-				id: '1421066',
-				image: 'https://img.spoonacular.com/recipes/1421065-556x370.jpeg',
-				readyInMinutes: 45,
-				servings: 1,
-				sourceUrl: 'https://fountainavenuekitchen.com/chili-stuffed-potatoes/',
-				title: 'Chili Stuffed Potatoes'
+				id: 1421066,
+				name: 'Spicy Potato Bowls',
+				minutes: 40,
+				nutrition: '[320, 12, 6, 400, 22, 4, 35]',
+				steps: '["Prepare potatoes", "Make spicy mixture", "Combine ingredients", "Garnish and serve"]',
+				description: 'Hearty potato bowls with a spicy kick',
+				ingredients: '["potatoes", "peppers", "onions", "cheese", "herbs", "spices"]',
+				score: 4.0
 			}
 		]
 	},
@@ -63,20 +69,8 @@ export const Default: Story = {
 
 		// Verify each card has the expected content
 		recipeCards.forEach(async (card) => {
-			const title = within(card).getByText('Chili Stuffed Potatoes');
-			const image = within(card).getByRole('img');
-
-			// Using a regex matcher for the cooking time
-			const time = within(card).getByText(/45\s*(min|minutes)/i);
-			const servings = within(card).getByText(/1\s*serving(s?)/i);
-
-			await expect(title).toBeInTheDocument();
-			await expect(image).toHaveAttribute(
-				'src',
-				'https://img.spoonacular.com/recipes/1421065-556x370.jpeg'
-			);
-			await expect(time).toBeInTheDocument();
-			await expect(servings).toBeInTheDocument();
+			const minutes = within(card).getByText(/45\s*(min|minutes)/i);
+			await expect(minutes).toBeInTheDocument();
 		});
 	}
 };
