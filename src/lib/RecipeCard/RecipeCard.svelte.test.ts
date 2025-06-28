@@ -3,6 +3,7 @@ import { describe, it, beforeEach, expect } from 'vitest';
 import RecipeCard from './RecipeCard.svelte';
 
 const recipe = {
+	id: '987',
 	image: 'https://img.spoonacular.com/recipes/987-556x370.jpg',
 	title: 'Sea Bass and Cucumbers in Champagne Sauce',
 	readyInMinutes: 15,

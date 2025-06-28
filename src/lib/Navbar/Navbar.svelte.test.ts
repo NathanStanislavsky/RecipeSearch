@@ -36,7 +36,7 @@ describe('navigation bar', () => {
 
 		it('shows logout button when user is logged in', async () => {
 			const mockUser = await createFakeUser();
-			render(Navbar, { user: mockUser });
+			render(Navbar, { user: mockUser, currentPath: '/' });
 
 			expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
 			expect(screen.queryByRole('button', { name: /register/i })).not.toBeInTheDocument();
@@ -114,7 +114,7 @@ describe('navigation bar', () => {
 
 		it('handles logout successfully', async () => {
 			const user = userEvent.setup();
-			render(Navbar, { user: mockUser });
+			render(Navbar, { user: mockUser, currentPath: '/' });
 
 			const form = screen.getByRole('button', { name: /logout/i }).closest('form');
 			expect(form).toBeInTheDocument();
@@ -129,7 +129,7 @@ describe('navigation bar', () => {
 		});
 
 		it('handles logout error gracefully', async () => {
-			render(Navbar, { user: mockUser });
+			render(Navbar, { user: mockUser, currentPath: '/' });
 			const logoutButton = screen.getByRole('button', { name: /logout/i });
 
 			// Simulate error in form submission
@@ -149,7 +149,7 @@ describe('navigation bar', () => {
 		});
 
 		it('does not redirect on failed logout response', async () => {
-			render(Navbar, { user: mockUser });
+			render(Navbar, { user: mockUser, currentPath: '/' });
 			const logoutButton = screen.getByRole('button', { name: /logout/i });
 
 			// Simulate failure in form submission

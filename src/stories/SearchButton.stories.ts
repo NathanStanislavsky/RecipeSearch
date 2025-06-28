@@ -4,7 +4,6 @@ import { expect, spyOn, userEvent, within } from '@storybook/test';
 
 interface SearchButtonProps {
 	onClick: () => void;
-	disabled?: boolean;
 }
 
 const meta = {
@@ -16,10 +15,6 @@ const meta = {
 			action: 'clicked',
 			description: 'Function to call when the button is clicked',
 			type: { name: 'function', required: true }
-		},
-		disabled: {
-			control: 'boolean',
-			description: 'Whether the button is disabled'
 		}
 	}
 } satisfies Meta<SearchButtonProps>;
@@ -31,8 +26,7 @@ export const Default: Story = {
 	args: {
 		onClick: () => {
 			alert('button is clicked');
-		},
-		disabled: false
+		}
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);

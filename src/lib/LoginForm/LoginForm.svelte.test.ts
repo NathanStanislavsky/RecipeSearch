@@ -7,7 +7,12 @@ type EnhanceHandler = (input: {
 	formData: FormData;
 	cancel: () => void;
 }) => (result: {
-	result: { type: string; error?: { message: string }; data?: { message: string } };
+	result: {
+		type: string;
+		error?: { message: string };
+		data?: { message: string };
+		location?: string;
+	};
 	update: () => void;
 }) => Promise<void>;
 

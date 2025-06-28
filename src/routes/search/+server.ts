@@ -10,10 +10,10 @@ import type { MongoRecipe, Recipe } from '../../types/recipe.js';
  */
 function extractImageUrl(images?: string | number | null | undefined): string {
 	if (!images) return '/favicon.png'; // fallback image
-	
+
 	// Convert to string and handle different types
 	const imageStr = String(images);
-	
+
 	// Handle c("url1", "url2", ...) format
 	if (imageStr.startsWith('c(')) {
 		const match = imageStr.match(/c\("([^"]+)"/);
@@ -21,12 +21,12 @@ function extractImageUrl(images?: string | number | null | undefined): string {
 			return match[1];
 		}
 	}
-	
+
 	// Handle plain URL
 	if (imageStr.startsWith('http')) {
 		return imageStr;
 	}
-	
+
 	return '/favicon.png'; // fallback
 }
 
@@ -35,15 +35,15 @@ function extractImageUrl(images?: string | number | null | undefined): string {
  */
 function parseDurationToMinutes(duration?: string | number | null): number {
 	if (!duration) return 0;
-	
+
 	// Convert to string and handle different types
 	const durationStr = String(duration);
 	const match = durationStr.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
 	if (!match) return 0;
-	
+
 	const hours = parseInt(match[1] || '0', 10);
 	const minutes = parseInt(match[2] || '0', 10);
-	
+
 	return hours * 60 + minutes;
 }
 

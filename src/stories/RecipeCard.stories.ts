@@ -19,6 +19,7 @@ const meta = {
 	},
 	args: {
 		recipe: {
+			id: '987',
 			image: 'https://img.spoonacular.com/recipes/987-556x370.jpg',
 			title: 'Sea Bass and Cucumbers in Champagne Sauce',
 			readyInMinutes: 15,
@@ -36,6 +37,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
 	args: {
 		recipe: {
+			id: '987',
 			image: 'https://img.spoonacular.com/recipes/987-556x370.jpg',
 			title: 'Sea Bass and Cucumbers in Champagne Sauce',
 			readyInMinutes: 15,
@@ -66,6 +68,7 @@ export const Default: Story = {
 export const Interactive: Story = {
 	args: {
 		recipe: {
+			id: '987',
 			image: 'https://img.spoonacular.com/recipes/987-556x370.jpg',
 			title: 'Sea Bass and Cucumbers in Champagne Sauce',
 			readyInMinutes: 15,

@@ -21,6 +21,7 @@ const meta = {
 	args: {
 		recipes: [
 			{
+				id: '1421065',
 				image: 'https://img.spoonacular.com/recipes/1421065-556x370.jpeg',
 				readyInMinutes: 45,
 				servings: 1,
@@ -38,6 +39,7 @@ export const Default: Story = {
 	args: {
 		recipes: [
 			{
+				id: '1421065',
 				image: 'https://img.spoonacular.com/recipes/1421065-556x370.jpeg',
 				readyInMinutes: 45,
 				servings: 1,
@@ -45,6 +47,7 @@ export const Default: Story = {
 				title: 'Chili Stuffed Potatoes'
 			},
 			{
+				id: '1421066',
 				image: 'https://img.spoonacular.com/recipes/1421065-556x370.jpeg',
 				readyInMinutes: 45,
 				servings: 1,

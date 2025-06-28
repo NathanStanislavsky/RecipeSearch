@@ -112,7 +112,9 @@ describe('RecipeCardParent', () => {
 
 		it('handles recipes with missing optional fields', () => {
 			const incompleteRecipe = {
+				id: '123',
 				title: 'Incomplete Recipe',
+				image: 'https://example.com/recipe.jpg',
 				readyInMinutes: 30,
 				servings: 2,
 				sourceUrl: 'https://example.com/incomplete'

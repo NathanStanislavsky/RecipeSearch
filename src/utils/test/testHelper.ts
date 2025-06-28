@@ -85,6 +85,7 @@ export class TestHelper {
 	 */
 	static createMockRecipe(id: number): Recipe {
 		return {
+			id: id.toString(),
 			title: `Test Recipe ${id}`,
 			image: `https://example.com/recipe${id}.jpg`,
 			servings: 4,
