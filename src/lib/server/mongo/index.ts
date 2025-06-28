@@ -1,10 +1,13 @@
 import { MongoClient } from 'mongodb';
+import { MONGODB_URI } from '$env/static/private';
 
-const uri = process.env.MONGODB_URI || '';
+const uri = MONGODB_URI;
 let client: MongoClient | null = null;
 let isConnected = false;
 
 export async function connectToMongo(): Promise<MongoClient> {
+	console.log('Connecting to MongoDB...');
+
 	if (!client) {
 		client = new MongoClient(uri);
 	}
@@ -24,6 +27,10 @@ export async function connectToMongo(): Promise<MongoClient> {
 }
 
 export function getMongoClient(): MongoClient | null {
+	if (!client) {
+		connectToMongo().catch(console.error);
+	}
+
 	return client;
 }
 
