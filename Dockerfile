@@ -1,9 +1,9 @@
-FROM node:20.14.0
+# syntax=docker/dockerfile:1.4
+FROM node:20.14.0 AS builder
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci
-
 RUN npx playwright install --with-deps
 
 COPY . .
@@ -24,4 +24,7 @@ RUN --mount=type=secret,id=jwt \
     && export MONGODB_SEARCH_INDEX="$(cat /run/secrets/mongodb_search_index)" \
     && npm run build
 
-CMD ["node","build"]
+FROM node:20.14.0
+WORKDIR /app
+COPY --from=builder /app/build ./build
+CMD ["node", "build"]
