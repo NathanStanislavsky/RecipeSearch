@@ -84,14 +84,15 @@ export MONGODB_DATABASE=<your_mongo_db>
 export MONGODB_COLLECTION=<your_mongo_collection>
 export MONGODB_SEARCH_INDEX=<your_mongo_search_index>
 ```
-```
+
+````
 ### Building a Docker image
 
 Use the following command to build your Docker image using the secrets from your env:
 
 ```bash
 docker build --secret id=jwt,env=JWT_SECRET --secret id=dburl,env=DATABASE_URL --secret id=rapidapi_key_2,env=RAPIDAPI_KEY_2 --secret id=mongodb_uri,env=MONGODB_URI --secret id=mongodb_database,env=MONGODB_DATABASE --secret id=mongodb_collection,env=MONGODB_COLLECTION --secret id=mongodb_search_index,env=MONGODB_SEARCH_INDEX -t recipe-search .
-```
+````
 
 ### Running your Docker Container
 
