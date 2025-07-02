@@ -35,6 +35,7 @@ jobs:
           context: .
           target: builder
           load: true
+          tags: recipe-search:builder
           secrets: |
             jwt=${{ secrets.JWT_SECRET }}
             dburl=${{ secrets.DATABASE_URL }}
