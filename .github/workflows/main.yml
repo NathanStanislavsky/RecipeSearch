@@ -1,7 +1,7 @@
 name: CI/CD
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 on:
   pull_request:
@@ -9,87 +9,111 @@ on:
   push:
     branches: [main]
 
+env:
+  CI: true
+  NODE_ENV: test
+
 jobs:
-  build-and-test:
+  lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-
-      - name: Cache node modules
-        uses: actions/cache@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
+          node-version: '20'
+          cache: 'npm'
       - name: Install dependencies
         run: npm ci
+      - name: Lint code
+        run: npm run lint
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build & Test Builder Stage
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          target: builder
-          load: true
-          tags: recipe-search:builder
-          secrets: |
-            jwt=${{ secrets.JWT_SECRET }}
-            dburl=${{ secrets.DATABASE_URL }}
-            rapidapi_key_2=${{ secrets.RAPIDAPI_KEY_2 }}
-            mongodb_uri=${{ secrets.MONGODB_URI }}
-            mongodb_database=${{ secrets.MONGODB_DATABASE }}
-            mongodb_collection=${{ secrets.MONGODB_COLLECTION }}
-            mongodb_search_index=${{ secrets.MONGODB_SEARCH_INDEX }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to:   type=local,dest=/tmp/.buildx-cache-new,mode=max
-
-      - name: Verify builder succeeded
-        run: docker run --rm recipe-search:builder echo "✅ builder OK"
-
-      - name: Save new Docker cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      - name: Build & Tag Runtime Stage
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          target: runtime
-          load: true
-          tags: recipe-search:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-
-      - name: Save new Docker cache
-        run: |
-          rm -rf /tmp/.buildx-cache && mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      - name: Smoke-test final image
-        run: |
-          docker run --rm recipe-search:latest node --version
-
-
-  deploy:
-    needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build application
+        run: npm run build
 
-      - name: Install & Build for Vercel
-        run: |
-          npm ci
-          npm run build
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      RAPIDAPI_KEY_2: ${{ secrets.RAPIDAPI_KEY_2 }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
+      MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
+      MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm run test:unit -- --run
 
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      RAPIDAPI_KEY_2: ${{ secrets.RAPIDAPI_KEY_2 }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
+      MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
+      MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Build application
+        run: npm run build
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+  deploy:
+    needs: [lint, build, test, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build for production
+        run: npm run build
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v20
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id:  ${{ secrets.VERCEL_ORG_ID }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
