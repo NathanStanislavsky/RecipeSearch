@@ -22,5 +22,5 @@ RUN --mount=type=secret,id=jwt \
     && export MONGODB_SEARCH_INDEX="$(cat /run/secrets/mongodb_search_index)" \
     && npm run build
 
-EXPOSE 4173
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
+EXPOSE 5173
+CMD ["npm", "run", "dev"]
