@@ -3,7 +3,7 @@
 
 	export let recipe: TransformedRecipe;
 
-	function parseJsonString(jsonString: string): any[] {
+	function parseJsonString(jsonString: string): string[] {
 		try {
 			return JSON.parse(jsonString.replace(/'/g, '"'));
 		} catch {

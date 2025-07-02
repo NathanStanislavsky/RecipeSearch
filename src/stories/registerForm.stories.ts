@@ -2,8 +2,6 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { expect, within, waitFor } from '@storybook/test';
 
-interface RegisterFormProps {}
-
 const meta = {
 	title: 'Components/RegisterForm',
 	component: RegisterForm,
@@ -26,7 +24,7 @@ const meta = {
 			description: 'Function called when the form is submitted'
 		}
 	}
-} satisfies Meta<RegisterFormProps>;
+} satisfies Meta<object>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
