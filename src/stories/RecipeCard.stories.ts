@@ -14,7 +14,8 @@ const meta = {
 	argTypes: {
 		recipe: {
 			control: 'object',
-			description: 'Recipe object containing name, minutes, nutrition, steps, description, ingredients, and score'
+			description:
+				'Recipe object containing name, minutes, nutrition, steps, description, ingredients, and score'
 		}
 	},
 	args: {

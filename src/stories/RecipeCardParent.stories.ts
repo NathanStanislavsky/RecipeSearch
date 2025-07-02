@@ -55,7 +55,8 @@ export const Default: Story = {
 				name: 'Spicy Potato Bowls',
 				minutes: 40,
 				nutrition: '[320, 12, 6, 400, 22, 4, 35]',
-				steps: '["Prepare potatoes", "Make spicy mixture", "Combine ingredients", "Garnish and serve"]',
+				steps:
+					'["Prepare potatoes", "Make spicy mixture", "Combine ingredients", "Garnish and serve"]',
 				description: 'Hearty potato bowls with a spicy kick',
 				ingredients: '["potatoes", "peppers", "onions", "cheese", "herbs", "spices"]',
 				score: 4.0
