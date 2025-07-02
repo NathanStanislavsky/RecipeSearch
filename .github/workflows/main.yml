@@ -32,6 +32,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      RAPIDAPI_KEY_2: ${{ secrets.RAPIDAPI_KEY_2 }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
+      MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
+      MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -99,6 +107,14 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      RAPIDAPI_KEY_2: ${{ secrets.RAPIDAPI_KEY_2 }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
+      MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
+      MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
