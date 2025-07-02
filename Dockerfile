@@ -27,4 +27,4 @@ RUN --mount=type=secret,id=jwt \
 FROM node:20.14.0
 WORKDIR /app
 COPY --from=builder /app/build ./build
-CMD ["node", "build"]
+CMD ["npm","run","start"]
