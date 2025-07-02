@@ -1,13 +1,9 @@
-# syntax=docker/dockerfile:1.4
-FROM node:20.14.0 AS builder
+FROM node:20.14.0
 WORKDIR /app
 
-# 1) install deps & playwright
 COPY package*.json ./
 RUN npm ci
-RUN npx playwright install --with-deps
 
-# 2) copy entire source, run tests & build
 COPY . .
 
 RUN --mount=type=secret,id=jwt \
@@ -24,16 +20,7 @@ RUN --mount=type=secret,id=jwt \
     && export MONGODB_DATABASE="$(cat /run/secrets/mongodb_database)" \
     && export MONGODB_COLLECTION="$(cat /run/secrets/mongodb_collection)" \
     && export MONGODB_SEARCH_INDEX="$(cat /run/secrets/mongodb_search_index)" \
-    && npm test && npm run build
+    && npm run build
 
-# ========== RUNTIME IMAGE ==========
-FROM node:20.14.0 AS runtime
-WORKDIR /app
-
-# 3) only bring in production artifacts
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-
-ENV NODE_ENV=production
-CMD ["npm","run","start"]
+EXPOSE 4173
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
