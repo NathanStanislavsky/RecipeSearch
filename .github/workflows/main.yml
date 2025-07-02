@@ -1,67 +1,62 @@
 name: CI/CD
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 on:
   pull_request:
-    branches: ['**']
+    branches: ['main']
   push:
     branches: [main]
 
 jobs:
   build-and-test:
-    name: Build & Test Docker Image
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build Docker image (with secrets)
+      - name: Build image with layer cache
         uses: docker/build-push-action@v4
         with:
           context: .
           load: true
           tags: recipe-search:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to:   type=local,dest=/tmp/.buildx-cache-new,mode=max
           secrets: |
             jwt=${{ secrets.JWT_SECRET }}
             dburl=${{ secrets.DATABASE_URL }}
-            rapidapi_key_2=${{ secrets.RAPIDAPI_KEY_2 }}
-            mongodb_uri=${{ secrets.MONGODB_URI }}
-            mongodb_database=${{ secrets.MONGODB_DATABASE }}
-            mongodb_collection=${{ secrets.MONGODB_COLLECTION }}
-            mongodb_search_index=${{ secrets.MONGODB_SEARCH_INDEX }}
+      - name: Save new Docker cache
+        run: |
+          rm -rf /tmp/.buildx-cache && mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-      - name: Run tests inside container
+      - name: Test & Build inside container
         run: |
           docker run --rm \
             -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
             -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
             -e RAPIDAPI_KEY_2=${{ secrets.RAPIDAPI_KEY_2 }} \
-            -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
-            -e MONGODB_DATABASE=${{ secrets.MONGODB_DATABASE }} \
-            -e MONGODB_COLLECTION=${{ secrets.MONGODB_COLLECTION }} \
-            -e MONGODB_SEARCH_INDEX=${{ secrets.MONGODB_SEARCH_INDEX }} \
             recipe-search:latest \
-            npm test
-
-      - name: Build assets inside container
-        run: |
-          docker run --rm \
-            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-            -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-            -e RAPIDAPI_KEY_2=${{ secrets.RAPIDAPI_KEY_2 }} \
-            -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
-            -e MONGODB_DATABASE=${{ secrets.MONGODB_DATABASE }} \
-            -e MONGODB_COLLECTION=${{ secrets.MONGODB_COLLECTION }} \
-            -e MONGODB_SEARCH_INDEX=${{ secrets.MONGODB_SEARCH_INDEX }} \
-            recipe-search:latest \
-            npm run build
+            sh -c "npm test && npm run build"
 
   deploy:
     needs: build-and-test
-    runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Deploy to Vercel
@@ -71,4 +66,3 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
-          working-directory: .
