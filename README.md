@@ -71,36 +71,34 @@ Built with SvelteKit, Node.js, TypeScript, Neon Serverless PostgreSQL, and Tailw
 
 ## Docker
 
-The application is containerized using Docker.
+Spin up a development server using Docker.
 
+### Define environment variables in shell
+
+```bash
+export JWT_SECRET=<your_jwt>
+export DATABASE_URL=<your_db_url>
+export RAPIDAPI_KEY_2=<your_rapidapi_key>
+export MONGODB_URI=<your_mongo_uri>
+export MONGODB_DATABASE=<your_mongo_db>
+export MONGODB_COLLECTION=<your_mongo_collection>
+export MONGODB_SEARCH_INDEX=<your_mongo_search_index>
+```
+```
 ### Building a Docker image
 
 Use the following command to build your Docker image using the secrets from your env:
 
-```
-DOCKER_BUILDKIT=1 \
-JWT_SECRET=<JWT_SECRET> \
-DATABASE_URL=<DATABASE_URL> \
-RAPIDAPI_KEY_2=<RAPIDAPI_KEY_2> \
-docker build \
-  --secret id=jwt,env=JWT_SECRET \
-  --secret id=dburl,env=DATABASE_URL \
-  --secret id=rapidapi_key,env=RAPIDAPI_KEY_2 \
-  -t recipe-search .
+```bash
+docker build --secret id=jwt,env=JWT_SECRET --secret id=dburl,env=DATABASE_URL --secret id=rapidapi_key_2,env=RAPIDAPI_KEY_2 --secret id=mongodb_uri,env=MONGODB_URI --secret id=mongodb_database,env=MONGODB_DATABASE --secret id=mongodb_collection,env=MONGODB_COLLECTION --secret id=mongodb_search_index,env=MONGODB_SEARCH_INDEX -t recipe-search .
 ```
 
 ### Running your Docker Container
 
 Use the following command to run your Docker container using the secrets from your env:
 
-```
-docker run -d \
-  --name recipe-search \
-  -p 3000:3000 \
-  -e DATABASE_URL=<DATABASE_URL> \
-  -e JWT_SECRET=<JWT_SECRET> \
-  -e RAPIDAPI_KEY_2=<RAPIDAPI_KEY_2> \
-  recipe-search
+```bash
+docker run -p 5173:5173 -e JWT_SECRET=<your_jwt> -e DATABASE_URL=<your_db_url> -e RAPIDAPI_KEY_2=<your_rapidapi_key> -e MONGODB_URI=<your_mongo_uri> -e MONGODB_DATABASE=<your_mongo_db> -e MONGODB_COLLECTION=<your_mongo_collection> -e MONGODB_SEARCH_INDEX=<your_mongo_search_index> recipe-search
 ```
 
 Make sure that you've built your Docker image prior to running the container. After running the container using the above command you can find your site at http://localhost:3000/
