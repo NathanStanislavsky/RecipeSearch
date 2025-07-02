@@ -40,6 +40,11 @@ jobs:
           secrets: |
             jwt=${{ secrets.JWT_SECRET }}
             dburl=${{ secrets.DATABASE_URL }}
+            rapidapi_key_2=${{ secrets.RAPIDAPI_KEY_2 }}
+            mongodb_uri=${{ secrets.MONGODB_URI }}
+            mongodb_database=${{ secrets.MONGODB_DATABASE }}
+            mongodb_collection=${{ secrets.MONGODB_COLLECTION }}
+            mongodb_search_index=${{ secrets.MONGODB_SEARCH_INDEX }}
       - name: Save new Docker cache
         run: |
           rm -rf /tmp/.buildx-cache && mv /tmp/.buildx-cache-new /tmp/.buildx-cache
@@ -50,6 +55,10 @@ jobs:
             -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
             -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
             -e RAPIDAPI_KEY_2=${{ secrets.RAPIDAPI_KEY_2 }} \
+            -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
+            -e MONGODB_DATABASE=${{ secrets.MONGODB_DATABASE }} \
+            -e MONGODB_COLLECTION=${{ secrets.MONGODB_COLLECTION }} \
+            -e MONGODB_SEARCH_INDEX=${{ secrets.MONGODB_SEARCH_INDEX }} \
             recipe-search:latest \
             sh -c "npm test && npm run build"
 
