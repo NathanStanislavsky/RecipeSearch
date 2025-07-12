@@ -2,10 +2,12 @@
 	import type { TransformedRecipe } from '../../types/recipe.js';
 	import RatingDisplay from '$lib/RatingDisplay/RatingDisplay.svelte';
 	import RecipeDetailView from '$lib/RecipeDetailView/RecipeDetailView.svelte';
+	import BaseModal from '$lib/BaseModal/BaseModal.svelte';
 
 	export let recipe: TransformedRecipe;
 
 	const rating: number = 4.5;
+	let showModal = false;
 </script>
 
 <div
@@ -26,10 +28,22 @@
 			<p class="text-sm leading-relaxed text-gray-600">{recipe.description}</p>
 		</div>
 
-		<RecipeDetailView {recipe} />
+		<button
+			onclick={() => (showModal = true)}
+			class="w-full rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+		>
+			View Recipe Details
+		</button>
 	</div>
 
 	<div class="px-6 py-4">
 		<RatingDisplay {rating} />
 	</div>
 </div>
+
+<BaseModal 
+	bind:isOpen={showModal} 
+	title={recipe.name}
+>
+	<RecipeDetailView {recipe} />
+</BaseModal>
