@@ -1,8 +1,11 @@
 <script lang="ts">
 	import type { TransformedRecipe } from '../../types/recipe.js';
-	import RecipeDetailView from '../RecipeDetailView/RecipeDetailView.svelte';
+	import RatingDisplay from '$lib/RatingDisplay/RatingDisplay.svelte';
+	import RecipeDetailView from '$lib/RecipeDetailView/RecipeDetailView.svelte';
 
 	export let recipe: TransformedRecipe;
+
+	const rating: number = 4.5;
 </script>
 
 <div
@@ -24,5 +27,9 @@
 		</div>
 
 		<RecipeDetailView {recipe} />
+	</div>
+
+	<div class="px-6 py-4">
+		<RatingDisplay {rating} />
 	</div>
 </div>
