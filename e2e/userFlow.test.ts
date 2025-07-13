@@ -69,7 +69,7 @@ test.describe('Complete user journey', () => {
 		const searchTerm = 'Carrots';
 		await searchHelper.search(searchTerm);
 
-		await searchHelper.verifyRecipeCard(mockRecipe.name, mockRecipe.minutes);
+		await searchHelper.verifyRecipeCard(mockRecipe.name, mockRecipe.minutes, mockRecipe.description);
 	});
 
 	test('complete journey with no search results', async ({ page }) => {
