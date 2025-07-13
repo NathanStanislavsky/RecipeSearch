@@ -66,9 +66,25 @@ test.describe('Complete user journey', () => {
 			userRating: 4
 		};
 
+		// Parse the JSON strings to get the actual data
+		const parsedNutrition = JSON.parse(mockRecipe.nutrition);
+		const calories = Math.round(parsedNutrition[0]);
+
 		const searchTerm = 'Carrots';
 		await searchHelper.search(searchTerm);
 
+		await searchHelper.verifyRecipeCard(mockRecipe.name, mockRecipe.minutes, mockRecipe.description);
+
+		// Click to open the recipe details modal
+		await searchHelper.clickViewRecipeDetails(mockRecipe.name);
+
+		// Verify recipe details in the modal
+		await searchHelper.verifyRecipeDetails(mockRecipe.name, calories);
+
+		// Close the recipe details modal
+		await searchHelper.closeRecipeDetails();
+
+		// Verify the recipe card is still visible
 		await searchHelper.verifyRecipeCard(mockRecipe.name, mockRecipe.minutes, mockRecipe.description);
 	});
 
