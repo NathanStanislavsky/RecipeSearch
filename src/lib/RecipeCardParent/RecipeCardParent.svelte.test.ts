@@ -14,7 +14,8 @@ const mockRecipes: TransformedRecipe[] = [
 		steps: '["empty can of chicken into large bowl", "mix with large spoon", "place in crockpot"]',
 		description: 'fast and easy, tastes great!',
 		ingredients: '["boneless chicken", "chicken flavor stuffing mix", "cream of chicken soup"]',
-		score: 1.504440426826477
+		score: 1.504440426826477,
+		userRating: undefined
 	},
 	{
 		id: 567234,
@@ -24,7 +25,8 @@ const mockRecipes: TransformedRecipe[] = [
 		steps: '["boil pasta", "cook bacon", "mix eggs and cheese", "combine all ingredients"]',
 		description: 'classic italian pasta dish with creamy sauce',
 		ingredients: '["pasta", "bacon", "eggs", "parmesan cheese", "black pepper"]',
-		score: 2.1234567
+		score: 2.1234567,
+		userRating: 4
 	},
 	{
 		id: 123456,
@@ -35,7 +37,8 @@ const mockRecipes: TransformedRecipe[] = [
 			'["cream butter and sugar", "add eggs and vanilla", "mix in flour", "add chocolate chips", "bake for 12 minutes"]',
 		description: 'soft and chewy homemade chocolate chip cookies',
 		ingredients: '["flour", "butter", "sugar", "eggs", "vanilla", "chocolate chips"]',
-		score: 1.87654321
+		score: 1.87654321,
+		userRating: 5
 	}
 ];
 
@@ -77,42 +80,35 @@ describe('RecipeCardParent', () => {
 			});
 		});
 
-		it('renders nutrition information for all recipes', () => {
+		it('renders "View Recipe Details" buttons for all recipes', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
-			// Check that nutrition labels are present (one for each recipe)
-			const nutritionHeadings = screen.getAllByText('Nutrition');
-			expect(nutritionHeadings).toHaveLength(mockRecipes.length);
+			const detailButtons = screen.getAllByText('View Recipe Details');
+			expect(detailButtons).toHaveLength(mockRecipes.length);
 
-			// Check that calories are displayed for each recipe
-			expect(screen.getByText('792')).toBeInTheDocument(); // First recipe calories
-			expect(screen.getByText('450')).toBeInTheDocument(); // Second recipe calories
-			expect(screen.getByText('281')).toBeInTheDocument(); // Third recipe calories (rounded)
+			detailButtons.forEach((button) => {
+				expect(button).toBeInTheDocument();
+				expect(button.tagName).toBe('BUTTON');
+			});
 		});
 
-		it('renders ingredients for all recipes', () => {
+		it('renders rating stars for all recipes', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
-			// Check that ingredients headings are present
-			const ingredientsHeadings = screen.getAllByText('Ingredients');
-			expect(ingredientsHeadings).toHaveLength(mockRecipes.length);
+			// Check that rating buttons are present for each recipe
+			const ratingButtons = screen.getAllByRole('button', { name: /Rate \d+ stars/ });
+			expect(ratingButtons.length).toBeGreaterThan(0);
 
-			// Check some specific ingredients
-			expect(screen.getByText('boneless chicken')).toBeInTheDocument();
-			expect(screen.getByText('pasta')).toBeInTheDocument();
-			expect(screen.getByText('chocolate chips')).toBeInTheDocument();
+			// Each recipe should have 5 rating buttons (1-5 stars)
+			expect(ratingButtons.length).toBe(mockRecipes.length * 5);
 		});
 
-		it('renders instructions for all recipes', () => {
+		it('renders description section with proper heading', () => {
 			render(RecipeCardParent, { props: { recipes: mockRecipes } });
 
-			// Check that instructions headings are present
-			const instructionsHeadings = screen.getAllByText('Instructions');
-			expect(instructionsHeadings).toHaveLength(mockRecipes.length);
-
-			// Check that step numbers are rendered
-			const stepNumbers = screen.getAllByText('1');
-			expect(stepNumbers.length).toBeGreaterThanOrEqual(mockRecipes.length);
+			// Check that description headings are present
+			const descriptionHeadings = screen.getAllByText('Description');
+			expect(descriptionHeadings).toHaveLength(mockRecipes.length);
 		});
 	});
 
@@ -175,7 +171,8 @@ describe('RecipeCardParent', () => {
 				steps: '["step 1", "step 2"]',
 				description: 'simple recipe',
 				ingredients: '["ingredient 1", "ingredient 2"]',
-				score: 1.0
+				score: 1.0,
+				userRating: undefined
 			};
 
 			render(RecipeCardParent, { props: { recipes: [minimalRecipe] } });
@@ -184,8 +181,8 @@ describe('RecipeCardParent', () => {
 			expect(screen.getByText(minimalRecipe.minutes.toString())).toBeInTheDocument();
 			expect(screen.getByText('minutes')).toBeInTheDocument();
 			expect(screen.getByText(minimalRecipe.description)).toBeInTheDocument();
-			expect(screen.getByText('ingredient 1')).toBeInTheDocument();
-			expect(screen.getByText('ingredient 2')).toBeInTheDocument();
+			expect(screen.getByText('View Recipe Details')).toBeInTheDocument();
+			expect(screen.getByRole('article')).toBeInTheDocument();
 		});
 
 		it('handles malformed JSON in recipe data gracefully', () => {
@@ -197,7 +194,8 @@ describe('RecipeCardParent', () => {
 				steps: 'invalid json',
 				ingredients: 'invalid json',
 				description: 'recipe with malformed json data',
-				score: 0.5
+				score: 0.5,
+				userRating: undefined
 			};
 
 			render(RecipeCardParent, { props: { recipes: [recipeWithBadData] } });
@@ -206,6 +204,29 @@ describe('RecipeCardParent', () => {
 			expect(screen.getByText(recipeWithBadData.name)).toBeInTheDocument();
 			expect(screen.getByText(recipeWithBadData.description)).toBeInTheDocument();
 			expect(screen.getByRole('article')).toBeInTheDocument();
+		});
+
+		it('handles recipes with userRating set', () => {
+			const ratedRecipe: TransformedRecipe = {
+				id: 777777,
+				name: 'rated recipe',
+				minutes: 25,
+				nutrition: '[300, 20, 10, 15, 25, 18, 30]',
+				steps: '["step 1", "step 2", "step 3"]',
+				description: 'recipe with user rating',
+				ingredients: '["ingredient 1", "ingredient 2", "ingredient 3"]',
+				score: 2.5,
+				userRating: 3
+			};
+
+			render(RecipeCardParent, { props: { recipes: [ratedRecipe] } });
+
+			expect(screen.getByText(ratedRecipe.name)).toBeInTheDocument();
+			expect(screen.getByText(ratedRecipe.description)).toBeInTheDocument();
+			expect(screen.getByRole('article')).toBeInTheDocument();
+
+			const ratingButtons = screen.getAllByRole('button', { name: /Rate \d+ stars/ });
+			expect(ratingButtons).toHaveLength(5);
 		});
 	});
 });
