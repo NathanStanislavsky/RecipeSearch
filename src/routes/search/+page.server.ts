@@ -1,9 +1,8 @@
-import type { RequestHandler } from '@sveltejs/kit';
-import { createJsonResponse } from '$utils/api/apiUtils.js';
+import { fail, type Actions } from '@sveltejs/kit';
 import { ApiError, handleError } from '$utils/errors/AppError.js';
 import { getMongoClient } from '$lib/server/mongo/index.js';
 import { MONGODB_DATABASE, MONGODB_COLLECTION, MONGODB_SEARCH_INDEX, MONGODB_REVIEWS_COLLECTION } from '$env/static/private';
-import type { TransformedRecipe } from '../../types/recipe.js';
+import type { TransformedRecipe } from '../../types/recipe.ts';
 
 async function searchRecipes(
 	searchQuery: string,
@@ -70,34 +69,27 @@ async function searchRecipes(
 	}
 }
 
-export const GET: RequestHandler = async ({ url, locals }) => {
-	try {
-		const searchParams = url.searchParams;
-		const query = searchParams.get('ingredients');
+export const actions: Actions = {
+	search: async ({ request, locals }) => {
+		try {
+			const formData = await request.formData();
+			const query = formData.get('ingredients')?.toString();
 
-		if (!query) {
-			throw new ApiError('Search query is required', 400);
-		}
+			if (!query) {
+				throw new ApiError('Search query is required', 400);
+			}
 
-		const userId = locals.user?.id.toString();
-		const results = await searchRecipes(query, 50, 0, userId);
+			const userId = locals.user?.id.toString();
+			const results = await searchRecipes(query, 50, 0, userId);
 
-		return createJsonResponse(
-			{
+			return {
 				results,
 				total: results.length,
 				query
-			},
-			200
-		);
-	} catch (error) {
-		const errorResponse = handleError(error, 'Ingredient Search');
-		return createJsonResponse(
-			{
-				error: errorResponse.error,
-				message: errorResponse.message
-			},
-			errorResponse.status
-		);
+			};
+		} catch (error) {
+			const errorResponse = handleError(error, 'Ingredient Search');
+			return fail(errorResponse.status, { message: errorResponse.message });
+		}
 	}
 };

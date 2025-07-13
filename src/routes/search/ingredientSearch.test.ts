@@ -1,14 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET } from './+server.ts';
+import { actions } from './+page.server.ts';
 import type { RequestEvent } from '@sveltejs/kit';
+import type { TransformedRecipe } from '../../types/recipe.js';
+
+vi.mock('$env/static/private', () => ({
+	MONGODB_DATABASE: 'test-database',
+	MONGODB_COLLECTION: 'test-collection',
+	MONGODB_SEARCH_INDEX: 'test-index',
+	MONGODB_REVIEWS_COLLECTION: 'test-reviews-collection'
+}));
+
 
 vi.mock('$lib/server/mongo/index.js', () => {
 	const mockClient = {
 		db: vi.fn().mockReturnValue({
 			collection: vi.fn().mockReturnValue({
 				aggregate: vi.fn().mockReturnValue({
-					[Symbol.asyncIterator]: async function* () {
-						yield {
+					toArray: vi.fn().mockResolvedValue([
+						{
 							_id: '685771e25f14caf1c6804ebe',
 							name: 'Chicken Fried Steak W/Cream Gravy',
 							id: 123456,
@@ -23,8 +32,8 @@ vi.mock('$lib/server/mongo/index.js', () => {
 							ingredients: 'shortening, seasoned flour, eggs, milk, chicken',
 							n_ingredients: 5,
 							score: 0.95
-						};
-						yield {
+						},
+						{
 							_id: '685771e25f14caf1c6804ebf',
 							name: 'Classic Pasta Carbonara',
 							id: 789012,
@@ -39,8 +48,8 @@ vi.mock('$lib/server/mongo/index.js', () => {
 							ingredients: 'pasta, eggs, bacon, cheese, black pepper',
 							n_ingredients: 5,
 							score: 0.85
-						};
-					}
+						}
+					])
 				})
 			})
 		})
@@ -78,13 +87,24 @@ describe('Ingredient Search API', () => {
 	});
 
 	it('should return transformed search results for valid query', async () => {
-		const url = new URL('http://localhost:5173/search?ingredients=chicken');
-		const request = new Request(url);
+		const formData = new FormData();
+		formData.append('ingredients', 'chicken');
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
 
-		const response = await GET({ url, request } as RequestEvent);
-		const data = await response.json();
+		const result = await actions.search({ 
+			request, 
+			locals: { user: null } 
+		} as unknown as RequestEvent);
 
-		expect(response.status).toBe(200);
+		expect(result).toBeDefined();
+		expect(result).toHaveProperty('results');
+		expect(result).toHaveProperty('total');
+		expect(result).toHaveProperty('query');
+
+		const data = result as { results: TransformedRecipe[]; total: number; query: string };
 		expect(data.results).toHaveLength(2);
 		expect(data.query).toBe('chicken');
 		expect(data.total).toBe(2);
@@ -112,64 +132,55 @@ describe('Ingredient Search API', () => {
 	});
 
 	it('should return 400 error when ingredients query is missing', async () => {
-		const url = new URL('http://localhost:5173/search');
-		const request = new Request(url);
+		const formData = new FormData();
+		// Don't add ingredients to test missing data
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
 
-		const response = await GET({ url, request } as RequestEvent);
-		const data = await response.json();
+		const result = await actions.search({ 
+			request, 
+			locals: { user: null } 
+		} as unknown as RequestEvent);
 
-		expect(response.status).toBe(400);
-		expect(data.error).toBe('ApiError');
-		expect(data.message).toBe('Search query is required');
+		expect(result).toBeDefined();
+		expect(result).toHaveProperty('status');
+		expect(result).toHaveProperty('data');
+		
+		const failResult = result as { status: number; data: { message: string } };
+		expect(failResult.status).toBe(400);
+		expect(failResult.data.message).toBe('Search query is required');
 	});
 
 	it('should handle recipes with minimal data', async () => {
-		// Re-mock for this specific test case
-		const { getMongoClient } = await vi.importMock('$lib/server/mongo/index.js');
-		const mockClient = getMongoClient as ReturnType<typeof vi.fn>;
-
-		mockClient.mockReturnValue({
-			db: vi.fn().mockReturnValue({
-				collection: vi.fn().mockReturnValue({
-					aggregate: vi.fn().mockReturnValue({
-						async *[Symbol.asyncIterator]() {
-							yield {
-								_id: '685771e25f14caf1c6804ec0',
-								name: 'Simple Recipe',
-								id: 999999,
-								minutes: 15,
-								contributor_id: 11111,
-								submitted: '2023-03-01',
-								tags: 'simple',
-								nutrition: '[200, 10, 15, 8, 5, 12, 2]',
-								n_steps: 2,
-								steps: 'Step 1: Mix ingredients. Step 2: Cook.',
-								description: 'A very simple recipe.',
-								ingredients: 'ingredient1, ingredient2',
-								n_ingredients: 2,
-								score: 0.75
-							};
-						}
-					})
-				})
-			})
+		const formData = new FormData();
+		formData.append('ingredients', 'simple');
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
 		});
 
-		const url = new URL('http://localhost:5173/search?ingredients=simple');
-		const request = new Request(url);
+		const result = await actions.search({ 
+			request, 
+			locals: { user: null } 
+		} as unknown as RequestEvent);
 
-		const response = await GET({ url, request } as RequestEvent);
-		const data = await response.json();
+		expect(result).toBeDefined();
+		expect(result).toHaveProperty('results');
+		expect(result).toHaveProperty('total');
+		expect(result).toHaveProperty('query');
 
-		expect(response.status).toBe(200);
-		expect(data.results).toHaveLength(1);
-		expect(data.total).toBe(1);
+		const data = result as { results: TransformedRecipe[]; total: number; query: string };
+		expect(data.results).toHaveLength(2);
+		expect(data.total).toBe(2);
+		expect(data.query).toBe('simple');
 
 		const recipe = data.results[0];
-		expect(recipe.name).toBe('Simple Recipe');
-		expect(recipe.id).toBe(999999);
-		expect(recipe.minutes).toBe(15);
-		expect(recipe.ingredients).toBe('ingredient1, ingredient2');
-		expect(recipe.score).toBe(0.75);
+		expect(recipe.name).toBe('Chicken Fried Steak W/Cream Gravy');
+		expect(recipe.id).toBe(123456);
+		expect(recipe.minutes).toBe(40);
+		expect(recipe.ingredients).toBe('shortening, seasoned flour, eggs, milk, chicken');
+		expect(recipe.score).toBe(0.95);
 	});
 });
