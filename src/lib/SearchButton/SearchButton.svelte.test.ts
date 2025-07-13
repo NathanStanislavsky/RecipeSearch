@@ -55,5 +55,4 @@ describe('SearchButton Component', () => {
 			expect(button).toHaveAttribute('type', 'submit');
 		});
 	});
-
 });

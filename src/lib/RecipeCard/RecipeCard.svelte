@@ -29,7 +29,7 @@
 
 		<button
 			onclick={() => (showModal = true)}
-			class="w-full rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+			class="w-full rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
 		>
 			View Recipe Details
 		</button>
@@ -40,9 +40,6 @@
 	</div>
 </div>
 
-<BaseModal 
-	bind:isOpen={showModal} 
-	title={recipe.name}
->
+<BaseModal bind:isOpen={showModal} title={recipe.name}>
 	<RecipeDetailView {recipe} />
 </BaseModal>

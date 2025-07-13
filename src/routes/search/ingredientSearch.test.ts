@@ -10,7 +10,6 @@ vi.mock('$env/static/private', () => ({
 	MONGODB_REVIEWS_COLLECTION: 'test-reviews-collection'
 }));
 
-
 vi.mock('$lib/server/mongo/index.js', () => {
 	const mockClient = {
 		db: vi.fn().mockReturnValue({
@@ -94,9 +93,9 @@ describe('Ingredient Search API', () => {
 			body: formData
 		});
 
-		const result = await actions.search({ 
-			request, 
-			locals: { user: null } 
+		const result = await actions.search({
+			request,
+			locals: { user: null }
 		} as unknown as RequestEvent);
 
 		expect(result).toBeDefined();
@@ -139,15 +138,15 @@ describe('Ingredient Search API', () => {
 			body: formData
 		});
 
-		const result = await actions.search({ 
-			request, 
-			locals: { user: null } 
+		const result = await actions.search({
+			request,
+			locals: { user: null }
 		} as unknown as RequestEvent);
 
 		expect(result).toBeDefined();
 		expect(result).toHaveProperty('status');
 		expect(result).toHaveProperty('data');
-		
+
 		const failResult = result as { status: number; data: { message: string } };
 		expect(failResult.status).toBe(400);
 		expect(failResult.data.message).toBe('Search query is required');
@@ -161,9 +160,9 @@ describe('Ingredient Search API', () => {
 			body: formData
 		});
 
-		const result = await actions.search({ 
-			request, 
-			locals: { user: null } 
+		const result = await actions.search({
+			request,
+			locals: { user: null }
 		} as unknown as RequestEvent);
 
 		expect(result).toBeDefined();

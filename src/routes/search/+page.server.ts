@@ -1,7 +1,12 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import { ApiError, handleError } from '$utils/errors/AppError.js';
 import { getMongoClient } from '$lib/server/mongo/index.js';
-import { MONGODB_DATABASE, MONGODB_COLLECTION, MONGODB_SEARCH_INDEX, MONGODB_REVIEWS_COLLECTION } from '$env/static/private';
+import {
+	MONGODB_DATABASE,
+	MONGODB_COLLECTION,
+	MONGODB_SEARCH_INDEX,
+	MONGODB_REVIEWS_COLLECTION
+} from '$env/static/private';
 import type { TransformedRecipe } from '../../types/recipe.ts';
 
 async function searchRecipes(
@@ -47,7 +52,7 @@ async function searchRecipes(
 			];
 
 			const ratings = await reviewsCollection.aggregate(ratingPipeline).toArray();
-			userRatings = new Map(ratings.map(r => [r.recipeId, r.rating]));
+			userRatings = new Map(ratings.map((r) => [r.recipeId, r.rating]));
 		}
 
 		const results: TransformedRecipe[] = searchResults.map((recipe) => ({
