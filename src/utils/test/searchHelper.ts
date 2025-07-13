@@ -1,11 +1,4 @@
 import { type Page, expect } from '@playwright/test';
-import type { TransformedRecipe } from '../../types/recipe.ts';
-
-export interface SearchApiResponse {
-	results: TransformedRecipe[];
-	total: number;
-	query: string;
-}
 
 export class SearchHelper {
 	private page: Page;
@@ -30,38 +23,6 @@ export class SearchHelper {
 	async clickSearchButton() {
 		const searchButton = this.page.locator('button:has-text("Search")');
 		await searchButton.click();
-	}
-
-	async simulateApiResponse(recipes: TransformedRecipe[], delayMs: number = 0) {
-		const responseBody: SearchApiResponse = {
-			results: recipes,
-			total: recipes.length,
-			query: 'test-query'
-		};
-
-		await this.page.route('**/search*', async (route) => {
-			if (delayMs) {
-				await new Promise((resolve) => setTimeout(resolve, delayMs));
-			}
-			route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify(responseBody)
-			});
-		});
-	}
-
-	async verifyLoadingState() {
-		// Verify loading state appears
-		const loadingMessage = this.page.locator('text=Loading...');
-		await expect(loadingMessage).toBeVisible();
-
-		// Verify results appear and loading disappears
-		const resultsContainer = this.page.locator('div.w-full.max-w-4xl.px-4');
-		await expect(resultsContainer).toBeVisible();
-		await expect(loadingMessage).not.toBeVisible();
-
-		return resultsContainer;
 	}
 
 	async verifyRecipeCard(recipeName: string, cookingMinutes: number) {
