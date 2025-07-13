@@ -3,27 +3,13 @@ import { createJsonResponse } from '$utils/api/apiUtils.js';
 import { ApiError, handleError } from '$utils/errors/AppError.js';
 import { getMongoClient } from '$lib/server/mongo/index.js';
 import { MONGODB_DATABASE, MONGODB_COLLECTION, MONGODB_SEARCH_INDEX } from '$env/static/private';
-import type { Recipe, TransformedRecipe } from '../../types/recipe.js';
-
-async function transformResults(results: Recipe[]): Promise<TransformedRecipe[]> {
-	return results.map((result) => {
-		return {
-			id: result.id,
-			name: result.name,
-			minutes: result.minutes,
-			nutrition: result.nutrition,
-			steps: result.steps,
-			description: result.description,
-			ingredients: result.ingredients,
-			score: result.score
-		};
-	});
-}
+import type { TransformedRecipe } from '../../types/recipe.js';
 
 async function searchRecipes(
 	searchQuery: string,
 	limit = 50,
-	skip = 0
+	skip = 0,
+	userId?: string
 ): Promise<TransformedRecipe[]> {
 	const client = getMongoClient();
 
@@ -35,7 +21,7 @@ async function searchRecipes(
 		const database = client.db(MONGODB_DATABASE);
 		const recipesCollection = database.collection(MONGODB_COLLECTION);
 
-		const pipeline = [
+		const searchPipeline = [
 			{
 				$search: {
 					index: MONGODB_SEARCH_INDEX,
@@ -51,21 +37,40 @@ async function searchRecipes(
 			{ $limit: limit }
 		];
 
-		const cursor = recipesCollection.aggregate(pipeline);
-		const results: Recipe[] = [];
+		const searchResults = await recipesCollection.aggregate(searchPipeline).toArray();
 
-		for await (const doc of cursor) {
-			results.push(doc as Recipe);
+		let userRatings: Map<string, number> = new Map();
+		if (userId) {
+			const reviewsCollection = database.collection(process.env.MONGODB_REVIEWS_COLLECTION as string);
+			const ratingPipeline = [
+				{ $match: { userId: userId, recipeId: { $exists: true } } },
+				{ $project: { recipeId: 1, rating: 1 } }
+			];
+
+			const ratings = await reviewsCollection.aggregate(ratingPipeline).toArray();
+			userRatings = new Map(ratings.map(r => [r.recipeId, r.rating]));
 		}
 
-		return transformResults(results);
+		const results: TransformedRecipe[] = searchResults.map((recipe) => ({
+			id: recipe.id as number,
+			name: recipe.name as string,
+			minutes: recipe.minutes as number,
+			nutrition: recipe.nutrition as string,
+			steps: recipe.steps as string,
+			description: recipe.description as string,
+			ingredients: recipe.ingredients as string,
+			score: recipe.score as number,
+			userRating: userRatings.get((recipe.id as number).toString())
+		}));
+
+		return results;
 	} catch (error) {
 		console.error('Error during Atlas Search aggregation:', error);
 		throw error;
 	}
 }
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, locals }) => {
 	try {
 		const searchParams = url.searchParams;
 		const query = searchParams.get('ingredients');
@@ -74,7 +79,8 @@ export const GET: RequestHandler = async ({ url }) => {
 			throw new ApiError('Search query is required', 400);
 		}
 
-		const results = await searchRecipes(query);
+		const userId = locals.user?.id.toString();
+		const results = await searchRecipes(query, 50, 0, userId);
 
 		return createJsonResponse(
 			{

@@ -6,7 +6,6 @@
 
 	export let recipe: TransformedRecipe;
 
-	const rating: number = 0;
 	let showModal = false;
 </script>
 
@@ -37,7 +36,7 @@
 	</div>
 
 	<div class="px-6 py-4">
-		<RatingDisplay selectedRating={rating} />
+		<RatingDisplay selectedRating={recipe.userRating} recipeId={recipe.id} />
 	</div>
 </div>
 

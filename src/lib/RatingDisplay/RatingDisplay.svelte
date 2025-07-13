@@ -1,8 +1,32 @@
 <script lang="ts">
-	const { selectedRating } = $props();
+	const { selectedRating, recipeId } = $props<{
+		selectedRating?: number;
+		recipeId: number;
+	}>();
 	
 	let hoveredRating: number | null = $state(null);
-	let currentRating: number = $state(selectedRating);
+	let currentRating: number = $state(selectedRating || 0);
+	
+	async function submitRating(rating: number) {
+		try {
+			const response = await fetch('/ratings', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					recipeId: recipeId.toString(),
+					rating: rating
+				})
+			});
+			
+			if (response.ok) {
+				currentRating = rating;
+			}
+		} catch (error) {
+			console.error('Error submitting rating:', error);
+		}
+	}
 </script>
 
 <div class="flex items-center">
@@ -17,11 +41,11 @@
 				hoveredRating = null;
 			}}
 			onclick={() => {
-				currentRating = index + 1;
+				submitRating(index + 1);
 			}}
 			aria-label="Rate {index + 1} stars"
 		>
-			{#if index < currentRating}
+			{#if index < (hoveredRating || currentRating)}
 				<!-- Full star -->
 				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" class="text-yellow-400">
 					<path fill="currentColor" d="m5.825 21l1.625-7.025L2 9.25l7.2-.625L12 2l2.8 6.625l7.2.625l-5.45 4.725L18.175 21L12 17.275z"/>
