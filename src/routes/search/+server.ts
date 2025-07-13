@@ -2,7 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { createJsonResponse } from '$utils/api/apiUtils.js';
 import { ApiError, handleError } from '$utils/errors/AppError.js';
 import { getMongoClient } from '$lib/server/mongo/index.js';
-import { MONGODB_DATABASE, MONGODB_COLLECTION, MONGODB_SEARCH_INDEX } from '$env/static/private';
+import { MONGODB_DATABASE, MONGODB_COLLECTION, MONGODB_SEARCH_INDEX, MONGODB_REVIEWS_COLLECTION } from '$env/static/private';
 import type { TransformedRecipe } from '../../types/recipe.js';
 
 async function searchRecipes(
@@ -41,7 +41,7 @@ async function searchRecipes(
 
 		let userRatings: Map<string, number> = new Map();
 		if (userId) {
-			const reviewsCollection = database.collection(process.env.MONGODB_REVIEWS_COLLECTION as string);
+			const reviewsCollection = database.collection(MONGODB_REVIEWS_COLLECTION);
 			const ratingPipeline = [
 				{ $match: { userId: userId, recipeId: { $exists: true } } },
 				{ $project: { recipeId: 1, rating: 1 } }
