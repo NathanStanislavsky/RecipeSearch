@@ -91,5 +91,42 @@ export const actions: Actions = {
 			const errorResponse = handleError(error, 'Ingredient Search');
 			return fail(errorResponse.status, { message: errorResponse.message });
 		}
+	},
+	addRating: async ({ request, locals }) => {
+		try {
+			const formData = await request.formData();
+			const recipeId = formData.get('recipeId')?.toString();
+			const rating = formData.get('rating')?.toString();
+
+			if (!recipeId || !rating) {
+				throw new ApiError('Recipe ID and rating are required', 400);
+			}
+
+			const userId = locals.user?.id.toString();
+
+			const client = getMongoClient();
+			if (!client) {
+				throw new ApiError('Failed to connect to MongoDB', 500);
+			}
+
+			const db = client.db(MONGODB_DATABASE);
+			const collection = db.collection(MONGODB_REVIEWS_COLLECTION);
+
+			const result = await collection.updateOne(
+				{ recipeId, userId },
+				{ $set: { rating: Number(rating) } },
+				{ upsert: true }
+			);
+
+			return {
+				message: result.upsertedCount > 0 ? 'Rating created' : 'Rating updated',
+				recipeId,
+				rating,
+				upserted: result.upsertedCount > 0
+			};
+		} catch (error) {
+			const errorResponse = handleError(error, 'Add Rating');
+			return fail(errorResponse.status, { message: errorResponse.message });
+		}
 	}
 };
