@@ -3,6 +3,18 @@ import { actions } from './+page.server.ts';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { TransformedRecipe } from '../../types/recipe.js';
 
+// Define types for our mock objects
+interface MockClient {
+	db: ReturnType<typeof vi.fn>;
+}
+
+interface TestGlobals {
+	__mockGetMongoClient: ReturnType<typeof vi.fn>;
+	__mockUpdateOne: ReturnType<typeof vi.fn>;
+	__mockAggregate: ReturnType<typeof vi.fn>;
+	__mockClient: MockClient;
+}
+
 vi.mock('$env/static/private', () => ({
 	MONGODB_DATABASE: 'test-database',
 	MONGODB_COLLECTION: 'test-collection',
@@ -63,10 +75,10 @@ vi.mock('$lib/server/mongo/index.js', () => {
 	const mockGetMongoClient = vi.fn().mockReturnValue(mockClient);
 
 	// Store references so we can access them in tests
-	(globalThis as any).__mockGetMongoClient = mockGetMongoClient;
-	(globalThis as any).__mockUpdateOne = mockUpdateOne;
-	(globalThis as any).__mockAggregate = mockAggregate;
-	(globalThis as any).__mockClient = mockClient;
+	(globalThis as TestGlobals & typeof globalThis).__mockGetMongoClient = mockGetMongoClient;
+	(globalThis as TestGlobals & typeof globalThis).__mockUpdateOne = mockUpdateOne;
+	(globalThis as TestGlobals & typeof globalThis).__mockAggregate = mockAggregate;
+	(globalThis as TestGlobals & typeof globalThis).__mockClient = mockClient;
 
 	return {
 		getMongoClient: mockGetMongoClient
@@ -95,10 +107,10 @@ vi.mock('$utils/errors/AppError.js', () => ({
 }));
 
 // Helper functions to access the mocked functions
-const getMockGetMongoClient = () => (globalThis as any).__mockGetMongoClient;
-const getMockUpdateOne = () => (globalThis as any).__mockUpdateOne;
-const getMockAggregate = () => (globalThis as any).__mockAggregate;
-const getMockClient = () => (globalThis as any).__mockClient;
+const getMockGetMongoClient = () => (globalThis as TestGlobals & typeof globalThis).__mockGetMongoClient;
+const getMockUpdateOne = () => (globalThis as TestGlobals & typeof globalThis).__mockUpdateOne;
+const getMockAggregate = () => (globalThis as TestGlobals & typeof globalThis).__mockAggregate;
+const getMockClient = () => (globalThis as TestGlobals & typeof globalThis).__mockClient;
 
 describe('Ingredient Search API', () => {
 	beforeEach(() => {
