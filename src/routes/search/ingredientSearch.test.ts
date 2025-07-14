@@ -103,13 +103,13 @@ const getMockClient = () => (globalThis as any).__mockClient;
 describe('Ingredient Search API', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Reset to default successful state
 		const mockGetMongoClient = getMockGetMongoClient();
 		const mockUpdateOne = getMockUpdateOne();
 		const mockAggregate = getMockAggregate();
 		const mockClient = getMockClient();
-		
+
 		mockGetMongoClient.mockReturnValue(mockClient);
 		mockUpdateOne.mockResolvedValue({ upsertedCount: 1 });
 		mockAggregate.mockReturnValue({
@@ -273,12 +273,12 @@ describe('Ingredient Search API', () => {
 describe('addRating action', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Reset to default successful state
 		const mockGetMongoClient = getMockGetMongoClient();
 		const mockUpdateOne = getMockUpdateOne();
 		const mockClient = getMockClient();
-		
+
 		mockGetMongoClient.mockReturnValue(mockClient);
 		mockUpdateOne.mockResolvedValue({ upsertedCount: 1 });
 	});

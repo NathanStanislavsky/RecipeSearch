@@ -73,7 +73,11 @@ test.describe('Complete user journey', () => {
 		const searchTerm = 'Carrots';
 		await searchHelper.search(searchTerm);
 
-		await searchHelper.verifyRecipeCard(mockRecipe.name, mockRecipe.minutes, mockRecipe.description);
+		await searchHelper.verifyRecipeCard(
+			mockRecipe.name,
+			mockRecipe.minutes,
+			mockRecipe.description
+		);
 
 		// Click to open the recipe details modal
 		await searchHelper.clickViewRecipeDetails(mockRecipe.name);
@@ -85,7 +89,11 @@ test.describe('Complete user journey', () => {
 		await searchHelper.closeRecipeDetails();
 
 		// Verify the recipe card is still visible
-		await searchHelper.verifyRecipeCard(mockRecipe.name, mockRecipe.minutes, mockRecipe.description);
+		await searchHelper.verifyRecipeCard(
+			mockRecipe.name,
+			mockRecipe.minutes,
+			mockRecipe.description
+		);
 	});
 
 	test('complete journey with no search results', async ({ page }) => {

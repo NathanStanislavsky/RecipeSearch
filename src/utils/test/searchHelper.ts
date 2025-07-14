@@ -46,7 +46,7 @@ export class SearchHelper {
 	async clickViewRecipeDetails(recipeName: string) {
 		const recipeCard = this.page.locator(`[aria-label="Recipe card for ${recipeName}"]`);
 		await recipeCard.locator('button:has-text("View Recipe Details")').click();
-		
+
 		// Wait for modal to be visible
 		await expect(this.page.locator('[role="document"]')).toBeVisible();
 	}
@@ -55,7 +55,7 @@ export class SearchHelper {
 		// Target the modal overlay, not the recipe card
 		const modal = this.page.locator('[role="document"]');
 		await expect(modal).toBeVisible();
-		
+
 		// Verify modal title
 		await expect(modal.locator(`h2:has-text("${recipeName}")`)).toBeVisible();
 
