@@ -286,7 +286,6 @@ describe('addRating action', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		// Reset to default successful state
 		const mockGetMongoClient = getMockGetMongoClient();
 		const mockUpdateOne = getMockUpdateOne();
 		const mockClient = getMockClient();
