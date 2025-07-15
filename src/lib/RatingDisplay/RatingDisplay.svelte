@@ -46,7 +46,7 @@
 </form>
 
 <div class="flex items-center">
-	{#each Array(5) as _, index}
+	{#each Array.from({ length: 5 }, (_, index) => index) as index}
 		{@const starNumber = index + 1}
 		{@const isActive = starNumber <= (hoveredRating || currentRating)}
 
