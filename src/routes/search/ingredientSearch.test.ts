@@ -107,7 +107,8 @@ vi.mock('$utils/errors/AppError.js', () => ({
 }));
 
 // Helper functions to access the mocked functions
-const getMockGetMongoClient = () => (globalThis as TestGlobals & typeof globalThis).__mockGetMongoClient;
+const getMockGetMongoClient = () =>
+	(globalThis as TestGlobals & typeof globalThis).__mockGetMongoClient;
 const getMockUpdateOne = () => (globalThis as TestGlobals & typeof globalThis).__mockUpdateOne;
 const getMockAggregate = () => (globalThis as TestGlobals & typeof globalThis).__mockAggregate;
 const getMockClient = () => (globalThis as TestGlobals & typeof globalThis).__mockClient;
