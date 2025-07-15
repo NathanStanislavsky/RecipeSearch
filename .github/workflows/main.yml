@@ -5,6 +5,7 @@ concurrency:
 
 on:
   pull_request:
+    types: [labeled]
     branches: ['main']
   push:
     branches: [main]
@@ -17,6 +18,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: github.event.label.name == 'CI/CD' || github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -32,6 +34,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    if: github.event.label.name == 'CI/CD' || github.event_name == 'push'
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -55,6 +58,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: github.event.label.name == 'CI/CD' || github.event_name == 'push'
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -78,6 +82,7 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    if: github.event.label.name == 'CI/CD' || github.event_name == 'push'
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
