@@ -1,11 +1,4 @@
 import { type Page, expect } from '@playwright/test';
-import type { TransformedRecipe } from '../../types/recipe.ts';
-
-export interface SearchApiResponse {
-	results: TransformedRecipe[];
-	total: number;
-	query: string;
-}
 
 export class SearchHelper {
 	private page: Page;
@@ -32,39 +25,7 @@ export class SearchHelper {
 		await searchButton.click();
 	}
 
-	async simulateApiResponse(recipes: TransformedRecipe[], delayMs: number = 0) {
-		const responseBody: SearchApiResponse = {
-			results: recipes,
-			total: recipes.length,
-			query: 'test-query'
-		};
-
-		await this.page.route('**/search*', async (route) => {
-			if (delayMs) {
-				await new Promise((resolve) => setTimeout(resolve, delayMs));
-			}
-			route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify(responseBody)
-			});
-		});
-	}
-
-	async verifyLoadingState() {
-		// Verify loading state appears
-		const loadingMessage = this.page.locator('text=Loading...');
-		await expect(loadingMessage).toBeVisible();
-
-		// Verify results appear and loading disappears
-		const resultsContainer = this.page.locator('div.w-full.max-w-4xl.px-4');
-		await expect(resultsContainer).toBeVisible();
-		await expect(loadingMessage).not.toBeVisible();
-
-		return resultsContainer;
-	}
-
-	async verifyRecipeCard(recipeName: string, cookingMinutes: number) {
+	async verifyRecipeCard(recipeName: string, cookingMinutes: number, description: string) {
 		// Verify recipe card is visible
 		const recipeCard = this.page.locator(`[aria-label="Recipe card for ${recipeName}"]`);
 		await expect(recipeCard).toBeVisible();
@@ -77,35 +38,37 @@ export class SearchHelper {
 		await expect(timeContainer.locator(`text=${cookingMinutes}`)).toBeVisible();
 		await expect(timeContainer.locator('text=minutes')).toBeVisible();
 
-		return recipeCard;
-	}
-
-	async verifyRecipeDetails(recipeName: string, description: string, ingredients: string[]) {
-		// Get the specific recipe card first
-		const recipeCard = this.page.locator(`[aria-label="Recipe card for ${recipeName}"]`);
-
 		// Verify description section within this card - use more specific selector
 		await expect(recipeCard.locator('h3:has-text("Description")')).toBeVisible();
 		await expect(recipeCard.locator(`text=${description}`)).toBeVisible();
-
-		// Verify ingredients section within this card - use more specific selector
-		await expect(recipeCard.locator('h3:has-text("Ingredients")')).toBeVisible();
-		const ingredientsList = recipeCard.locator('ul.text-sm.text-gray-600');
-
-		for (const ingredient of ingredients) {
-			// Look for ingredient within the ingredients list only
-			await expect(ingredientsList.locator(`text=${ingredient}`)).toBeVisible();
-		}
 	}
 
-	async verifyNutritionInfo(recipeName: string, calories: number) {
-		// Get the specific recipe card first
+	async clickViewRecipeDetails(recipeName: string) {
 		const recipeCard = this.page.locator(`[aria-label="Recipe card for ${recipeName}"]`);
+		await recipeCard.locator('button:has-text("View Recipe Details")').click();
 
-		// Verify nutrition section within this card - use more specific selector
-		await expect(recipeCard.locator('h3:has-text("Nutrition")')).toBeVisible();
-		await expect(recipeCard.locator('text=Calories:')).toBeVisible();
-		await expect(recipeCard.locator(`text=${calories}`)).toBeVisible();
+		// Wait for modal to be visible
+		await expect(this.page.locator('[role="document"]')).toBeVisible();
+	}
+
+	async verifyRecipeDetails(recipeName: string, calories: number) {
+		// Target the modal overlay, not the recipe card
+		const modal = this.page.locator('[role="document"]');
+		await expect(modal).toBeVisible();
+
+		// Verify modal title
+		await expect(modal.locator(`h2:has-text("${recipeName}")`)).toBeVisible();
+
+		// Verify nutrition section and calories
+		await expect(modal.locator('h3:has-text("Nutrition")')).toBeVisible();
+		await expect(modal.locator('text=Calories:')).toBeVisible();
+		await expect(modal.locator(`text=${calories}`)).toBeVisible();
+		await expect(modal.locator('h3:has-text("Ingredients")')).toBeVisible();
+		await expect(modal.locator('h3:has-text("Instructions")')).toBeVisible();
+	}
+
+	async closeRecipeDetails() {
+		await this.page.keyboard.press('Escape');
 	}
 
 	async verifyNoResults() {

@@ -1,53 +1,87 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET } from './+server.ts';
+import { actions } from './+page.server.ts';
 import type { RequestEvent } from '@sveltejs/kit';
+import type { TransformedRecipe } from '../../types/recipe.js';
+
+// Define types for our mock objects
+interface MockClient {
+	db: ReturnType<typeof vi.fn>;
+}
+
+interface TestGlobals {
+	__mockGetMongoClient: ReturnType<typeof vi.fn>;
+	__mockUpdateOne: ReturnType<typeof vi.fn>;
+	__mockAggregate: ReturnType<typeof vi.fn>;
+	__mockClient: MockClient;
+}
+
+vi.mock('$env/static/private', () => ({
+	MONGODB_DATABASE: 'test-database',
+	MONGODB_COLLECTION: 'test-collection',
+	MONGODB_SEARCH_INDEX: 'test-index',
+	MONGODB_REVIEWS_COLLECTION: 'test-reviews-collection'
+}));
 
 vi.mock('$lib/server/mongo/index.js', () => {
+	const mockUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
+	const mockAggregate = vi.fn().mockReturnValue({
+		toArray: vi.fn().mockResolvedValue([
+			{
+				_id: '685771e25f14caf1c6804ebe',
+				name: 'Chicken Fried Steak W/Cream Gravy',
+				id: 123456,
+				minutes: 40,
+				contributor_id: 12345,
+				submitted: '2023-01-01',
+				tags: 'main-course,comfort-food',
+				nutrition: '[500, 25, 30, 15, 10, 20, 5]',
+				n_steps: 5,
+				steps: 'Step 1: Prepare ingredients. Step 2: Cook steak.',
+				description: 'This is a recipe for Chicken Fried Steak with delicious cream gravy.',
+				ingredients: 'shortening, seasoned flour, eggs, milk, chicken',
+				n_ingredients: 5,
+				score: 0.95
+			},
+			{
+				_id: '685771e25f14caf1c6804ebf',
+				name: 'Classic Pasta Carbonara',
+				id: 789012,
+				minutes: 30,
+				contributor_id: 54321,
+				submitted: '2023-02-01',
+				tags: 'pasta,italian,quick',
+				nutrition: '[400, 20, 35, 18, 8, 15, 3]',
+				n_steps: 4,
+				steps: 'Step 1: Boil pasta. Step 2: Prepare sauce.',
+				description: 'Classic Italian pasta dish with eggs, bacon, and cheese.',
+				ingredients: 'pasta, eggs, bacon, cheese, black pepper',
+				n_ingredients: 5,
+				score: 0.85
+			}
+		])
+	});
+
+	const mockCollection = {
+		aggregate: mockAggregate,
+		updateOne: mockUpdateOne
+	};
+
 	const mockClient = {
 		db: vi.fn().mockReturnValue({
-			collection: vi.fn().mockReturnValue({
-				aggregate: vi.fn().mockReturnValue({
-					[Symbol.asyncIterator]: async function* () {
-						yield {
-							_id: '685771e25f14caf1c6804ebe',
-							name: 'Chicken Fried Steak W/Cream Gravy',
-							id: 123456,
-							minutes: 40,
-							contributor_id: 12345,
-							submitted: '2023-01-01',
-							tags: 'main-course,comfort-food',
-							nutrition: '[500, 25, 30, 15, 10, 20, 5]',
-							n_steps: 5,
-							steps: 'Step 1: Prepare ingredients. Step 2: Cook steak.',
-							description: 'This is a recipe for Chicken Fried Steak with delicious cream gravy.',
-							ingredients: 'shortening, seasoned flour, eggs, milk, chicken',
-							n_ingredients: 5,
-							score: 0.95
-						};
-						yield {
-							_id: '685771e25f14caf1c6804ebf',
-							name: 'Classic Pasta Carbonara',
-							id: 789012,
-							minutes: 30,
-							contributor_id: 54321,
-							submitted: '2023-02-01',
-							tags: 'pasta,italian,quick',
-							nutrition: '[400, 20, 35, 18, 8, 15, 3]',
-							n_steps: 4,
-							steps: 'Step 1: Boil pasta. Step 2: Prepare sauce.',
-							description: 'Classic Italian pasta dish with eggs, bacon, and cheese.',
-							ingredients: 'pasta, eggs, bacon, cheese, black pepper',
-							n_ingredients: 5,
-							score: 0.85
-						};
-					}
-				})
-			})
+			collection: vi.fn().mockReturnValue(mockCollection)
 		})
 	};
 
+	const mockGetMongoClient = vi.fn().mockReturnValue(mockClient);
+
+	// Store references so we can access them in tests
+	(globalThis as TestGlobals & typeof globalThis).__mockGetMongoClient = mockGetMongoClient;
+	(globalThis as TestGlobals & typeof globalThis).__mockUpdateOne = mockUpdateOne;
+	(globalThis as TestGlobals & typeof globalThis).__mockAggregate = mockAggregate;
+	(globalThis as TestGlobals & typeof globalThis).__mockClient = mockClient;
+
 	return {
-		getMongoClient: vi.fn().mockReturnValue(mockClient)
+		getMongoClient: mockGetMongoClient
 	};
 });
 
@@ -72,19 +106,82 @@ vi.mock('$utils/errors/AppError.js', () => ({
 	}))
 }));
 
+// Helper functions to access the mocked functions
+const getMockGetMongoClient = () =>
+	(globalThis as TestGlobals & typeof globalThis).__mockGetMongoClient;
+const getMockUpdateOne = () => (globalThis as TestGlobals & typeof globalThis).__mockUpdateOne;
+const getMockAggregate = () => (globalThis as TestGlobals & typeof globalThis).__mockAggregate;
+const getMockClient = () => (globalThis as TestGlobals & typeof globalThis).__mockClient;
+
 describe('Ingredient Search API', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+
+		// Reset to default successful state
+		const mockGetMongoClient = getMockGetMongoClient();
+		const mockUpdateOne = getMockUpdateOne();
+		const mockAggregate = getMockAggregate();
+		const mockClient = getMockClient();
+
+		mockGetMongoClient.mockReturnValue(mockClient);
+		mockUpdateOne.mockResolvedValue({ upsertedCount: 1 });
+		mockAggregate.mockReturnValue({
+			toArray: vi.fn().mockResolvedValue([
+				{
+					_id: '685771e25f14caf1c6804ebe',
+					name: 'Chicken Fried Steak W/Cream Gravy',
+					id: 123456,
+					minutes: 40,
+					contributor_id: 12345,
+					submitted: '2023-01-01',
+					tags: 'main-course,comfort-food',
+					nutrition: '[500, 25, 30, 15, 10, 20, 5]',
+					n_steps: 5,
+					steps: 'Step 1: Prepare ingredients. Step 2: Cook steak.',
+					description: 'This is a recipe for Chicken Fried Steak with delicious cream gravy.',
+					ingredients: 'shortening, seasoned flour, eggs, milk, chicken',
+					n_ingredients: 5,
+					score: 0.95
+				},
+				{
+					_id: '685771e25f14caf1c6804ebf',
+					name: 'Classic Pasta Carbonara',
+					id: 789012,
+					minutes: 30,
+					contributor_id: 54321,
+					submitted: '2023-02-01',
+					tags: 'pasta,italian,quick',
+					nutrition: '[400, 20, 35, 18, 8, 15, 3]',
+					n_steps: 4,
+					steps: 'Step 1: Boil pasta. Step 2: Prepare sauce.',
+					description: 'Classic Italian pasta dish with eggs, bacon, and cheese.',
+					ingredients: 'pasta, eggs, bacon, cheese, black pepper',
+					n_ingredients: 5,
+					score: 0.85
+				}
+			])
+		});
 	});
 
 	it('should return transformed search results for valid query', async () => {
-		const url = new URL('http://localhost:5173/search?ingredients=chicken');
-		const request = new Request(url);
+		const formData = new FormData();
+		formData.append('ingredients', 'chicken');
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
 
-		const response = await GET({ url, request } as RequestEvent);
-		const data = await response.json();
+		const result = await actions.search({
+			request,
+			locals: { user: null }
+		} as unknown as RequestEvent);
 
-		expect(response.status).toBe(200);
+		expect(result).toBeDefined();
+		expect(result).toHaveProperty('results');
+		expect(result).toHaveProperty('total');
+		expect(result).toHaveProperty('query');
+
+		const data = result as { results: TransformedRecipe[]; total: number; query: string };
 		expect(data.results).toHaveLength(2);
 		expect(data.query).toBe('chicken');
 		expect(data.total).toBe(2);
@@ -112,64 +209,223 @@ describe('Ingredient Search API', () => {
 	});
 
 	it('should return 400 error when ingredients query is missing', async () => {
-		const url = new URL('http://localhost:5173/search');
-		const request = new Request(url);
+		const formData = new FormData();
+		// Don't add ingredients to test missing data
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
 
-		const response = await GET({ url, request } as RequestEvent);
-		const data = await response.json();
+		const result = await actions.search({
+			request,
+			locals: { user: null }
+		} as unknown as RequestEvent);
 
-		expect(response.status).toBe(400);
-		expect(data.error).toBe('ApiError');
-		expect(data.message).toBe('Search query is required');
+		expect(result).toBeDefined();
+		expect(result).toHaveProperty('status');
+		expect(result).toHaveProperty('data');
+
+		const failResult = result as { status: number; data: { message: string } };
+		expect(failResult.status).toBe(400);
+		expect(failResult.data.message).toBe('Search query is required');
 	});
 
 	it('should handle recipes with minimal data', async () => {
-		// Re-mock for this specific test case
-		const { getMongoClient } = await vi.importMock('$lib/server/mongo/index.js');
-		const mockClient = getMongoClient as ReturnType<typeof vi.fn>;
-
-		mockClient.mockReturnValue({
-			db: vi.fn().mockReturnValue({
-				collection: vi.fn().mockReturnValue({
-					aggregate: vi.fn().mockReturnValue({
-						async *[Symbol.asyncIterator]() {
-							yield {
-								_id: '685771e25f14caf1c6804ec0',
-								name: 'Simple Recipe',
-								id: 999999,
-								minutes: 15,
-								contributor_id: 11111,
-								submitted: '2023-03-01',
-								tags: 'simple',
-								nutrition: '[200, 10, 15, 8, 5, 12, 2]',
-								n_steps: 2,
-								steps: 'Step 1: Mix ingredients. Step 2: Cook.',
-								description: 'A very simple recipe.',
-								ingredients: 'ingredient1, ingredient2',
-								n_ingredients: 2,
-								score: 0.75
-							};
-						}
-					})
-				})
-			})
+		const formData = new FormData();
+		formData.append('ingredients', 'simple');
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
 		});
 
-		const url = new URL('http://localhost:5173/search?ingredients=simple');
-		const request = new Request(url);
+		const result = await actions.search({
+			request,
+			locals: { user: null }
+		} as unknown as RequestEvent);
 
-		const response = await GET({ url, request } as RequestEvent);
-		const data = await response.json();
+		expect(result).toBeDefined();
+		expect(result).toHaveProperty('results');
+		expect(result).toHaveProperty('total');
+		expect(result).toHaveProperty('query');
 
-		expect(response.status).toBe(200);
-		expect(data.results).toHaveLength(1);
-		expect(data.total).toBe(1);
+		const data = result as { results: TransformedRecipe[]; total: number; query: string };
+		expect(data.results).toHaveLength(2);
+		expect(data.total).toBe(2);
+		expect(data.query).toBe('simple');
 
 		const recipe = data.results[0];
-		expect(recipe.name).toBe('Simple Recipe');
-		expect(recipe.id).toBe(999999);
-		expect(recipe.minutes).toBe(15);
-		expect(recipe.ingredients).toBe('ingredient1, ingredient2');
-		expect(recipe.score).toBe(0.75);
+		expect(recipe.name).toBe('Chicken Fried Steak W/Cream Gravy');
+		expect(recipe.id).toBe(123456);
+		expect(recipe.minutes).toBe(40);
+		expect(recipe.ingredients).toBe('shortening, seasoned flour, eggs, milk, chicken');
+		expect(recipe.score).toBe(0.95);
+	});
+
+	it('should return 500 if mongo client is not available', async () => {
+		const mockGetMongoClient = getMockGetMongoClient();
+		mockGetMongoClient.mockReturnValue(null);
+
+		const formData = new FormData();
+		formData.append('ingredients', 'chicken');
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
+
+		const result = await actions.search({
+			request,
+			locals: { user: null }
+		} as unknown as RequestEvent);
+
+		const failResult = result as { status: number; data: { message: string } };
+		expect(failResult.status).toBe(500);
+		expect(failResult.data.message).toBe('MongoDB client not found');
+	});
+});
+
+describe('addRating action', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+
+		const mockGetMongoClient = getMockGetMongoClient();
+		const mockUpdateOne = getMockUpdateOne();
+		const mockClient = getMockClient();
+
+		mockGetMongoClient.mockReturnValue(mockClient);
+		mockUpdateOne.mockResolvedValue({ upsertedCount: 1 });
+	});
+
+	it('should successfully add a new rating', async () => {
+		const formData = new FormData();
+		formData.append('recipeId', '123456');
+		formData.append('rating', '5');
+
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
+
+		const result = await actions.addRating({
+			request,
+			locals: { user: { id: 'user123' } }
+		} as unknown as RequestEvent);
+
+		expect(result).toEqual({
+			message: 'Rating created',
+			recipeId: '123456',
+			rating: '5',
+			upserted: true
+		});
+	});
+
+	it('should successfully update an existing rating', async () => {
+		// Mock updateOne to return upsertedCount: 0 for an update
+		const mockUpdateOne = getMockUpdateOne();
+		mockUpdateOne.mockResolvedValue({ upsertedCount: 0 });
+
+		const formData = new FormData();
+		formData.append('recipeId', '123456');
+		formData.append('rating', '4');
+
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
+
+		const result = await actions.addRating({
+			request,
+			locals: { user: { id: 'user123' } }
+		} as unknown as RequestEvent);
+
+		expect(result).toEqual({
+			message: 'Rating updated',
+			recipeId: '123456',
+			rating: '4',
+			upserted: false
+		});
+	});
+
+	it('should return 400 if recipeId is missing', async () => {
+		const formData = new FormData();
+		formData.append('rating', '5');
+
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
+
+		const result = await actions.addRating({
+			request,
+			locals: { user: { id: 'user123' } }
+		} as unknown as RequestEvent);
+
+		const failResult = result as { status: number; data: { message: string } };
+		expect(failResult.status).toBe(400);
+		expect(failResult.data.message).toBe('Recipe ID and rating are required');
+	});
+
+	it('should return 400 if rating is missing', async () => {
+		const formData = new FormData();
+		formData.append('recipeId', '123456');
+
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
+
+		const result = await actions.addRating({
+			request,
+			locals: { user: { id: 'user123' } }
+		} as unknown as RequestEvent);
+
+		const failResult = result as { status: number; data: { message: string } };
+		expect(failResult.status).toBe(400);
+		expect(failResult.data.message).toBe('Recipe ID and rating are required');
+	});
+
+	it('should return 500 if mongo client is not available', async () => {
+		const mockGetMongoClient = getMockGetMongoClient();
+		mockGetMongoClient.mockReturnValue(null);
+
+		const formData = new FormData();
+		formData.append('recipeId', '123456');
+		formData.append('rating', '5');
+
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
+
+		const result = await actions.addRating({
+			request,
+			locals: { user: { id: 'user123' } }
+		} as unknown as RequestEvent);
+
+		const failResult = result as { status: number; data: { message: string } };
+		expect(failResult.status).toBe(500);
+		expect(failResult.data.message).toBe('Failed to connect to MongoDB');
+	});
+
+	it('should handle errors during rating submission', async () => {
+		const mockUpdateOne = getMockUpdateOne();
+		mockUpdateOne.mockRejectedValue(new Error('Update failed'));
+
+		const formData = new FormData();
+		formData.append('recipeId', '123456');
+		formData.append('rating', '5');
+
+		const request = new Request('http://localhost:5173/search', {
+			method: 'POST',
+			body: formData
+		});
+
+		const result = await actions.addRating({
+			request,
+			locals: { user: { id: 'user123' } }
+		} as unknown as RequestEvent);
+
+		const failResult = result as { status: number; data: { message: string } };
+		expect(failResult.status).toBe(500);
+		expect(failResult.data.message).toBe('Update failed');
 	});
 });

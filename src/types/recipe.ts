@@ -50,4 +50,5 @@ export interface TransformedRecipe {
 	description: string;
 	ingredients: string;
 	score: number;
+	userRating?: number;
 }

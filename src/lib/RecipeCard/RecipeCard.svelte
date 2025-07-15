@@ -1,8 +1,12 @@
 <script lang="ts">
 	import type { TransformedRecipe } from '../../types/recipe.js';
-	import RecipeDetailView from '../RecipeDetailView/RecipeDetailView.svelte';
+	import RatingDisplay from '$lib/RatingDisplay/RatingDisplay.svelte';
+	import RecipeDetailView from '$lib/RecipeDetailView/RecipeDetailView.svelte';
+	import BaseModal from '$lib/BaseModal/BaseModal.svelte';
 
 	export let recipe: TransformedRecipe;
+
+	let showModal = false;
 </script>
 
 <div
@@ -23,6 +27,19 @@
 			<p class="text-sm leading-relaxed text-gray-600">{recipe.description}</p>
 		</div>
 
-		<RecipeDetailView {recipe} />
+		<button
+			onclick={() => (showModal = true)}
+			class="w-full rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+		>
+			View Recipe Details
+		</button>
+	</div>
+
+	<div class="px-6 py-4">
+		<RatingDisplay selectedRating={recipe.userRating} recipeId={recipe.id} />
 	</div>
 </div>
+
+<BaseModal bind:isOpen={showModal} title={recipe.name}>
+	<RecipeDetailView {recipe} />
+</BaseModal>

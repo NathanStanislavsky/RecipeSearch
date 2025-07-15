@@ -4,51 +4,43 @@
 	import RecipeCardParent from '$lib/RecipeCardParent/RecipeCardParent.svelte';
 	import type { Recipe } from '../../types/recipe.ts';
 	import Navbar from '$lib/Navbar/Navbar.svelte';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
+
 	let ingredients = '';
 	let recipes: Recipe[] = [];
-
 	let isLoading = false;
 	let hasSearched = false;
 	let searchError = '';
 
-	async function searchRecipes() {
-		try {
-			if (!ingredients) {
-				console.error('No ingredients provided');
-				return;
-			}
+	const handleSearch: SubmitFunction = () => {
+		if (!ingredients) {
+			console.error('No ingredients provided');
+			return;
+		}
 
-			isLoading = true;
-			hasSearched = true;
-			searchError = '';
+		isLoading = true;
+		hasSearched = true;
+		searchError = '';
 
-			const response = await fetch(`/search?ingredients=${encodeURIComponent(ingredients)}`);
+		return async ({ result, update }) => {
+			isLoading = false;
 
-			if (!response.ok) {
-				throw new Error(`Search failed: ${response.statusText}`);
-			}
-
-			const data = await response.json();
-
-			console.log('Search response:', data);
-
-			// Handle the new API response format
-			if (data.results) {
-				recipes = data.results;
-			} else if (Array.isArray(data)) {
-				// Fallback for direct array response
-				recipes = data;
+			if (result.type === 'success' && result.data) {
+				const data = result.data as { results: Recipe[]; total: number; query: string };
+				console.log('Search response:', data);
+				recipes = data.results || [];
+			} else if (result.type === 'failure') {
+				searchError = result.data?.message || 'Search failed';
+				recipes = [];
 			} else {
+				searchError = 'An unexpected error occurred';
 				recipes = [];
 			}
-		} catch (error) {
-			console.error('Error fetching recipes:', error);
-			searchError = error instanceof Error ? error.message : 'An error occurred during search';
-			recipes = [];
-		} finally {
-			isLoading = false;
-		}
-	}
+
+			await update();
+		};
+	};
 </script>
 
 <Navbar user={true} currentPath={'/search'} />
@@ -56,8 +48,12 @@
 <div class="flex min-h-screen flex-col items-center bg-slate-100 pt-20 font-serif">
 	<div class="mb-10 w-full max-w-4xl text-center">
 		<h1 class="mb-4 text-4xl">What is in your fridge?</h1>
-		<SearchBar bind:ingredients />
-		<SearchButton onClick={searchRecipes} />
+
+		<form method="POST" action="?/search" use:enhance={handleSearch}>
+			<SearchBar bind:ingredients />
+			<input type="hidden" name="ingredients" bind:value={ingredients} />
+			<SearchButton />
+		</form>
 	</div>
 
 	{#if isLoading}
