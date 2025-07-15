@@ -43,6 +43,7 @@ jobs:
       MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
       MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
       MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
+      MONGODB_REVIEWS_COLLECTION: ${{ secrets.MONGODB_REVIEWS_COLLECTION }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -67,6 +68,7 @@ jobs:
       MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
       MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
       MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
+      MONGODB_REVIEWS_COLLECTION: ${{ secrets.MONGODB_REVIEWS_COLLECTION }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -91,6 +93,7 @@ jobs:
       MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
       MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
       MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
+      MONGODB_REVIEWS_COLLECTION: ${{ secrets.MONGODB_REVIEWS_COLLECTION }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -120,6 +123,7 @@ jobs:
       MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
       MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
       MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
+      MONGODB_REVIEWS_COLLECTION: ${{ secrets.MONGODB_REVIEWS_COLLECTION }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
