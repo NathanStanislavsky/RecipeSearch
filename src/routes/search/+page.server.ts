@@ -13,7 +13,7 @@ async function searchRecipes(
 	searchQuery: string,
 	limit = 50,
 	skip = 0,
-	userId?: string
+	userId?: number
 ): Promise<TransformedRecipe[]> {
 	const client = getMongoClient();
 
@@ -84,7 +84,7 @@ export const actions: Actions = {
 				throw new ApiError('Search query is required', 400);
 			}
 
-			const userId = locals.user?.id.toString();
+			const userId = locals.user?.id;
 			const results = await searchRecipes(query, 50, 0, userId);
 
 			return {
@@ -107,7 +107,7 @@ export const actions: Actions = {
 				throw new ApiError('Recipe ID and rating are required', 400);
 			}
 
-			const userId = locals.user?.id.toString();
+			const userId = locals.user?.id;
 
 			const client = getMongoClient();
 			if (!client) {
