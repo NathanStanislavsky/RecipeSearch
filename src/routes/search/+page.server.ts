@@ -43,7 +43,7 @@ async function searchRecipes(
 
 		const searchResults = await recipesCollection.aggregate(searchPipeline).toArray();
 
-		let userRatings: Map<string, number> = new Map();
+		let userRatings: Map<number, number> = new Map();
 		if (userId) {
 			const reviewsCollection = database.collection(MONGODB_REVIEWS_COLLECTION);
 			const ratingPipeline = [
@@ -64,7 +64,7 @@ async function searchRecipes(
 			description: recipe.description as string,
 			ingredients: recipe.ingredients as string,
 			score: recipe.score as number,
-			userRating: userRatings.get((recipe.id as number).toString())
+			userRating: userRatings.get(recipe.id as number)
 		}));
 
 		return results;
@@ -100,8 +100,8 @@ export const actions: Actions = {
 	addRating: async ({ request, locals }) => {
 		try {
 			const formData = await request.formData();
-			const recipeId = formData.get('recipeId')?.toString();
-			const rating = formData.get('rating')?.toString();
+			const recipeId = Number(formData.get('recipeId'));
+			const rating = formData.get('rating');
 
 			if (!recipeId || !rating) {
 				throw new ApiError('Recipe ID and rating are required', 400);
