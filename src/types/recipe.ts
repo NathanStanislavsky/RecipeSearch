@@ -20,7 +20,7 @@ export interface RecipeResponse {
 }
 
 export interface ExtractRecipeIdsResult {
-	recipeIds?: number[];
+	recipe_ids?: number[];
 	errorResponse?: Response;
 }
 

@@ -17,7 +17,7 @@ export interface RecipeResponse {
 	sourceUrl: string;
 }
 export interface ExtractRecipeIdsResult {
-	recipeIds?: number[];
+	recipe_ids?: number[];
 	errorResponse?: Response;
 }
 export interface Recipe {

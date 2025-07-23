@@ -13,7 +13,7 @@ async function searchRecipes(
 	searchQuery: string,
 	limit = 50,
 	skip = 0,
-	userId?: number
+	user_id?: number
 ): Promise<TransformedRecipe[]> {
 	const client = getMongoClient();
 
@@ -44,15 +44,15 @@ async function searchRecipes(
 		const searchResults = await recipesCollection.aggregate(searchPipeline).toArray();
 
 		let userRatings: Map<number, number> = new Map();
-		if (userId) {
+		if (user_id) {
 			const reviewsCollection = database.collection(MONGODB_REVIEWS_COLLECTION);
 			const ratingPipeline = [
-				{ $match: { userId: userId, recipeId: { $exists: true } } },
-				{ $project: { recipeId: 1, rating: 1 } }
+				{ $match: { user_id: user_id, recipe_id: { $exists: true } } },
+				{ $project: { recipe_id: 1, rating: 1 } }
 			];
 
 			const ratings = await reviewsCollection.aggregate(ratingPipeline).toArray();
-			userRatings = new Map(ratings.map((r) => [r.recipeId, r.rating]));
+			userRatings = new Map(ratings.map((r) => [r.recipe_id, r.rating]));
 		}
 
 		const results: TransformedRecipe[] = searchResults.map((recipe) => ({
@@ -84,8 +84,8 @@ export const actions: Actions = {
 				throw new ApiError('Search query is required', 400);
 			}
 
-			const userId = locals.user?.id;
-			const results = await searchRecipes(query, 50, 0, userId);
+			const user_id = locals.user?.id;
+			const results = await searchRecipes(query, 50, 0, user_id);
 
 			return {
 				results,
@@ -100,14 +100,14 @@ export const actions: Actions = {
 	addRating: async ({ request, locals }) => {
 		try {
 			const formData = await request.formData();
-			const recipeId = Number(formData.get('recipeId'));
+			const recipe_id = Number(formData.get('recipe_id'));
 			const rating = formData.get('rating');
 
-			if (!recipeId || !rating) {
+			if (!recipe_id || !rating) {
 				throw new ApiError('Recipe ID and rating are required', 400);
 			}
 
-			const userId = locals.user?.id;
+			const user_id = locals.user?.id;
 
 			const client = getMongoClient();
 			if (!client) {
@@ -118,14 +118,14 @@ export const actions: Actions = {
 			const collection = db.collection(MONGODB_REVIEWS_COLLECTION);
 
 			const result = await collection.updateOne(
-				{ recipeId, userId },
+				{ recipe_id, user_id },
 				{ $set: { rating: Number(rating) } },
 				{ upsert: true }
 			);
 
 			return {
 				message: result.upsertedCount > 0 ? 'Rating created' : 'Rating updated',
-				recipeId,
+				recipe_id,
 				rating,
 				upserted: result.upsertedCount > 0
 			};

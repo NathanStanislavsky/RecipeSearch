@@ -297,7 +297,7 @@ describe('addRating action', () => {
 
 	it('should successfully add a new rating', async () => {
 		const formData = new FormData();
-		formData.append('recipeId', '123456');
+		formData.append('recipe_id', '123456');
 		formData.append('rating', '5');
 
 		const request = new Request('http://localhost:5173/search', {
@@ -312,7 +312,7 @@ describe('addRating action', () => {
 
 		expect(result).toEqual({
 			message: 'Rating created',
-			recipeId: '123456',
+			recipe_id: 123456,
 			rating: '5',
 			upserted: true
 		});
@@ -324,7 +324,7 @@ describe('addRating action', () => {
 		mockUpdateOne.mockResolvedValue({ upsertedCount: 0 });
 
 		const formData = new FormData();
-		formData.append('recipeId', '123456');
+		formData.append('recipe_id', '123456');
 		formData.append('rating', '4');
 
 		const request = new Request('http://localhost:5173/search', {
@@ -339,13 +339,13 @@ describe('addRating action', () => {
 
 		expect(result).toEqual({
 			message: 'Rating updated',
-			recipeId: '123456',
+			recipe_id: 123456,
 			rating: '4',
 			upserted: false
 		});
 	});
 
-	it('should return 400 if recipeId is missing', async () => {
+	it('should return 400 if recipe_id is missing', async () => {
 		const formData = new FormData();
 		formData.append('rating', '5');
 
@@ -366,7 +366,7 @@ describe('addRating action', () => {
 
 	it('should return 400 if rating is missing', async () => {
 		const formData = new FormData();
-		formData.append('recipeId', '123456');
+		formData.append('recipe_id', '123456');
 
 		const request = new Request('http://localhost:5173/search', {
 			method: 'POST',
@@ -388,7 +388,7 @@ describe('addRating action', () => {
 		mockGetMongoClient.mockReturnValue(null);
 
 		const formData = new FormData();
-		formData.append('recipeId', '123456');
+		formData.append('recipe_id', '123456');
 		formData.append('rating', '5');
 
 		const request = new Request('http://localhost:5173/search', {
@@ -411,7 +411,7 @@ describe('addRating action', () => {
 		mockUpdateOne.mockRejectedValue(new Error('Update failed'));
 
 		const formData = new FormData();
-		formData.append('recipeId', '123456');
+		formData.append('recipe_id', '123456');
 		formData.append('rating', '5');
 
 		const request = new Request('http://localhost:5173/search', {

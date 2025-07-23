@@ -36,7 +36,7 @@
 	</div>
 
 	<div class="px-6 py-4">
-		<RatingDisplay selectedRating={recipe.userRating} recipeId={recipe.id} />
+		<RatingDisplay selectedRating={recipe.userRating} recipe_id={recipe.id} />
 	</div>
 </div>
 

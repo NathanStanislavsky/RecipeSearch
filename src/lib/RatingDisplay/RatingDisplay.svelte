@@ -2,9 +2,9 @@
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 
-	const { selectedRating, recipeId } = $props<{
+	const { selectedRating, recipe_id } = $props<{
 		selectedRating?: number;
-		recipeId: number;
+		recipe_id: number;
 	}>();
 
 	let hoveredRating: number | null = $state(null);
@@ -41,7 +41,7 @@
 	use:enhance={handleRatingSubmit}
 	class="hidden"
 >
-	<input type="hidden" name="recipeId" value={recipeId.toString()} />
+	<input type="hidden" name="recipe_id" value={recipe_id.toString()} />
 	<input bind:this={ratingInput} type="hidden" name="rating" value="" />
 </form>
 
