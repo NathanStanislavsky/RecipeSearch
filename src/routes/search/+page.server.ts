@@ -47,12 +47,12 @@ async function searchRecipes(
 		if (user_id) {
 			const reviewsCollection = database.collection(MONGODB_REVIEWS_COLLECTION);
 			const ratingPipeline = [
-				{ $match: { user_id: user_id, recipe_id: { $exists: true } } },
+				{ $match: { user_id: String(user_id), recipe_id: { $exists: true } } },
 				{ $project: { recipe_id: 1, rating: 1 } }
 			];
 
 			const ratings = await reviewsCollection.aggregate(ratingPipeline).toArray();
-			userRatings = new Map(ratings.map((r) => [r.recipe_id, r.rating]));
+			userRatings = new Map(ratings.map((r) => [Number(r.recipe_id), r.rating]));
 		}
 
 		const results: TransformedRecipe[] = searchResults.map((recipe) => ({
@@ -100,14 +100,18 @@ export const actions: Actions = {
 	addRating: async ({ request, locals }) => {
 		try {
 			const formData = await request.formData();
-			const recipe_id = Number(formData.get('recipe_id'));
+			const recipe_id = formData.get('recipe_id')?.toString();
 			const rating = formData.get('rating');
 
 			if (!recipe_id || !rating) {
 				throw new ApiError('Recipe ID and rating are required', 400);
 			}
 
-			const user_id = locals.user?.id;
+			const user_id = locals.user?.id?.toString();
+
+			if (!user_id) {
+				throw new ApiError('User not authenticated', 401);
+			}
 
 			const client = getMongoClient();
 			if (!client) {
