@@ -22,6 +22,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			event.locals.user = decoded;
 		} catch (error) {
 			handleError(error, 'JWT Verification');
+			console.log('JWT Verification error:', error);
 			// Clear the invalid token
 			event.cookies.delete('jwt', { path: '/' });
 		}
