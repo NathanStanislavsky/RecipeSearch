@@ -9,7 +9,7 @@
 	"scripts": {
 		"dev": "npm run dev --workspace=services/web",
 		"build": "npm run build --workspace=services/web",
-		"test": "npm run test --workspaces",
+		"test": "npm run test --workspace=services/web",
 		"test:unit": "npm run test --workspace=services/web",
 		"test:e2e": "npm run test:e2e --workspace=services/web",
 		"lint": "npm run lint --workspace=services/web",
