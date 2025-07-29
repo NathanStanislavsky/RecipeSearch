@@ -29,13 +29,29 @@ export default ts.config(
 	},
 	{
 		ignores: [
+			// Build outputs
 			'.svelte-kit/**',
-			'.vercel/**',
-			'node_modules/**',
-			'dist/**',
 			'build/**',
+			'dist/**',
+			// Vercel
+			'.vercel/**',
+			// Dependencies
+			'node_modules/**',
+			// Config files
 			'*.config.js',
-			'*.config.ts'
+			'*.config.ts',
+			// Environment variables
+			'.env',
+			'.env.*',
+			'!.env.example',
+			// Logs
+			'*.log',
+			// OS files
+			'.DS_Store',
+			'Thumbs.db',
+			// IDE
+			'.vscode/**',
+			'.idea/**'
 		]
 	}
 );

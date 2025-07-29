@@ -4,7 +4,11 @@
 	"private": true,
 	"scripts": {
 		"extract": "python3 extract.py",
-		"train": "python3 train.py"
+		"train": "python3 train.py",
+		"lint": "echo \"No linting needed for Python service\"",
+		"test": "echo \"No tests for Python service\"",
+		"test:e2e": "echo \"No E2E tests for Python service\"",
+		"build": "echo \"No build needed for Python service\""
 	},
 	"devDependencies": {
 		"typescript": "^5.0.0"
