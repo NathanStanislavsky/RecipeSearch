@@ -4,12 +4,10 @@ import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import ts from 'typescript-eslint';
 
-export default ts.config(
+export default [
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs['flat/recommended'],
-	prettier,
-	...svelte.configs['flat/prettier'],
 	{
 		files: ['src/**/*.{js,ts,svelte}'],
 		languageOptions: {
@@ -53,5 +51,7 @@ export default ts.config(
 			'.vscode/**',
 			'.idea/**'
 		]
-	}
-);
+	},
+	prettier,
+	...svelte.configs['flat/prettier']
+];
