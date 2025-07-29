@@ -1,0 +1,16 @@
+{
+  "name": "@recipesearch/svd-training",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "extract": "python3 extract.py",
+    "train": "python3 train.py"
+  },
+  "dependencies": {
+    "@recipesearch/database": "workspace:*",
+    "@recipesearch/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+} 
