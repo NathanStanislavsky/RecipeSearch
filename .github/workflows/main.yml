@@ -28,8 +28,8 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
-      - name: Lint code
-        run: npm run lint
+      - name: Lint web service
+        run: npm run lint --workspace=services/web
 
   build:
     runs-on: ubuntu-latest
@@ -51,10 +51,10 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - name: Install dependencies
+      - name: Install Node.js dependencies
         run: npm ci
-      - name: Build application
-        run: npm run build
+      - name: Build web service
+        run: npm run build --workspace=services/web
 
   test:
     runs-on: ubuntu-latest
@@ -76,10 +76,10 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - name: Install dependencies
+      - name: Install Node.js dependencies
         run: npm ci
-      - name: Run unit tests
-        run: npm run test:unit -- --run
+      - name: Run web service tests
+        run: npm run test --workspace=services/web
 
   e2e:
     runs-on: ubuntu-latest
@@ -105,11 +105,10 @@ jobs:
         run: npm ci
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
-      - name: Build application
-        run: npm run build
+      - name: Build web service
+        run: npm run build --workspace=services/web
       - name: Run E2E tests
-        run: npm run test:e2e
-
+        run: npm run test:e2e --workspace=services/web
   deploy:
     needs: [lint, build, test, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -133,8 +132,8 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
-      - name: Build for production
-        run: npm run build
+      - name: Build web service for production
+        run: npm run build --workspace=services/web
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v20
         with:
