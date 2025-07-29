@@ -13,8 +13,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
-    "jsonwebtoken": "^9.0.2",
-    "@recipesearch/types": "workspace:*"
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
