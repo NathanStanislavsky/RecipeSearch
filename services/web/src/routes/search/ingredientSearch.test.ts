@@ -312,7 +312,7 @@ describe('addRating action', () => {
 
 		expect(result).toEqual({
 			message: 'Rating created',
-			recipe_id: 123456,
+			recipe_id: '123456',
 			rating: '5',
 			upserted: true
 		});
@@ -339,7 +339,7 @@ describe('addRating action', () => {
 
 		expect(result).toEqual({
 			message: 'Rating updated',
-			recipe_id: 123456,
+			recipe_id: '123456',
 			rating: '4',
 			upserted: false
 		});
