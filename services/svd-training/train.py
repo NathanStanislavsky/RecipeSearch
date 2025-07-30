@@ -180,8 +180,9 @@ class Train:
     def save_to_faiss(self, recipe_embeddings):
         print("--- Saving recipe embeddings to FAISS and uploading to GCS ---")
 
+        recipe_ids = list(recipe_embeddings.keys())
         recipe_embeddings_array = np.array(
-            list(recipe_embeddings.values()), dtype="float32"
+            [recipe_embeddings[r] for r in recipe_ids], dtype="float32"
         )
         D = recipe_embeddings_array.shape[1]
         M = 16
@@ -205,10 +206,19 @@ class Train:
 
             print(f"Successfully uploaded FAISS index to GCS bucket {self.bucket_name}")
 
+            np.save("/tmp/recipe_ids.npy", np.array(recipe_ids, dtype="<U36"))
+            blob = bucket.blob("recipe_ids.npy")
+            blob.upload_from_filename("/tmp/recipe_ids.npy", content_type="application/octet-stream")
+
+            print(f"Successfully uploaded recipe IDs to GCS bucket {self.bucket_name}")
+
+
         finally:
             if os.path.exists(temp_file.name):
                 os.remove(temp_file.name)
-                print("Temporary file cleaned up")
+            if os.path.exists("/tmp/recipe_ids.npy"):
+                os.remove("/tmp/recipe_ids.npy")
+            print("Temporary files cleaned up")
 
         print("--- Recipe embeddings saved to FAISS and uploaded to GCS ---")
 
