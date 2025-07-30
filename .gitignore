@@ -32,3 +32,4 @@ vite.config.ts.timestamp-*
 services/svd-training/gcs-credentials.json
 services/recommender/gcs-credentials.json
 services/svd-training/venv
+services/recommender/venv
