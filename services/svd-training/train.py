@@ -173,6 +173,7 @@ class Train:
         self.save_to_gcs("recipe_embeddings.json", recipe_embeddings_serializable)
 
         print("--- Pipeline Complete ---")
+        return internal_user_embeddings, recipe_embeddings_serializable
 
 
 if __name__ == "__main__":
@@ -192,4 +193,8 @@ if __name__ == "__main__":
         exit()
 
     trainer = Train()
-    trainer.run_pipeline(ratings_df)
+    internal_user_embeddings, recipe_embeddings_serializable = trainer.run_pipeline(
+        ratings_df
+    )
+
+    
