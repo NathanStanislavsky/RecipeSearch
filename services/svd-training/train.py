@@ -5,8 +5,9 @@ import json
 from dotenv import load_dotenv
 from google.cloud import storage
 from surprise import SVD, Dataset, Reader
-
+import faiss
 from extract import Extract
+import tempfile
 
 load_dotenv()
 DB_NAME = os.getenv("MONGODB_DATABASE")
@@ -90,7 +91,7 @@ class Train:
             except Exception as e:
                 print(f"Warning: Could not map inner user ID {inner_uid} - {e}")
                 continue
-        
+
         recipe_id_map = {}
         for inner_iid in range(trainset.n_items):
             try:
@@ -172,8 +173,44 @@ class Train:
 
         self.save_to_gcs("recipe_embeddings.json", recipe_embeddings_serializable)
 
+        self.save_to_faiss(recipe_embeds)
+
         print("--- Pipeline Complete ---")
-        return internal_user_embeddings, recipe_embeddings_serializable
+
+    def save_to_faiss(self, recipe_embeddings):
+        print("--- Saving recipe embeddings to FAISS and uploading to GCS ---")
+
+        recipe_embeddings_array = np.array(
+            list(recipe_embeddings.values()), dtype="float32"
+        )
+        D = recipe_embeddings_array.shape[1]
+        M = 16
+
+        index = faiss.IndexHNSWFlat(D, M)
+        index.hnsw.efConstruction = 200
+        index.hnsw.efSearch = 64
+
+        index.add(recipe_embeddings_array)
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".index") as temp_file:
+            faiss.write_index(index, temp_file.name)
+
+        try:
+            bucket = self.storage_client.bucket(self.bucket_name)
+            blob = bucket.blob("faiss_index.index")
+
+            blob.upload_from_filename(
+                temp_file.name, content_type="application/octet-stream"
+            )
+
+            print(f"Successfully uploaded FAISS index to GCS bucket {self.bucket_name}")
+
+        finally:
+            if os.path.exists(temp_file.name):
+                os.remove(temp_file.name)
+                print("Temporary file cleaned up")
+
+        print("--- Recipe embeddings saved to FAISS and uploaded to GCS ---")
 
 
 if __name__ == "__main__":
@@ -193,8 +230,4 @@ if __name__ == "__main__":
         exit()
 
     trainer = Train()
-    internal_user_embeddings, recipe_embeddings_serializable = trainer.run_pipeline(
-        ratings_df
-    )
-
-    
+    trainer.run_pipeline(ratings_df)
