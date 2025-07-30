@@ -30,4 +30,5 @@ vite.config.ts.timestamp-*
 *storybook.log
 
 services/svd-training/gcs-credentials.json
+services/recommender/gcs-credentials.json
 services/svd-training/venv
