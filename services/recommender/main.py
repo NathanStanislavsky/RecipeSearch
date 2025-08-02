@@ -5,11 +5,14 @@ from fastapi import FastAPI, HTTPException
 from google.cloud import storage
 from pydantic import BaseModel
 from typing import List
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-BUCKET_NAME = os.environ["GCS_BUCKET_NAME"]
-HNSW_INDEX_BLOB_NAME = os.environ.get("HNSW_INDEX_BLOB", "faiss_index.index")
-RECIPE_IDS_BLOB_NAME = os.environ.get("RECIPE_IDS_BLOB", "recipe_ids.npy")
+BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+HNSW_INDEX_BLOB_NAME = os.getenv("HNSW_INDEX_BLOB", "faiss_index.index")
+RECIPE_IDS_BLOB_NAME = os.getenv("RECIPE_IDS_BLOB", "recipe_ids.npy")
 
 app = FastAPI()
 storage_client = storage.Client()
