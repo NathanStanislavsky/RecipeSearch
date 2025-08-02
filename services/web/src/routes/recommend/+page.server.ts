@@ -1,6 +1,18 @@
 import type { PageServerLoad } from "./$types.js";
 import { Storage } from "@google-cloud/storage";
-import { GCS_BUCKET_NAME, RECOMMEND_URL } from "$env/static/private";
+import { GCS_BUCKET_NAME, RECOMMEND_URL, MONGODB_DATABASE, MONGODB_COLLECTION } from "$env/static/private";
+import { getMongoClient } from '$lib/server/mongo/index.js';
+import { ApiError } from '$utils/errors/AppError.js';
+
+interface TransformedRecipe {
+    id: number;
+    name: string;
+    minutes: number;
+    nutrition: string;
+    steps: string;
+    description: string;
+    ingredients: string;
+}
 
 async function getUserEmbedding(userId: string): Promise<number[] | null> {
     try {
@@ -11,6 +23,39 @@ async function getUserEmbedding(userId: string): Promise<number[] | null> {
     } catch (error) {
         console.error(`Error fetching user embedding for ${userId}:`, error);
         return null;
+    }
+}
+
+async function getRecipesByIds(recipe_ids: number[]): Promise<TransformedRecipe[]> {
+    const client = getMongoClient();
+
+    if (!client) {
+        throw new ApiError('MongoDB client not found', 500);
+    }
+
+    try {
+        const database = client.db(MONGODB_DATABASE);
+        const recipesCollection = database.collection(MONGODB_COLLECTION);
+
+        recipe_ids = recipe_ids.map(id => Number(id));
+
+        const recipes = await recipesCollection.find({
+            id: { $in: recipe_ids }
+        }).toArray();
+
+        const results: TransformedRecipe[] = recipes.map((recipe) => ({
+            id: recipe.id as number,
+            name: recipe.name as string,
+            minutes: recipe.minutes as number,
+            nutrition: recipe.nutrition as string,
+            steps: recipe.steps as string,
+            description: recipe.description as string,
+            ingredients: recipe.ingredients as string,
+        }));
+        return results;
+    } catch (error) {
+        console.error('Error fetching recipes by IDs:', error);
+        throw error;
     }
 }
 
@@ -41,13 +86,13 @@ export const load: PageServerLoad = async ({ locals }) => {
         });
         const data = await response.json();
 
+        const recommendations = await getRecipesByIds(data.recipe_ids);
 
-        console.log(data);
         return {
-            recommendations: data.recipe_ids
+            recommendations
         };
     } catch (error) {
-        console.error(error);
+        console.error('Error getting recommendations:', error);
         return {
             recommendations: []
         };
