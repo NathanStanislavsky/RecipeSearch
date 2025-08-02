@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+
+  web:
+    build:
+      context: ./services/web
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+
+  recommender:
+    build:
+      context: ./services/recommender
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
