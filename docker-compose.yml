@@ -10,6 +10,9 @@ services:
       - "5173:5173"
     environment:
       - RECOMMEND_URL=http://recommender:8080
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcs-credentials.json
+    volumes:
+      - ./services/web/gcs-credentials.json:/app/gcs-credentials.json:ro
     depends_on:
       - recommender
 
