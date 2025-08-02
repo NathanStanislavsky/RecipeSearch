@@ -17,28 +17,24 @@ storage_client = storage.Client()
 _index      : faiss.Index   = None
 _recipe_ids : np.ndarray    = None
 
-# ─── STARTUP ─────────────────────────────────────────────────────────────
-
 @app.on_event("startup")
 def load_faiss_and_data():
     global _index, _recipe_ids
 
     bucket = storage_client.bucket(BUCKET_NAME)
 
-    idx_local = "/tmp/faiss_index.index"
+    index_local = "/tmp/faiss_index.index"
     bucket.blob(HNSW_INDEX_BLOB_NAME) \
-          .download_to_filename(idx_local)
-    _index = faiss.read_index(idx_local)
+          .download_to_filename(index_local)
+    _index = faiss.read_index(index_local)
     _index.hnsw.efSearch = 64
 
-    ids_local = "/tmp/recipe_ids.npy"
+    recipe_ids_local = "/tmp/recipe_ids.npy"
     bucket.blob(RECIPE_IDS_BLOB_NAME) \
-          .download_to_filename(ids_local)
-    _recipe_ids = np.load(ids_local)
+          .download_to_filename(recipe_ids_local)
+    _recipe_ids = np.load(recipe_ids_local)
 
     print(f"Loaded FAISS index, {_recipe_ids.shape[0]} IDs")
-
-# ─── MODELS ───────────────────────────────────────────────────────────────────
 
 class UserEmbeddingRequest(BaseModel):
     user_embedding: List[float]
@@ -47,17 +43,15 @@ class RecommendResponse(BaseModel):
     recipe_ids: list[str]
     distances:  list[float]
 
-# ─── ENDPOINTS ───────────────────────────────────────────────────────────────
-
 @app.post("/recommend", response_model=RecommendResponse)
 def recommend(request: UserEmbeddingRequest, k: int = 20):
     user_embedding = request.user_embedding
     if len(user_embedding) != 100:
         raise HTTPException(400, f"User embedding must be exactly 100 dimensions, got {len(user_embedding)}")
     
-    user_vec = np.array(user_embedding, dtype=np.float32).reshape(1, -1)
+    user_vector = np.array(user_embedding, dtype=np.float32).reshape(1, -1)
 
-    distances, indices = _index.search(user_vec, k)
+    distances, indices = _index.search(user_vector, k)
     distances = distances[0].tolist()
     indices   = indices[0]
 
@@ -65,8 +59,6 @@ def recommend(request: UserEmbeddingRequest, k: int = 20):
 
     return RecommendResponse(recipe_ids=recipe_ids, distances=distances)
 
-# ─── HEALTH CHECK ──────────────────────────────────────────────────────────────
-
-@app.get("/healthz")
-def healthz():
+@app.get("/health")
+def health():
     return {"status": "ok"}
