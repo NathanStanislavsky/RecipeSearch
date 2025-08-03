@@ -5,6 +5,7 @@ import { Storage } from "@google-cloud/storage";
 import { GCS_BUCKET_NAME, RECOMMEND_URL, MONGODB_DATABASE, MONGODB_COLLECTION, MONGODB_REVIEWS_COLLECTION } from "$env/static/private";
 import { getMongoClient } from '$lib/server/mongo/index.js';
 import { ApiError, handleError } from '$utils/errors/AppError.js';
+import { GoogleAuth } from 'google-auth-library';
 
 interface TransformedRecipe {
     id: number;
@@ -92,16 +93,16 @@ export const load: PageServerLoad = async ({ locals }) => {
             };
         }
 
-        const response = await fetch(`${RECOMMEND_URL}/recommend`, {
+        const auth = new GoogleAuth();
+        const client = await auth.getIdTokenClient(RECOMMEND_URL);
+
+        const response = await client.request<{ recipe_ids: number[] }>({
+            url: `${RECOMMEND_URL}/recommend`,
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                user_embedding: user_embedding
-            })
-        });
-        const data = await response.json();
+            data: { user_embedding },
+            headers: { "Content-Type": "application/json" }
+          });
+        const data = response.data;
 
         const recommendations = await getRecipesByIds(data.recipe_ids, locals.user.id);
 
