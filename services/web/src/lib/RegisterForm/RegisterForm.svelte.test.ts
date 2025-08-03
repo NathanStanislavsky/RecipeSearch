@@ -2,7 +2,7 @@ import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import RegisterForm from '$lib/RegisterForm/RegisterForm.svelte';
 import { userEvent } from '@testing-library/user-event';
-import { TEST_USER } from '../../utils/test/testConstants.js';
+import { TEST_USER } from '../../utils/test/userTestUtils.js';
 
 // Type definitions for form enhancement
 interface EnhanceHandler {

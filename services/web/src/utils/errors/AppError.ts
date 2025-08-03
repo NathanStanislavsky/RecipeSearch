@@ -45,26 +45,6 @@ export class ApiError extends AppError {
 }
 
 /**
- * Error for not found resources
- */
-export class NotFoundError extends AppError {
-	constructor(message: string) {
-		super(message, 404, 'NOT_FOUND');
-		this.name = 'NotFoundError';
-	}
-}
-
-/**
- * Error for configuration/environment issues
- */
-export class ConfigError extends AppError {
-	constructor(message: string) {
-		super(message, 500, 'CONFIGURATION_ERROR');
-		this.name = 'ConfigError';
-	}
-}
-
-/**
  * Error response interface
  */
 export interface ErrorResponse {
@@ -75,61 +55,31 @@ export interface ErrorResponse {
 }
 
 /**
- * Creates a standardized error response
- */
-export function createErrorResponse(error: AppError): ErrorResponse {
-	return {
-		error: error.name,
-		message: error.message,
-		code: error.code,
-		status: error.status
-	};
-}
-
-/**
- * Logs errors in a standardized way
- */
-export function logError(error: unknown, context: string): void {
-	if (error instanceof AppError) {
-		console.error(`[${error.name}] ${context}:`, {
-			message: error.message,
-			code: error.code,
-			status: error.status
-		});
-	} else if (error instanceof Error) {
-		console.error(`[Error] ${context}:`, {
-			name: error.name,
-			message: error.message,
-			stack: error.stack
-		});
-	} else {
-		console.error(`[Unknown Error] ${context}:`, error);
-	}
-}
-
-/**
- * Converts any error to an AppError
- */
-export function toAppError(
-	error: unknown,
-	defaultMessage = 'An unexpected error occurred'
-): AppError {
-	if (error instanceof AppError) {
-		return error;
-	}
-
-	if (error instanceof Error) {
-		return new AppError(error.message);
-	}
-
-	return new AppError(defaultMessage);
-}
-
-/**
  * Creates a standardized error response from any error
  */
 export function handleError(error: unknown, context: string): ErrorResponse {
-	const appError = toAppError(error);
-	logError(appError, context);
-	return createErrorResponse(appError);
+	let appError: AppError;
+	
+	if (error instanceof AppError) {
+		appError = error;
+	} else if (error instanceof Error) {
+		appError = new AppError(error.message);
+	} else {
+		appError = new AppError('An unexpected error occurred');
+	}
+
+	// Log the error
+	console.error(`[${appError.name}] ${context}:`, {
+		message: appError.message,
+		code: appError.code,
+		status: appError.status
+	});
+
+	// Return standardized response
+	return {
+		error: appError.name,
+		message: appError.message,
+		code: appError.code,
+		status: appError.status
+	};
 }

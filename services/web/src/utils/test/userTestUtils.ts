@@ -1,6 +1,13 @@
 import bcrypt from 'bcryptjs';
-import type { User } from '../../types/user.ts';
-import { TEST_USER } from './testConstants.js';
+import type { User } from '../../types/user.js';
+
+export const TEST_USER = {
+	email: 'test@example.com',
+	correctPassword: 'correct-password',
+	wrongPassword: 'wrong-password',
+	name: 'Test User',
+	userId: 1
+} as const;
 
 export async function createFakeUser(password = TEST_USER.correctPassword): Promise<User> {
 	const passwordHash = await bcrypt.hash(password, 10);

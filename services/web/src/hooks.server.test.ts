@@ -3,7 +3,7 @@ import type { RequestEvent, Cookies } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '$env/static/private';
 import { handle } from './hooks.server.js';
-import type { UserPayload } from './types/user.ts';
+import type { UserPayload } from './types/user.js';
 
 interface Locals {
 	user: { id: number; name: string; email: string };
@@ -65,7 +65,7 @@ describe('hooks.server', () => {
 			const verifySpy = vi.spyOn(jwt, 'verify').mockImplementation(
 				() =>
 					({
-						payload: validPayload
+						user: validPayload
 					}) as jwt.JwtPayload
 			);
 

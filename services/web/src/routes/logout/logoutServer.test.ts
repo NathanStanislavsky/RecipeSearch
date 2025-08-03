@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { actions } from './+page.server.js';
 import { TestHelper } from '../../utils/test/testHelper.ts';
-import { TEST_USER } from '../../utils/test/testConstants.js';
+import { TEST_USER } from '../../utils/test/userTestUtils.js';
 import { createFakeUser } from '../../utils/test/userTestUtils.js';
-import type { User } from '../../types/user.ts';
+import type { User } from '../../types/user.js';
 
 type LogoutRequestEvent = RequestEvent & {
 	route: { id: '/logout' };

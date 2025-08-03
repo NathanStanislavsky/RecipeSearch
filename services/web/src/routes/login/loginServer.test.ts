@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { actions } from './+page.server.js';
-import * as selectModule from '../../queries/user/select.js';
+import { UserService } from '../../data/services/UserService.js';
 import { TestHelper } from '../../utils/test/testHelper.js';
 import { createFakeUser } from '../../utils/test/userTestUtils.js';
-import { TEST_USER } from '../../utils/test/testConstants.js';
+import { TEST_USER } from '../../utils/test/userTestUtils.js';
 
 type LoginRequestEvent = RequestEvent & {
 	route: { id: '/login' };
@@ -42,7 +42,7 @@ describe('/login endpoint', () => {
 
 	it('returns success on successful login', async () => {
 		const fakeUser = await createFakeUser();
-		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
+		vi.spyOn(UserService.prototype, 'authenticateUser').mockResolvedValue(fakeUser);
 
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
@@ -65,7 +65,7 @@ describe('/login endpoint', () => {
 	});
 
 	it('returns error if user not found', async () => {
-		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(null);
+		vi.spyOn(UserService.prototype, 'authenticateUser').mockResolvedValue(null);
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
@@ -77,8 +77,7 @@ describe('/login endpoint', () => {
 	});
 
 	it('returns error if password is incorrect', async () => {
-		const fakeUser = await createFakeUser();
-		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
+		vi.spyOn(UserService.prototype, 'authenticateUser').mockResolvedValue(null);
 
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.wrongPassword);
 		const event = createLoginRequestEvent(request);
@@ -91,7 +90,7 @@ describe('/login endpoint', () => {
 	});
 
 	it('handles database errors gracefully', async () => {
-		vi.spyOn(selectModule, 'getUserByEmail').mockRejectedValueOnce(new Error('Database error'));
+		vi.spyOn(UserService.prototype, 'authenticateUser').mockRejectedValueOnce(new Error('Database error'));
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 
@@ -104,7 +103,7 @@ describe('/login endpoint', () => {
 
 	it('sets auth cookie on successful login', async () => {
 		const fakeUser = await createFakeUser();
-		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
+		vi.spyOn(UserService.prototype, 'authenticateUser').mockResolvedValue(fakeUser);
 
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
@@ -134,7 +133,7 @@ describe('/login endpoint', () => {
 
 	it('handles concurrent login attempts', async () => {
 		const fakeUser = await createFakeUser();
-		vi.spyOn(selectModule, 'getUserByEmail').mockResolvedValue(fakeUser);
+		vi.spyOn(UserService.prototype, 'authenticateUser').mockResolvedValue(fakeUser);
 
 		const request1 = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const request2 = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
