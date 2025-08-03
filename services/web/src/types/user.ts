@@ -1,4 +1,3 @@
-// Re-export types from the new data layer for backward compatibility
 export type {
 	User,
 	CreateUserData,
