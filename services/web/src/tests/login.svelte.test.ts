@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/svelte';
 import { userEvent } from '@testing-library/user-event';
 import LoginForm from '$lib/LoginForm/LoginForm.svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TEST_USER } from '../utils/test/testConstants.js';
+import { TEST_USER } from '../utils/test/userTestUtils.js';
 
 type EnhanceHandler = (input: {
 	formData: FormData;

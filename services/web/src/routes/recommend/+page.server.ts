@@ -2,27 +2,12 @@ import type { PageServerLoad } from './$types.js';
 import type { Actions } from '@sveltejs/kit';
 import { fail } from '@sveltejs/kit';
 import { Storage } from '@google-cloud/storage';
-import {
-	GCS_BUCKET_NAME,
-	RECOMMEND_URL,
-	MONGODB_DATABASE,
-	MONGODB_COLLECTION,
-	MONGODB_REVIEWS_COLLECTION
-} from '$env/static/private';
-import { getMongoClient } from '$lib/server/mongo/index.js';
-import { ApiError, handleError } from '$utils/errors/AppError.js';
+import { GCS_BUCKET_NAME, RECOMMEND_URL } from '$env/static/private';
+import { handleError } from '$utils/errors/AppError.js';
 import { GoogleAuth } from 'google-auth-library';
+import { RecipeService } from '../../data/services/RecipeService.js';
 
-interface TransformedRecipe {
-	id: number;
-	name: string;
-	minutes: number;
-	nutrition: string;
-	steps: string;
-	description: string;
-	ingredients: string;
-	userRating?: number;
-}
+const recipeService = new RecipeService();
 
 // Helper to load the JSON credentials from the base64 environment variable
 function loadServiceAccountCredentials() {
@@ -51,9 +36,9 @@ function getAuthClient() {
 function getStorageClient() {
 	const creds = loadServiceAccountCredentials();
 	if (creds) {
-		return new Storage({ 
-			credentials: creds, 
-			projectId: creds.project_id 
+		return new Storage({
+			credentials: creds,
+			projectId: creds.project_id
 		});
 	}
 	return new Storage();
@@ -72,47 +57,7 @@ async function getUserEmbedding(userId: string): Promise<number[] | null> {
 	}
 }
 
-async function getRecipesByIds(
-	recipe_ids: number[],
-	user_id?: number
-): Promise<TransformedRecipe[]> {
-	const client = getMongoClient();
-	if (!client) {
-		throw new ApiError('MongoDB client not found', 500);
-	}
-	try {
-		const database = client.db(MONGODB_DATABASE);
-		const recipesCollection = database.collection(MONGODB_COLLECTION);
-
-		recipe_ids = recipe_ids.map((id) => Number(id));
-		const recipes = await recipesCollection.find({ id: { $in: recipe_ids } }).toArray();
-
-		let userRatings: Map<number, number> = new Map();
-		if (user_id) {
-			const reviewsCollection = database.collection(MONGODB_REVIEWS_COLLECTION);
-			const ratingPipeline = [
-				{ $match: { user_id: String(user_id), recipe_id: { $exists: true } } },
-				{ $project: { recipe_id: 1, rating: 1 } }
-			];
-			const ratings = await reviewsCollection.aggregate(ratingPipeline).toArray();
-			userRatings = new Map(ratings.map((r) => [Number(r.recipe_id), r.rating]));
-		}
-
-		return recipes.map((recipe) => ({
-			id: recipe.id as number,
-			name: recipe.name as string,
-			minutes: recipe.minutes as number,
-			nutrition: recipe.nutrition as string,
-			steps: recipe.steps as string,
-			description: recipe.description as string,
-			ingredients: recipe.ingredients as string,
-			userRating: userRatings.get(recipe.id as number)
-		}));
-	} catch (error) {
-		console.error('Error fetching recipes by IDs:', error);
-		throw error;
-	}
-}
+// This function is now handled by RecipeService.getRecipesByIdsWithUserRatings
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -134,7 +79,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		});
 		const data = response.data;
 
-		const recommendations = await getRecipesByIds(data.recipe_ids, locals.user.id);
+		const recommendations = await recipeService.getRecipesByIdsWithUserRatings(
+			data.recipe_ids,
+			locals.user.id
+		);
 		return { recommendations };
 	} catch (error) {
 		console.error('Error getting recommendations:', error);
@@ -148,29 +96,23 @@ export const actions: Actions = {
 			const formData = await request.formData();
 			const recipe_id = formData.get('recipe_id')?.toString();
 			const rating = formData.get('rating');
+
 			if (!recipe_id || !rating) {
-				throw new ApiError('Recipe ID and rating are required', 400);
+				return fail(400, { message: 'Recipe ID and rating are required' });
 			}
-			const user_id = locals.user?.id?.toString();
+
+			const user_id = locals.user?.id;
 			if (!user_id) {
-				throw new ApiError('User not authenticated', 401);
+				return fail(401, { message: 'User not authenticated' });
 			}
-			const client = getMongoClient();
-			if (!client) {
-				throw new ApiError('Failed to connect to MongoDB', 500);
-			}
-			const db = client.db(MONGODB_DATABASE);
-			const collection = db.collection(MONGODB_REVIEWS_COLLECTION);
-			const result = await collection.updateOne(
-				{ recipe_id, user_id },
-				{ $set: { rating: Number(rating) } },
-				{ upsert: true }
-			);
+
+			const result = await recipeService.rateRecipe(user_id, Number(recipe_id), Number(rating));
+
 			return {
-				message: result.upsertedCount > 0 ? 'Rating created' : 'Rating updated',
+				message: result.upserted ? 'Rating created' : 'Rating updated',
 				recipe_id,
-				rating,
-				upserted: result.upsertedCount > 0
+				rating: result.rating,
+				upserted: result.upserted
 			};
 		} catch (error) {
 			const errorResponse = handleError(error, 'Add Rating');

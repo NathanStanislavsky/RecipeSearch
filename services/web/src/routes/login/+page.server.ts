@@ -1,10 +1,12 @@
 import type { Actions } from './$types.js';
-import { getUserByEmail } from '../../queries/user/select.js';
 import type { RequestEvent } from '@sveltejs/kit';
 import { AuthService } from '../../utils/auth/authService.js';
 import { fail, redirect } from '@sveltejs/kit';
 import { JWT_SECRET } from '$env/static/private';
 import { handleError } from '$utils/errors/AppError.js';
+import { UserService } from '../../data/services/UserService.js';
+
+const userService = new UserService();
 
 export const actions: Actions = {
 	default: async ({ request, cookies }: RequestEvent) => {
@@ -22,20 +24,15 @@ export const actions: Actions = {
 				return fail(400, { message: 'Email and password required' });
 			}
 
-			// Look up the user by email.
-			const user = await getUserByEmail(email);
+			// Authenticate user
+			const user = await userService.authenticateUser(email, password);
 			if (!user) {
 				return fail(401, { message: 'Invalid credentials' });
 			}
 
-			// Validate credentials.
-			const isValid = await authService.validateCredentials(user, password);
-			if (!isValid) {
-				return fail(401, { message: 'Invalid credentials' });
-			}
-
 			// Create and set JWT token.
-			const token = authService.createJwtToken(user);
+			const userPayload = userService.createUserPayload(user);
+			const token = authService.createJwtToken(userPayload);
 			authService.setAuthCookie(cookies, token);
 
 			// Redirect to search page on successful login.

@@ -1,5 +1,4 @@
 import { test, expect, Page } from '@playwright/test';
-import { pool } from '../src/lib/server/db/index.js';
 import { registerUser, loginUser } from '../src/utils/test/authenticationUtils.js';
 import { SearchHelper } from '../src/utils/test/searchHelper.js';
 import type { TransformedRecipe } from '../src/types/recipe.js';
@@ -11,12 +10,6 @@ test.describe('Complete user journey', () => {
 	test.beforeEach(async ({ page }) => {
 		uniqueEmail = `test-${Date.now()}@example.com`;
 		searchHelper = new SearchHelper(page);
-	});
-
-	test.afterEach(async () => {
-		if (uniqueEmail) {
-			await pool.query('DELETE FROM users WHERE email = $1', [uniqueEmail]);
-		}
 	});
 
 	async function completeRegistrationAndLogin(page: Page) {
@@ -54,7 +47,6 @@ test.describe('Complete user journey', () => {
 			description:
 				"one of my favorites. i love it when it's served right away over ice. just make sure nto to over power the carrot juice with the beet. try to use cold veggies it is a big difference in taste if you juice room temp veggies.",
 			ingredients: '["carrots", "beet"]',
-			score: 0.95,
 			userRating: 4
 		};
 
