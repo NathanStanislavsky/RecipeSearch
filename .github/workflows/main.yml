@@ -44,6 +44,8 @@ jobs:
       MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
       MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
       MONGODB_REVIEWS_COLLECTION: ${{ secrets.MONGODB_REVIEWS_COLLECTION }}
+      GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+      RECOMMEND_URL: ${{ secrets.RECOMMEND_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -69,6 +71,8 @@ jobs:
       MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
       MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
       MONGODB_REVIEWS_COLLECTION: ${{ secrets.MONGODB_REVIEWS_COLLECTION }}
+      GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+      RECOMMEND_URL: ${{ secrets.RECOMMEND_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -94,6 +98,8 @@ jobs:
       MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
       MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
       MONGODB_REVIEWS_COLLECTION: ${{ secrets.MONGODB_REVIEWS_COLLECTION }}
+      GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+      RECOMMEND_URL: ${{ secrets.RECOMMEND_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -123,6 +129,8 @@ jobs:
       MONGODB_COLLECTION: ${{ secrets.MONGODB_COLLECTION }}
       MONGODB_SEARCH_INDEX: ${{ secrets.MONGODB_SEARCH_INDEX }}
       MONGODB_REVIEWS_COLLECTION: ${{ secrets.MONGODB_REVIEWS_COLLECTION }}
+      GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+      RECOMMEND_URL: ${{ secrets.RECOMMEND_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js

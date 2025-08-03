@@ -31,6 +31,14 @@
 				</button>
 			</a>
 		{/if}
+		{#if user && currentPath !== '/recommend'}
+			<button
+				class="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+				onclick={() => goto('/recommend')}
+			>
+				Recommend
+			</button>
+		{/if}
 	</div>
 
 	<!-- Center Column -->

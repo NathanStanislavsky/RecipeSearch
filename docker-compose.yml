@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./services/web
+      dockerfile: Dockerfile
+    ports:
+      - '5173:5173'
+    environment:
+      - RECOMMEND_URL=http://recommender:8080
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcs-credentials.json
+    volumes:
+      - ./services/web/gcs-credentials.json:/app/gcs-credentials.json:ro
+    depends_on:
+      - recommender
+
+  recommender:
+    build:
+      context: ./services/recommender
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
