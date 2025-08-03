@@ -34,4 +34,4 @@ export function getMongoClient(): MongoClient | null {
 	return client;
 }
 
-connectToMongo().catch(console.error);
+connectToMongo().catch(console.error); 
