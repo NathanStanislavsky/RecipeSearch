@@ -23,7 +23,7 @@
 			document.removeEventListener('keydown', handleKeydown);
 		};
 	});
-	
+
 	$: if (typeof document !== 'undefined') {
 		if (isOpen) {
 			document.body.style.overflow = 'hidden';
