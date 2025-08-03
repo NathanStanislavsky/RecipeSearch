@@ -1,8 +1,10 @@
 import type { PageServerLoad } from "./$types.js";
+import type { Actions } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { Storage } from "@google-cloud/storage";
-import { GCS_BUCKET_NAME, RECOMMEND_URL, MONGODB_DATABASE, MONGODB_COLLECTION } from "$env/static/private";
+import { GCS_BUCKET_NAME, RECOMMEND_URL, MONGODB_DATABASE, MONGODB_COLLECTION, MONGODB_REVIEWS_COLLECTION } from "$env/static/private";
 import { getMongoClient } from '$lib/server/mongo/index.js';
-import { ApiError } from '$utils/errors/AppError.js';
+import { ApiError, handleError } from '$utils/errors/AppError.js';
 
 interface TransformedRecipe {
     id: number;
@@ -12,6 +14,7 @@ interface TransformedRecipe {
     steps: string;
     description: string;
     ingredients: string;
+    userRating?: number;
 }
 
 async function getUserEmbedding(userId: string): Promise<number[] | null> {
@@ -26,7 +29,7 @@ async function getUserEmbedding(userId: string): Promise<number[] | null> {
     }
 }
 
-async function getRecipesByIds(recipe_ids: number[]): Promise<TransformedRecipe[]> {
+async function getRecipesByIds(recipe_ids: number[], user_id?: number): Promise<TransformedRecipe[]> {
     const client = getMongoClient();
 
     if (!client) {
@@ -43,6 +46,19 @@ async function getRecipesByIds(recipe_ids: number[]): Promise<TransformedRecipe[
             id: { $in: recipe_ids }
         }).toArray();
 
+        // Fetch user ratings if user is authenticated
+        let userRatings: Map<number, number> = new Map();
+        if (user_id) {
+            const reviewsCollection = database.collection(MONGODB_REVIEWS_COLLECTION);
+            const ratingPipeline = [
+                { $match: { user_id: String(user_id), recipe_id: { $exists: true } } },
+                { $project: { recipe_id: 1, rating: 1 } }
+            ];
+
+            const ratings = await reviewsCollection.aggregate(ratingPipeline).toArray();
+            userRatings = new Map(ratings.map((r) => [Number(r.recipe_id), r.rating]));
+        }
+
         const results: TransformedRecipe[] = recipes.map((recipe) => ({
             id: recipe.id as number,
             name: recipe.name as string,
@@ -51,6 +67,7 @@ async function getRecipesByIds(recipe_ids: number[]): Promise<TransformedRecipe[
             steps: recipe.steps as string,
             description: recipe.description as string,
             ingredients: recipe.ingredients as string,
+            userRating: userRatings.get(recipe.id as number)
         }));
         return results;
     } catch (error) {
@@ -86,7 +103,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         });
         const data = await response.json();
 
-        const recommendations = await getRecipesByIds(data.recipe_ids);
+        const recommendations = await getRecipesByIds(data.recipe_ids, locals.user.id);
 
         return {
             recommendations
@@ -97,4 +114,48 @@ export const load: PageServerLoad = async ({ locals }) => {
             recommendations: []
         };
     }
+};
+
+export const actions: Actions = {
+	addRating: async ({ request, locals }) => {
+		try {
+			const formData = await request.formData();
+			const recipe_id = formData.get('recipe_id')?.toString();
+			const rating = formData.get('rating');
+
+			if (!recipe_id || !rating) {
+				throw new ApiError('Recipe ID and rating are required', 400);
+			}
+
+			const user_id = locals.user?.id?.toString();
+
+			if (!user_id) {
+				throw new ApiError('User not authenticated', 401);
+			}
+
+			const client = getMongoClient();
+			if (!client) {
+				throw new ApiError('Failed to connect to MongoDB', 500);
+			}
+
+			const db = client.db(MONGODB_DATABASE);
+			const collection = db.collection(MONGODB_REVIEWS_COLLECTION);
+
+			const result = await collection.updateOne(
+				{ recipe_id, user_id },
+				{ $set: { rating: Number(rating) } },
+				{ upsert: true }
+			);
+
+			return {
+				message: result.upsertedCount > 0 ? 'Rating created' : 'Rating updated',
+				recipe_id,
+				rating,
+				upserted: result.upsertedCount > 0
+			};
+		} catch (error) {
+			const errorResponse = handleError(error, 'Add Rating');
+			return fail(errorResponse.status, { message: errorResponse.message });
+		}
+	}
 };
