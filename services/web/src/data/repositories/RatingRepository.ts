@@ -53,7 +53,11 @@ export class RatingRepository {
 	/**
 	 * Create or update a rating for a recipe
 	 */
-	async upsertRating(userId: number, recipeId: number, rating: number): Promise<{
+	async upsertRating(
+		userId: number,
+		recipeId: number,
+		rating: number
+	): Promise<{
 		upserted: boolean;
 		rating: number;
 	}> {
@@ -143,7 +147,7 @@ export class RatingRepository {
 			];
 
 			const distribution = await collection.aggregate(pipeline).toArray();
-			
+
 			if (distribution.length === 0) return null;
 
 			const ratingCounts: { [rating: number]: number } = {};
@@ -168,4 +172,4 @@ export class RatingRepository {
 			throw error;
 		}
 	}
-} 
+}

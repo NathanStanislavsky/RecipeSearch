@@ -59,7 +59,7 @@ export interface ErrorResponse {
  */
 export function handleError(error: unknown, context: string): ErrorResponse {
 	let appError: AppError;
-	
+
 	if (error instanceof AppError) {
 		appError = error;
 	} else if (error instanceof Error) {

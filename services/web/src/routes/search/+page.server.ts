@@ -14,11 +14,9 @@ export const actions: Actions = {
 				return fail(400, { message: 'Search query is required' });
 			}
 
-			const result = await recipeService.searchRecipesWithUserRatings(
-				query,
-				locals.user?.id,
-				{ limit: 50 }
-			);
+			const result = await recipeService.searchRecipesWithUserRatings(query, locals.user?.id, {
+				limit: 50
+			});
 
 			return {
 				results: result.recipes,
@@ -45,11 +43,7 @@ export const actions: Actions = {
 				return fail(401, { message: 'User not authenticated' });
 			}
 
-			const result = await recipeService.rateRecipe(
-				user_id,
-				Number(recipe_id),
-				Number(rating)
-			);
+			const result = await recipeService.rateRecipe(user_id, Number(recipe_id), Number(rating));
 
 			return {
 				message: result.upserted ? 'Rating created' : 'Rating updated',

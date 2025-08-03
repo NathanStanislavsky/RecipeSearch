@@ -51,4 +51,4 @@ export interface RecipeSearchResult {
 	total: number;
 	query: string;
 	hasMore: boolean;
-} 
+}

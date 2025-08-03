@@ -22,8 +22,5 @@ export declare class TestHelper {
 	 * @param options - Additional options for the request event
 	 * @returns A mock RequestEvent
 	 */
-	static createMockRequestEvent(
-		url?: string,
-		options?: MockRequestEventOptions
-	): RequestEvent;
+	static createMockRequestEvent(url?: string, options?: MockRequestEventOptions): RequestEvent;
 }

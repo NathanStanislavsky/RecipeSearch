@@ -6,7 +6,7 @@ import type { TransformedRecipe } from '../../data/models/Recipe.js';
 vi.mock('../../data/services/RecipeService.js', () => {
 	const mockSearchRecipesWithUserRatings = vi.fn();
 	const mockRateRecipe = vi.fn();
-	
+
 	return {
 		RecipeService: vi.fn().mockImplementation(() => ({
 			searchRecipesWithUserRatings: mockSearchRecipesWithUserRatings,
@@ -22,14 +22,18 @@ let mockRateRecipe: ReturnType<typeof vi.fn>;
 
 beforeAll(async () => {
 	const module = await import('../../data/services/RecipeService.js');
-	mockSearchRecipesWithUserRatings = (module as typeof module & {
-		__mockSearchRecipesWithUserRatings: ReturnType<typeof vi.fn>;
-		__mockRateRecipe: ReturnType<typeof vi.fn>;
-	}).__mockSearchRecipesWithUserRatings;
-	mockRateRecipe = (module as typeof module & {
-		__mockSearchRecipesWithUserRatings: ReturnType<typeof vi.fn>;
-		__mockRateRecipe: ReturnType<typeof vi.fn>;
-	}).__mockRateRecipe;
+	mockSearchRecipesWithUserRatings = (
+		module as typeof module & {
+			__mockSearchRecipesWithUserRatings: ReturnType<typeof vi.fn>;
+			__mockRateRecipe: ReturnType<typeof vi.fn>;
+		}
+	).__mockSearchRecipesWithUserRatings;
+	mockRateRecipe = (
+		module as typeof module & {
+			__mockSearchRecipesWithUserRatings: ReturnType<typeof vi.fn>;
+			__mockRateRecipe: ReturnType<typeof vi.fn>;
+		}
+	).__mockRateRecipe;
 });
 
 vi.mock('$utils/errors/AppError.js', () => ({
@@ -122,11 +126,9 @@ describe('Ingredient Search API', () => {
 		expect(secondRecipe.minutes).toBe(30);
 		expect(secondRecipe.ingredients).toBe('pasta, eggs, bacon, cheese, black pepper');
 
-		expect(mockSearchRecipesWithUserRatings).toHaveBeenCalledWith(
-			'chicken',
-			undefined,
-			{ limit: 50 }
-		);
+		expect(mockSearchRecipesWithUserRatings).toHaveBeenCalledWith('chicken', undefined, {
+			limit: 50
+		});
 	});
 
 	it('should return 400 error when ingredients query is missing', async () => {
@@ -200,9 +202,7 @@ describe('Ingredient Search API', () => {
 	});
 
 	it('should handle service errors gracefully', async () => {
-		mockSearchRecipesWithUserRatings.mockRejectedValue(
-			new Error('Database connection failed')
-		);
+		mockSearchRecipesWithUserRatings.mockRejectedValue(new Error('Database connection failed'));
 
 		const formData = new FormData();
 		formData.append('ingredients', 'chicken');
@@ -344,9 +344,7 @@ describe('addRating action', () => {
 	});
 
 	it('should handle service errors during rating submission', async () => {
-		mockRateRecipe.mockRejectedValue(
-			new Error('Update failed')
-		);
+		mockRateRecipe.mockRejectedValue(new Error('Update failed'));
 
 		const formData = new FormData();
 		formData.append('recipe_id', '123456');

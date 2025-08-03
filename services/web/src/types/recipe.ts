@@ -5,4 +5,4 @@ export type {
 	RecipeRecommendation,
 	RecipeRating,
 	RecipeSearchResult
-} from '../data/models/Recipe.js'; 
+} from '../data/models/Recipe.js';

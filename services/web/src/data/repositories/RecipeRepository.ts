@@ -1,9 +1,5 @@
 import { getMongoClient } from '../connections/mongodb.js';
-import {
-	MONGODB_DATABASE,
-	MONGODB_COLLECTION,
-	MONGODB_SEARCH_INDEX
-} from '$env/static/private';
+import { MONGODB_DATABASE, MONGODB_COLLECTION, MONGODB_SEARCH_INDEX } from '$env/static/private';
 import type { TransformedRecipe, RecipeSearchOptions } from '../models/Recipe.js';
 import { ApiError } from '$utils/errors/AppError.js';
 
@@ -137,4 +133,4 @@ export class RecipeRepository {
 			throw error;
 		}
 	}
-} 
+}

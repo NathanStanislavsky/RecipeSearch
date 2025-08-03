@@ -6,4 +6,4 @@ export type {
 	JWTPayload,
 	RegisterPayload,
 	LoginPayload
-} from '../data/models/User.js'; 
+} from '../data/models/User.js';

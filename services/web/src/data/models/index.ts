@@ -17,4 +17,4 @@ export type {
 	RecipeRecommendation,
 	RecipeRating,
 	RecipeSearchResult
-} from './Recipe.js'; 
+} from './Recipe.js';

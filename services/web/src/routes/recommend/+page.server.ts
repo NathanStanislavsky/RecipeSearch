@@ -2,10 +2,7 @@ import type { PageServerLoad } from './$types.js';
 import type { Actions } from '@sveltejs/kit';
 import { fail } from '@sveltejs/kit';
 import { Storage } from '@google-cloud/storage';
-import {
-	GCS_BUCKET_NAME,
-	RECOMMEND_URL
-} from '$env/static/private';
+import { GCS_BUCKET_NAME, RECOMMEND_URL } from '$env/static/private';
 import { handleError } from '$utils/errors/AppError.js';
 import { GoogleAuth } from 'google-auth-library';
 import { RecipeService } from '../../data/services/RecipeService.js';
@@ -39,9 +36,9 @@ function getAuthClient() {
 function getStorageClient() {
 	const creds = loadServiceAccountCredentials();
 	if (creds) {
-		return new Storage({ 
-			credentials: creds, 
-			projectId: creds.project_id 
+		return new Storage({
+			credentials: creds,
+			projectId: creds.project_id
 		});
 	}
 	return new Storage();
@@ -109,11 +106,7 @@ export const actions: Actions = {
 				return fail(401, { message: 'User not authenticated' });
 			}
 
-			const result = await recipeService.rateRecipe(
-				user_id,
-				Number(recipe_id),
-				Number(rating)
-			);
+			const result = await recipeService.rateRecipe(user_id, Number(recipe_id), Number(rating));
 
 			return {
 				message: result.upserted ? 'Rating created' : 'Rating updated',

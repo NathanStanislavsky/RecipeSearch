@@ -4,4 +4,4 @@ export { TestHelper } from './test/testHelper.js';
 export { TEST_USER, createFakeUser } from './test/userTestUtils.js';
 export { createFormDataRequest } from './test/createTestRequestUtils.js';
 export { SearchHelper } from './test/searchHelper.js';
-export { registerUser, loginUser } from './test/authenticationUtils.js'; 
+export { registerUser, loginUser } from './test/authenticationUtils.js';

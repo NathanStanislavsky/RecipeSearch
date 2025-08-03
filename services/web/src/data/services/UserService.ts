@@ -28,7 +28,7 @@ export class UserService {
 			password: hashedPassword
 		});
 
-		return user
+		return user;
 	}
 
 	/**
@@ -91,7 +91,7 @@ export class UserService {
 		}
 
 		const user = await this.userRepo.updateProfile(userId, updates);
-		
+
 		return user;
 	}
 
@@ -167,4 +167,4 @@ export class UserService {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		return emailRegex.test(email);
 	}
-} 
+}

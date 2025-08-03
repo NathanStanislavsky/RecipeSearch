@@ -90,7 +90,9 @@ describe('/login endpoint', () => {
 	});
 
 	it('handles database errors gracefully', async () => {
-		vi.spyOn(UserService.prototype, 'authenticateUser').mockRejectedValueOnce(new Error('Database error'));
+		vi.spyOn(UserService.prototype, 'authenticateUser').mockRejectedValueOnce(
+			new Error('Database error')
+		);
 		const request = createLoginRequest(TEST_USER.email, TEST_USER.correctPassword);
 		const event = createLoginRequestEvent(request);
 

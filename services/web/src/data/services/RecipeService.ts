@@ -35,9 +35,9 @@ export class RecipeService {
 		let enrichedRecipes = recipes;
 		if (userId) {
 			const userRatings = await this.ratingRepo.getUserRatings(userId);
-			
+
 			// Merge ratings with recipes
-			enrichedRecipes = recipes.map(recipe => ({
+			enrichedRecipes = recipes.map((recipe) => ({
 				...recipe,
 				userRating: userRatings.get(recipe.id)
 			}));
@@ -85,9 +85,9 @@ export class RecipeService {
 		// Get user ratings if user is provided
 		if (userId) {
 			const userRatings = await this.ratingRepo.getUserRatings(userId);
-			
+
 			// Merge ratings with recipes
-			return recipes.map(recipe => ({
+			return recipes.map((recipe) => ({
 				...recipe,
 				userRating: userRatings.get(recipe.id)
 			}));
@@ -162,9 +162,9 @@ export class RecipeService {
 		const recipes = await this.recipeRepo.findByIds(ratedRecipeIds);
 
 		// Add user ratings
-		return recipes.map(recipe => ({
+		return recipes.map((recipe) => ({
 			...recipe,
 			userRating: userRatings.get(recipe.id)
 		}));
 	}
-} 
+}

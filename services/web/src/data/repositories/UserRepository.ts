@@ -32,16 +32,15 @@ export class UserRepository {
 	 * Update user password
 	 */
 	async updatePassword(userId: number, hashedPassword: string): Promise<void> {
-		await postgres.update(users)
-			.set({ password: hashedPassword })
-			.where(eq(users.id, userId));
+		await postgres.update(users).set({ password: hashedPassword }).where(eq(users.id, userId));
 	}
 
 	/**
 	 * Update user profile information
 	 */
 	async updateProfile(userId: number, updates: { name?: string; email?: string }): Promise<User> {
-		const result = await postgres.update(users)
+		const result = await postgres
+			.update(users)
 			.set(updates)
 			.where(eq(users.id, userId))
 			.returning();
@@ -59,10 +58,11 @@ export class UserRepository {
 	 * Check if a user exists by email
 	 */
 	async existsByEmail(email: string): Promise<boolean> {
-		const result = await postgres.select({ id: users.id })
+		const result = await postgres
+			.select({ id: users.id })
 			.from(users)
 			.where(eq(users.email, email))
 			.limit(1);
 		return result.length > 0;
 	}
-} 
+}
