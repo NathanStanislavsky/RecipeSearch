@@ -24,26 +24,45 @@ interface TransformedRecipe {
 	userRating?: number;
 }
 
-function getAuthClient() {
+// Helper to load the JSON credentials from the base64 environment variable
+function loadServiceAccountCredentials() {
 	const b64 = process.env.SERVICE_ACCOUNT_KEY;
-	if (b64) {
-		try {
-			const jsonKey = Buffer.from(b64, 'base64').toString('utf8');
-			const creds = JSON.parse(jsonKey);
-			return new GoogleAuth({
-				credentials: creds,
-				clientOptions: { subject: creds.client_email }
-			});
-		} catch (e) {
-			console.error('Failed to parse SERVICE_ACCOUNT_KEY:', e);
-		}
+	if (!b64) return null;
+	try {
+		const jsonKey = Buffer.from(b64, 'base64').toString('utf8');
+		return JSON.parse(jsonKey);
+	} catch (e) {
+		console.error('Failed to parse SERVICE_ACCOUNT_KEY:', e);
+		return null;
+	}
+}
+
+function getAuthClient() {
+	const creds = loadServiceAccountCredentials();
+	if (creds) {
+		return new GoogleAuth({
+			credentials: creds,
+			clientOptions: { subject: creds.client_email }
+		});
 	}
 	return new GoogleAuth();
 }
 
+function getStorageClient() {
+	const creds = loadServiceAccountCredentials();
+	if (creds) {
+		return new Storage({ 
+			credentials: creds, 
+			projectId: creds.project_id 
+		});
+	}
+	return new Storage();
+}
+
 async function getUserEmbedding(userId: string): Promise<number[] | null> {
 	try {
-		const bucket = new Storage().bucket(GCS_BUCKET_NAME);
+		const storage = getStorageClient();
+		const bucket = storage.bucket(GCS_BUCKET_NAME);
 		const userFileBlob = bucket.file(`user_embeddings/${userId}.json`);
 		const [userFile] = await userFileBlob.download();
 		return JSON.parse(userFile.toString('utf8'));
