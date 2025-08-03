@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import json
+import requests
 from dotenv import load_dotenv
 from google.cloud import storage
 from surprise import SVD, Dataset, Reader
@@ -13,6 +14,7 @@ load_dotenv()
 DB_NAME = os.getenv("MONGODB_DATABASE")
 INTERNAL_RATINGS_COLLECTION = os.getenv("MONGODB_REVIEWS_COLLECTION")
 EXTERNAL_RATINGS_COLLECTION = os.getenv("MONGODB_EXTERNAL_REVIEWS_COLLECTION")
+RELOAD_URL = os.getenv("RELOAD_URL")
 
 
 class Train:
@@ -169,11 +171,17 @@ class Train:
         }
 
         print("\n--- Saving all artifacts to Google Cloud Storage ---")
+        print("--- Saving user embeddings to GCS ---")
         self.save_user_embeddings_individually(internal_user_embeddings)
 
+        print("--- Saving recipe embeddings to GCS ---")
         self.save_to_gcs("recipe_embeddings.json", recipe_embeddings_serializable)
 
+        print("--- Saving recipe embeddings to FAISS and uploading to GCS ---")
         self.save_to_faiss(recipe_embeds)
+
+        print("--- Reloading recommender index ---")
+        self.reload_recommender_index()
 
         print("--- Pipeline Complete ---")
 
@@ -221,6 +229,22 @@ class Train:
             print("Temporary files cleaned up")
 
         print("--- Recipe embeddings saved to FAISS and uploaded to GCS ---")
+
+    def reload_recommender_index(self):
+        if not RELOAD_URL:
+            print("WARNING: RELOAD_URL not set, skipping index reload")
+            return
+        
+        print("--- Reloading recommender index ---")
+        try:
+            response = requests.post(f"{RELOAD_URL}/admin/reload_index", timeout=60)
+            if response.status_code == 200:
+                result = response.json()
+                print(f"Successfully reloaded index with {result.get('num_recipes', 'unknown')} recipes")
+            else:
+                print(f"Failed to reload index: HTTP {response.status_code} - {response.text}")
+        except Exception as e:
+            print(f"Unexpected error during index reload: {e}")
 
 
 if __name__ == "__main__":
