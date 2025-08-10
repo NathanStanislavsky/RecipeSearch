@@ -9,6 +9,8 @@ from surprise import SVD, Dataset, Reader
 import faiss
 from extract import Extract
 import tempfile
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
 
 load_dotenv()
 DB_NAME = os.getenv("MONGODB_DATABASE")
@@ -237,7 +239,11 @@ class Train:
         
         print("--- Reloading recommender index ---")
         try:
-            response = requests.post(f"{RELOAD_URL}/admin/reload_index", timeout=60)
+            request = Request()
+            token = id_token.fetch_id_token(request, RELOAD_URL)
+
+            headers = {"Authorization": f"Bearer {token}"}
+            response = requests.post(f"{RELOAD_URL}/admin/reload_index", headers=headers, timeout=60)
             if response.status_code == 200:
                 result = response.json()
                 print(f"Successfully reloaded index with {result.get('num_recipes', 'unknown')} recipes")
