@@ -107,3 +107,43 @@ Make sure that you've built your Docker image prior to running the container. Af
 ## Deployment
 
 The application is currently deployed on Vercel at https://recipe-search-psi.vercel.app/
+
+# RecipeRecommendations
+
+The `svd-training` service is responsible for training a SVD model to extract user and recipe feature matrices and then creating a Hierarchical Navigable Small World to recommend recipes to users.
+
+## Training Pipeline
+
+The training pipeline performs the following steps:
+
+1. **Data Extraction**: Extracts rating data from MongoDB collections
+2. **Model Training**: Trains an SVD (Singular Value Decomposition) model using the Surprise library
+3. **Embedding Extraction**: Extracts user and recipe embeddings from the trained model
+4. **Storage**: Saves embeddings to Google Cloud Storage
+5. **FAISS Index**: Creates and uploads a FAISS index for fast similarity search
+6. **Index Reload**: Automatically calls the recommender service's reload endpoint to update the live index
+
+## Environment Variables
+
+Required environment variables:
+- `MONGODB_DATABASE`: MongoDB database name
+- `MONGODB_REVIEWS_COLLECTION`: Internal reviews collection name
+- `MONGODB_EXTERNAL_REVIEWS_COLLECTION`: External reviews collection name
+- `GCS_BUCKET_NAME`: Google Cloud Storage bucket name
+- `RELOAD_URL`: URL of the recommender service (e.g., `http://recommender:8080`)
+
+## Running the Pipeline
+
+The pipeline can be run using Docker Compose:
+
+```bash
+docker-compose up svd-training
+```
+
+Or directly with Python:
+
+```bash
+python train.py
+```
+
+After completion, the recommender service will automatically reload its index with the new embeddings.
