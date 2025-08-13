@@ -20,7 +20,7 @@ RELOAD_URL = os.getenv("RELOAD_URL")
 
 
 class Train:
-    def __init__(self, n_factors=100, n_epochs=20, random_state=42):
+    def __init__(self, n_factors=100, n_epochs=30, random_state=42):
         self.algo = SVD(
             n_factors=n_factors,
             n_epochs=n_epochs,
@@ -155,7 +155,7 @@ class Train:
 
         print("--- Individual user embedding upload complete ---")
 
-    def run_pipeline(self, ratings_df):
+    def run_pipeline(self, ratings_df, run_comparison=False):
         algo, trainset = self.train_model(ratings_df)
         user_embeds, recipe_embeds = self.extract_embeddings(algo, trainset)
 
@@ -182,6 +182,14 @@ class Train:
         print("--- Saving recipe embeddings to FAISS and uploading to GCS ---")
         self.save_to_faiss(recipe_embeds)
 
+        if run_comparison and internal_user_embeddings:
+            print("\n--- Running Search Method Comparison ---")
+            first_user_id = next(iter(internal_user_embeddings))
+            user_vector = np.array(internal_user_embeddings[first_user_id])
+            comparison_results = self.compare_search_methods(recipe_embeds, user_vector)
+            if comparison_results:
+                print(f"Search comparison completed with Recall@50: {comparison_results['recall_at_k']:.3f}")
+
         print("--- Reloading recommender index ---")
         self.reload_recommender_index()
 
@@ -195,11 +203,11 @@ class Train:
             [recipe_embeddings[r] for r in recipe_ids], dtype="float32"
         )
         D = recipe_embeddings_array.shape[1]
-        M = 16
+        M = 40
 
-        index = faiss.IndexHNSWFlat(D, M)
-        index.hnsw.efConstruction = 200
-        index.hnsw.efSearch = 64
+        index = faiss.IndexHNSWFlat(D, M, faiss.METRIC_INNER_PRODUCT)
+        index.hnsw.efConstruction = 400
+        index.hnsw.efSearch = 192
 
         index.add(recipe_embeddings_array)
 
@@ -252,8 +260,96 @@ class Train:
         except Exception as e:
             print(f"Unexpected error during index reload: {e}")
 
+    def compare_search_methods(self, recipe_embeddings, user_vector, top_k=50):
+        print(f"--- Comparing Search Methods (Top-{top_k}) ---")
+        
+        recipe_ids = list(recipe_embeddings.keys())
+        recipe_embeddings_array = np.array(
+            [recipe_embeddings[r] for r in recipe_ids], dtype="float32"
+        )
+        user_vector = user_vector.reshape(1, -1).astype("float32")
+        
+        print("Running brute force search...")
+        dim = recipe_embeddings_array.shape[1]
+        index_flat = faiss.IndexFlatIP(dim)  # exact inner product
+        index_flat.add(recipe_embeddings_array)
+        
+        distances_exact, indices_exact = index_flat.search(user_vector, top_k)
+        exact_top_k = indices_exact[0].tolist()
+        exact_scores = distances_exact[0].tolist()
+        
+        print(f"Exact top-5 indices: {exact_top_k[:5]}")
+        print(f"Exact top-5 scores: {exact_scores[:5]}")
+        
+        print("Running HNSW search...")
+        try:
+            bucket = self.storage_client.bucket(self.bucket_name)
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".index") as temp_index:
+                blob = bucket.blob("faiss_index.index")
+                blob.download_to_filename(temp_index.name)
+                hnsw_index = faiss.read_index(temp_index.name)
+            
+            hnsw_index.hnsw.efSearch = 192
+            distances_hnsw, indices_hnsw = hnsw_index.search(user_vector, top_k)
+            hnsw_top_k = indices_hnsw[0].tolist()
+            hnsw_scores = distances_hnsw[0].tolist()
+            
+            print(f"HNSW top-5 indices: {hnsw_top_k[:5]}")
+            print(f"HNSW top-5 scores: {hnsw_scores[:5]}")
+            
+            overlap = len(set(exact_top_k) & set(hnsw_top_k))
+            recall_at_k = overlap / top_k
+            
+            mismatches = [i for i in hnsw_top_k if i not in exact_top_k]
+            missed = [i for i in exact_top_k if i not in hnsw_top_k]
+            
+            exact_recipe_ids = [recipe_ids[i] for i in exact_top_k[:5]]
+            hnsw_recipe_ids = [recipe_ids[i] for i in hnsw_top_k[:5]]
+            
+            results = {
+                "recall_at_k": recall_at_k,
+                "overlap_count": overlap,
+                "total_k": top_k,
+                "exact_top_5_recipe_ids": exact_recipe_ids,
+                "hnsw_top_5_recipe_ids": hnsw_recipe_ids,
+                "exact_top_5_scores": exact_scores[:5],
+                "hnsw_top_5_scores": hnsw_scores[:5],
+                "mismatches_count": len(mismatches),
+                "missed_count": len(missed)
+            }
+            
+            print(f"\n--- Search Comparison Results ---")
+            print(f"Recall@{top_k}: {recall_at_k:.3f}")
+            print(f"Overlap: {overlap}/{top_k}")
+            print(f"HNSW mismatches in top-{top_k}: {len(mismatches)}")
+            print(f"Exact results missed by HNSW: {len(missed)}")
+            print(f"Exact top-5 recipe IDs: {exact_recipe_ids}")
+            print(f"HNSW top-5 recipe IDs: {hnsw_recipe_ids}")
+            
+            return results
+            
+        except Exception as e:
+            print(f"ERROR: Failed to compare search methods: {e}")
+            return None
+        finally:
+            if 'temp_index' in locals() and os.path.exists(temp_index.name):
+                os.remove(temp_index.name)
 
 if __name__ == "__main__":
+    import sys
+    
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "train-with-comparison":
+            run_comparison = True
+        else:
+            print("Usage:")
+            print("  python train.py                    # Normal training pipeline")
+            print("  python train.py train-with-comparison  # Training pipeline with comparison")
+            exit()
+    else:
+        run_comparison = False
+
     extractor = Extract()
     if not extractor.client:
         print("Could not connect to MongoDB. Exiting.")
@@ -270,4 +366,4 @@ if __name__ == "__main__":
         exit()
 
     trainer = Train()
-    trainer.run_pipeline(ratings_df)
+    trainer.run_pipeline(ratings_df, run_comparison=run_comparison)

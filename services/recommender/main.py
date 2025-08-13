@@ -29,7 +29,7 @@ def load_index():
     index_local_path = "/tmp/faiss_index.index"
     bucket.blob(HNSW_INDEX_BLOB_NAME).download_to_filename(index_local_path)
     index = faiss.read_index(index_local_path)
-    index.hnsw.efSearch = 64
+    index.hnsw.efSearch = 192
 
     ids_local_path = "/tmp/recipe_ids.npy"
     bucket.blob(RECIPE_IDS_BLOB_NAME).download_to_filename(ids_local_path)
