@@ -1,15 +1,13 @@
 import type { PageServerLoad } from './$types.js';
 import type { Actions } from '@sveltejs/kit';
 import { fail } from '@sveltejs/kit';
-import { Storage } from '@google-cloud/storage';
-import { GCS_BUCKET_NAME, RECOMMEND_URL } from '$env/static/private';
+import { RECOMMEND_URL } from '$env/static/private';
 import { handleError } from '$utils/errors/AppError.js';
 import { GoogleAuth } from 'google-auth-library';
 import { RecipeService } from '../../data/services/RecipeService.js';
 
 const recipeService = new RecipeService();
 
-// Helper to load the JSON credentials from the base64 environment variable
 function loadServiceAccountCredentials() {
 	const b64 = process.env.SERVICE_ACCOUNT_KEY;
 	if (!b64) return null;
@@ -33,48 +31,18 @@ function getAuthClient() {
 	return new GoogleAuth();
 }
 
-function getStorageClient() {
-	const creds = loadServiceAccountCredentials();
-	if (creds) {
-		return new Storage({
-			credentials: creds,
-			projectId: creds.project_id
-		});
-	}
-	return new Storage();
-}
-
-async function getUserEmbedding(userId: string): Promise<number[] | null> {
-	try {
-		const storage = getStorageClient();
-		const bucket = storage.bucket(GCS_BUCKET_NAME);
-		const userFileBlob = bucket.file(`user_embeddings/${userId}.json`);
-		const [userFile] = await userFileBlob.download();
-		return JSON.parse(userFile.toString('utf8'));
-	} catch (error) {
-		console.error(`Error fetching user embedding for ${userId}:`, error);
-		return null;
-	}
-}
-
-// This function is now handled by RecipeService.getRecipesByIdsWithUserRatings
-
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		return { recommendations: [] };
 	}
 	try {
-		const user_embedding = await getUserEmbedding(locals.user.id.toString());
-		if (!user_embedding) {
-			return { recommendations: [] };
-		}
 		const auth = getAuthClient();
 		const client = await auth.getIdTokenClient(RECOMMEND_URL);
 
 		const response = await client.request<{ recipe_ids: number[] }>({
 			url: `${RECOMMEND_URL}/recommend`,
 			method: 'POST',
-			data: { user_embedding },
+			data: { user_id: locals.user.id },
 			headers: { 'Content-Type': 'application/json' }
 		});
 		const data = response.data;
