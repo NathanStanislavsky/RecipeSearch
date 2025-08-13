@@ -177,16 +177,9 @@ class Train:
             f"Filtered out external users. Saving {len(internal_user_embeddings)} internal user embeddings."
         )
 
-        recipe_embeddings_serializable = {
-            k: v.tolist() for k, v in recipe_embeds.items()
-        }
-
         print("\n--- Saving all artifacts to Google Cloud Storage ---")
         print("--- Saving user embeddings to GCS ---")
         self.save_user_embeddings_individually(internal_user_embeddings)
-
-        print("--- Saving recipe embeddings to GCS ---")
-        self.save_to_gcs("recipe_embeddings.json", recipe_embeddings_serializable)
 
         print("--- Saving biases to GCS ---")
         self.save_to_gcs("global_mean.json", {"global_mean": global_mean})
@@ -238,12 +231,21 @@ class Train:
 
             print(f"Successfully uploaded FAISS index to GCS bucket {self.bucket_name}")
 
-            np.save("/tmp/recipe_ids.npy", np.array(recipe_ids, dtype="<U36"))
+            print("--- Saving recipe IDs to GCS ---")
+            
+            np.save("/tmp/recipe_ids.npy", np.array(recipe_ids, dtype=object))
             blob = bucket.blob("recipe_ids.npy")
             blob.upload_from_filename("/tmp/recipe_ids.npy", content_type="application/octet-stream")
 
             print(f"Successfully uploaded recipe IDs to GCS bucket {self.bucket_name}")
 
+            print("--- Saving recipe factors to GCS ---")
+
+            np.save("/tmp/recipe_factors.npy", recipe_embeddings_array)
+            blob = bucket.blob("recipe_factors.npy")
+            blob.upload_from_filename("/tmp/recipe_factors.npy", content_type="application/octet-stream")
+
+            print(f"Successfully uploaded recipe factors to GCS bucket {self.bucket_name}")
 
         finally:
             if os.path.exists(temp_file.name):
