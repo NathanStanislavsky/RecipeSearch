@@ -14,7 +14,7 @@ Built with SvelteKit, Node.js, TypeScript, Neon Serverless PostgreSQL, and Tailw
 ## Tech Stack
 
 - Frontend: SvelteKit, Tailwind CSS
-- Backend: Node.js (within SvelteKit endpoints), TypeScript, 
+- Backend: Node.js (within SvelteKit endpoints), TypeScript,
 - Recommendation pipeline: Python, Pandas, NumPy, SciKit-Surprise, FAISS, Google Cloud SDK
 - Database: Neon Serverless PostgreSQL, MongoDB, Google Cloud Storage
 - Infrastructure: Docker, Google Cloud Run Services & Jobs, GitHub Actions
