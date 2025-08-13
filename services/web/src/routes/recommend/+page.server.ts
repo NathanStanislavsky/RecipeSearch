@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const response = await client.request<{ recipe_ids: number[] }>({
 			url: `${RECOMMEND_URL}/recommend`,
 			method: 'POST',
-			data: { user_id: locals.user.id },
+			data: { user_id: String(locals.user.id) },
 			headers: { 'Content-Type': 'application/json' }
 		});
 		const data = response.data;
@@ -51,6 +51,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			data.recipe_ids,
 			locals.user.id
 		);
+
 		return { recommendations };
 	} catch (error) {
 		console.error('Error getting recommendations:', error);

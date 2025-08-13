@@ -66,7 +66,14 @@ export class RecipeRepository {
 				.find({ id: { $in: recipeIds.map((id) => Number(id)) } })
 				.toArray();
 
-			return recipes.map((recipe) => ({
+			const recipeMap = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+			
+			const orderedRecipes = recipeIds.map((id) => {
+				const found = recipeMap.get(Number(id));
+				return found;
+			}).filter((recipe): recipe is NonNullable<typeof recipe> => recipe !== undefined);
+
+			return orderedRecipes.map((recipe) => ({
 				id: recipe.id as number,
 				name: recipe.name as string,
 				minutes: recipe.minutes as number,
