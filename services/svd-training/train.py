@@ -74,7 +74,16 @@ class Train:
 
         self.algo.fit(trainset)
         print("--- Model Training Complete ---")
-        return self.algo, trainset
+
+        global_mean = float(trainset.global_mean)
+        user_bias = {trainset.to_raw_uid(i): float(self.algo.bu[i]) for i in range(trainset.n_users)}
+        item_bias = {trainset.to_raw_iid(i): float(self.algo.bi[i]) for i in range(trainset.n_items)}
+
+        print(f"Global mean: {global_mean}")
+        print(f"Number of user biases: {len(user_bias)}")
+        print(f"Number of item biases: {len(item_bias)}")
+
+        return self.algo, trainset, global_mean, user_bias, item_bias
 
     def extract_embeddings(self, algo, trainset):
         print("--- Extracting Embeddings ---")
@@ -156,7 +165,7 @@ class Train:
         print("--- Individual user embedding upload complete ---")
 
     def run_pipeline(self, ratings_df, run_comparison=False):
-        algo, trainset = self.train_model(ratings_df)
+        algo, trainset, global_mean, user_bias, item_bias = self.train_model(ratings_df)
         user_embeds, recipe_embeds = self.extract_embeddings(algo, trainset)
 
         internal_user_embeddings = {
@@ -178,6 +187,11 @@ class Train:
 
         print("--- Saving recipe embeddings to GCS ---")
         self.save_to_gcs("recipe_embeddings.json", recipe_embeddings_serializable)
+
+        print("--- Saving biases to GCS ---")
+        self.save_to_gcs("global_mean.json", {"global_mean": global_mean})
+        self.save_to_gcs("user_bias.json", user_bias)
+        self.save_to_gcs("item_bias.json", item_bias)
 
         print("--- Saving recipe embeddings to FAISS and uploading to GCS ---")
         self.save_to_faiss(recipe_embeds)
