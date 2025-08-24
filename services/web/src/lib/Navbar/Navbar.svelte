@@ -38,6 +38,13 @@
 				</button>
 			</a>
 		{/if}
+		{#if currentPath == '/recommend'}
+			<a href="/search">
+				<button class="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50">
+					Search
+				</button>
+			</a>
+		{/if}
 	</div>
 
 	<!-- Center Column -->

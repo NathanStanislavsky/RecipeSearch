@@ -2,13 +2,13 @@
 	import SearchButton from '$lib/SearchButton/SearchButton.svelte';
 	import SearchBar from '$lib/SearchBar/SearchBar.svelte';
 	import RecipeCardParent from '$lib/RecipeCardParent/RecipeCardParent.svelte';
-	import type { Recipe } from '../../types/recipe.ts';
+	import type { TransformedRecipe } from '../../types/recipe.ts';
 	import Navbar from '$lib/Navbar/Navbar.svelte';
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 
 	let ingredients = '';
-	let recipes: Recipe[] = [];
+	let recipes: TransformedRecipe[] = [];
 	let isLoading = false;
 	let hasSearched = false;
 	let searchError = '';
@@ -27,7 +27,7 @@
 			isLoading = false;
 
 			if (result.type === 'success' && result.data) {
-				const data = result.data as { results: Recipe[]; total: number; query: string };
+				const data = result.data as { results: TransformedRecipe[]; total: number; query: string };
 				console.log('Search response:', data);
 				recipes = data.results || [];
 			} else if (result.type === 'failure') {
@@ -45,7 +45,7 @@
 
 <Navbar user={true} currentPath={'/search'} />
 
-<div class="flex min-h-screen flex-col items-center bg-slate-100 pt-20 font-serif">
+<div class="flex min-h-screen flex-col items-center bg-blue-50 pt-20 font-serif">
 	<div class="mb-10 w-full max-w-4xl text-center">
 		<h1 class="mb-4 text-4xl">What is in your fridge?</h1>
 
