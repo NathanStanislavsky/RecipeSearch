@@ -5,7 +5,7 @@
 
 <Navbar user={false} currentPath={'/register'} />
 
-<div class="flex min-h-screen items-center justify-center bg-slate-100">
+<div class="flex min-h-screen items-center bg-blue-50 justify-center">
 	<div class="w-full max-w-lg">
 		<RegisterForm />
 	</div>

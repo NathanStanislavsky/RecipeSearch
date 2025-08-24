@@ -87,7 +87,7 @@
 
 <Navbar user={true} currentPath={'/recommend'} />
 
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pt-20 pb-8">
+<div class="min-h-screen bg-gradient-to-br bg-blue-50 pt-20 pb-8">
 	<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 		{#if data.recommendations.length > 0}
 			<!-- Filters Section -->
