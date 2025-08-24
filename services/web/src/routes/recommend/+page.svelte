@@ -87,7 +87,7 @@
 
 <Navbar user={true} currentPath={'/recommend'} />
 
-<div class="min-h-screen bg-gradient-to-br bg-blue-50 pt-20 pb-8">
+<div class="min-h-screen bg-blue-50 bg-gradient-to-br pt-20 pb-8">
 	<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 		{#if data.recommendations.length > 0}
 			<!-- Filters Section -->
@@ -96,7 +96,7 @@
 					<h3 class="text-lg font-semibold text-gray-800">Filter & Sort</h3>
 					<button
 						on:click={resetFilters}
-						class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+						class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
 					>
 						Reset Filters
 					</button>
@@ -105,23 +105,25 @@
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 					<!-- Search Filter -->
 					<div>
-						<label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+						<label for="search" class="mb-2 block text-sm font-medium text-gray-700">Search</label>
 						<input
 							id="search"
 							type="text"
 							bind:value={$searchQuery}
 							placeholder="Search recipes..."
-							class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 						/>
 					</div>
 
 					<!-- Cooking Time Filter -->
 					<div>
-						<label for="cookingTime" class="block text-sm font-medium text-gray-700 mb-2">Cooking Time</label>
+						<label for="cookingTime" class="mb-2 block text-sm font-medium text-gray-700"
+							>Cooking Time</label
+						>
 						<select
 							id="cookingTime"
 							bind:value={$cookingTimeFilter}
-							class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 						>
 							<option value="all">All Times</option>
 							<option value="quick">Quick (≤30 min)</option>
@@ -132,11 +134,11 @@
 
 					<!-- Rating Filter -->
 					<div>
-						<label for="rating" class="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+						<label for="rating" class="mb-2 block text-sm font-medium text-gray-700">Rating</label>
 						<select
 							id="rating"
 							bind:value={$ratingFilter}
-							class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 						>
 							<option value="all">All Ratings</option>
 							<option value="rated">Rated</option>
@@ -148,11 +150,11 @@
 
 					<!-- Sort By -->
 					<div>
-						<label for="sortBy" class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+						<label for="sortBy" class="mb-2 block text-sm font-medium text-gray-700">Sort By</label>
 						<select
 							id="sortBy"
 							bind:value={$sortBy}
-							class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 						>
 							<option value="score">Recommended Order</option>
 							<option value="name">Name A-Z</option>
@@ -182,7 +184,11 @@
 								clip-rule="evenodd"
 							/>
 						</svg>
-						<span>{$filteredRecommendations.length} recipe{$filteredRecommendations.length === 1 ? '' : 's'} found</span>
+						<span
+							>{$filteredRecommendations.length} recipe{$filteredRecommendations.length === 1
+								? ''
+								: 's'} found</span
+						>
 					</div>
 				</div>
 
@@ -192,7 +198,9 @@
 					<div class="py-12 text-center">
 						<div class="mx-auto mb-4 h-16 w-16 text-gray-400">
 							<svg fill="currentColor" viewBox="0 0 24 24">
-								<path d="M9,2A1,1 0 0,0 8,3V4.06C5.72,4.92 4,7.17 4,10V16L2,18V19H22V18L20,16V10C20,7.17 18.28,4.92 16,4.06V3A1,1 0 0,0 15,2H9M9,4H15V4.06C16.67,4.86 18,6.76 18,9V16H6V9C6,6.76 7.33,4.86 9,4.06V4M9,20V21H15V20H9Z" />
+								<path
+									d="M9,2A1,1 0 0,0 8,3V4.06C5.72,4.92 4,7.17 4,10V16L2,18V19H22V18L20,16V10C20,7.17 18.28,4.92 16,4.06V3A1,1 0 0,0 15,2H9M9,4H15V4.06C16.67,4.86 18,6.76 18,9V16H6V9C6,6.76 7.33,4.86 9,4.06V4M9,20V21H15V20H9Z"
+								/>
 							</svg>
 						</div>
 						<h3 class="mb-2 text-lg font-medium text-gray-900">No recipes match your filters</h3>
@@ -207,7 +215,8 @@
 				</div>
 				<h3 class="mb-2 text-xl font-medium text-gray-900">No Recommendations Yet</h3>
 				<p class="mx-auto mb-8 max-w-sm text-gray-600">
-					We're still learning about your preferences. Try rating some recipes and try again later to get personalized recommendations!
+					We're still learning about your preferences. Try rating some recipes and try again later
+					to get personalized recommendations!
 				</p>
 				<div class="space-y-3 sm:flex sm:justify-center sm:space-y-0 sm:space-x-3">
 					<a
