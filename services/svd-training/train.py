@@ -4,6 +4,7 @@ import numpy as np
 import json
 import requests
 from dotenv import load_dotenv
+import psycopg2 as pg
 from google.cloud import storage
 from surprise import SVD, Dataset, Reader
 import faiss
@@ -39,6 +40,21 @@ class Train:
             print(f"Successfully connected and targeting bucket: {self.bucket_name}")
         except Exception as e:
             print(f"FATAL: Could not connect to GCS: {e}")
+            raise
+
+        self.postgres_client = self.connect_to_postgres()
+    
+    def connect_to_postgres(self):
+        print("--- Connecting to PostgreSQL ---")
+        if os.getenv("DATABASE_URL"):
+            try:
+                return pg.connect(os.getenv("DATABASE_URL"))
+                print("Successfully connected to PostgreSQL")
+            except Exception as e:
+                print(f"FATAL: Could not connect to PostgreSQL: {e}")
+                raise
+        else:
+            print("FATAL: DATABASE_URL not found in environment variables")
             raise
 
     def train_model(self, ratings_df):
@@ -284,9 +300,21 @@ class Train:
         for user_id, embedding in user_embeddings.items():
             self.save_user_embedding_to_postgres(user_id, embedding)
 
+        print("--- User embeddings saved to PostgreSQL ---")
+
     def save_user_embedding_to_postgres(self, user_id, embedding):
         print(f"Saving user {user_id} embedding to PostgreSQL")
-        pass
+        if not self.postgres_client:
+            print("No PostgreSQL client found")
+            return
+        
+        try:
+            self.postgres_client.cursor().execute("INSERT INTO user_vectors (user_id, vector, updated_at) VALUES (%s, %s, NOW())", (user_id, embedding))
+            self.postgres_client.commit()
+            print(f"Successfully saved user {user_id} embedding to PostgreSQL")
+        except Exception as e:
+            print(f"ERROR: Failed to save user {user_id} embedding to PostgreSQL: {e}")
+            return
 
     def compare_search_methods(self, recipe_embeddings, user_vector, top_k=50):
         print(f"--- Comparing Search Methods (Top-{top_k}) ---")
