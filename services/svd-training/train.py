@@ -281,6 +281,11 @@ class Train:
 
     def save_user_embeddings_to_postgres(self, user_embeddings):
         print("--- Saving user embeddings to PostgreSQL ---")
+        for user_id, embedding in user_embeddings.items():
+            self.save_user_embedding_to_postgres(user_id, embedding)
+
+    def save_user_embedding_to_postgres(self, user_id, embedding):
+        print(f"Saving user {user_id} embedding to PostgreSQL")
         pass
 
     def compare_search_methods(self, recipe_embeddings, user_vector, top_k=50):
