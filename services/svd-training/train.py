@@ -181,6 +181,9 @@ class Train:
         print("--- Saving user embeddings to GCS ---")
         self.save_user_embeddings_individually(internal_user_embeddings)
 
+        print("--- Saving user embedding to PostgreSQL ---")
+        self.save_user_embeddings_to_postgres(internal_user_embeddings)
+
         print("--- Saving biases to GCS ---")
         self.save_to_gcs("global_mean.json", {"global_mean": global_mean})
         self.save_to_gcs("user_bias.json", user_bias)
@@ -275,6 +278,10 @@ class Train:
                 print(f"Failed to reload index: HTTP {response.status_code} - {response.text}")
         except Exception as e:
             print(f"Unexpected error during index reload: {e}")
+
+    def save_user_embeddings_to_postgres(self, user_embeddings):
+        print("--- Saving user embeddings to PostgreSQL ---")
+        pass
 
     def compare_search_methods(self, recipe_embeddings, user_vector, top_k=50):
         print(f"--- Comparing Search Methods (Top-{top_k}) ---")
