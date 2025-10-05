@@ -41,13 +41,36 @@ async def process_rating_event(rating_event: dict):
     # Retrieve the last SVD completion time and if the rating_timestamp is older than
     # that, then we don't need to recompute since it's already been incorporated by SVD
     # we sack the message and return
+    last_svd_completion_time = get_last_svd_completion_time()
+    if rating_timestamp < last_svd_completion_time:
+        print(f"Rating timestamp {rating_timestamp} is older than last SVD completion time {last_svd_completion_time}. Skipping recomputation.")
+        return
 
     # If the timestamp check passes then we need to recompute the user vector by first
     # getting the user vector from the PostgreSQL database and the recipe vector from GCS
+    user_vector = get_user_vector(user_id)
+    recipe_vector = get_recipe_vector(recipe_id)
     
-    # Then we apply the weighted average formula on the user vector
+    # Then we apply the SGD average formula on the user vector
+    new_user_vector = sgd_average(user_vector, recipe_vector, rating)
 
     # Finally we update the user vector in the PostgreSQL database
+    update_user_vector(user_id, new_user_vector)
+
+def get_last_svd_completion_time():
+    pass
+
+def get_user_vector(user_id: int):
+    pass
+
+def get_recipe_vector(recipe_id: int):
+    pass
+
+def sgd_average(user_vector: list[float], recipe_vector: list[float], rating: float):
+    pass
+
+def update_user_vector(user_id: int, new_user_vector: list[float]):
+    pass
     
 
 @app.get("/health")
