@@ -6,12 +6,14 @@ import requests
 from dotenv import load_dotenv
 import psycopg2 as pg
 from google.cloud import storage
+from datetime import datetime
 from surprise import SVD, Dataset, Reader
 import faiss
 from extract import Extract
 import tempfile
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
+import psycopg2.extras
 
 load_dotenv()
 DB_NAME = os.getenv("MONGODB_DATABASE")
@@ -48,14 +50,15 @@ class Train:
         print("--- Connecting to PostgreSQL ---")
         if os.getenv("DATABASE_URL"):
             try:
-                return pg.connect(os.getenv("DATABASE_URL"))
+                conn = pg.connect(os.getenv("DATABASE_URL"))
                 print("Successfully connected to PostgreSQL")
+                return conn
             except Exception as e:
                 print(f"FATAL: Could not connect to PostgreSQL: {e}")
                 raise
         else:
             print("FATAL: DATABASE_URL not found in environment variables")
-            raise
+            raise ValueError("DATABASE_URL not found")
 
     def train_model(self, ratings_df):
         print("--- Training SVD Model ---")
@@ -198,7 +201,7 @@ class Train:
         self.save_user_embeddings_individually(internal_user_embeddings)
 
         print("--- Saving user embedding to PostgreSQL ---")
-        self.save_user_embeddings_to_postgres(internal_user_embeddings)
+        self.save_user_embeddings_to_postgres_batch(internal_user_embeddings)
 
         print("--- Saving biases to GCS ---")
         self.save_to_gcs("global_mean.json", {"global_mean": global_mean})
@@ -295,26 +298,44 @@ class Train:
         except Exception as e:
             print(f"Unexpected error during index reload: {e}")
 
-    def save_user_embeddings_to_postgres(self, user_embeddings):
-        print("--- Saving user embeddings to PostgreSQL ---")
-        for user_id, embedding in user_embeddings.items():
-            self.save_user_embedding_to_postgres(user_id, embedding)
-
-        print("--- User embeddings saved to PostgreSQL ---")
-
-    def save_user_embedding_to_postgres(self, user_id, embedding):
-        print(f"Saving user {user_id} embedding to PostgreSQL")
+    def save_user_embeddings_to_postgres_batch(self, user_embeddings):
+        print(f"Saving {len(user_embeddings)} user embeddings to PostgreSQL")
         if not self.postgres_client:
             print("No PostgreSQL client found")
             return
         
+        cursor = None
         try:
-            self.postgres_client.cursor().execute("INSERT INTO user_vectors (user_id, vector, updated_at) VALUES (%s, %s, NOW())", (user_id, embedding))
+            cursor = self.postgres_client.cursor()
+
+            insert_data = []
+            for user_id, embedding in user_embeddings.items():
+                insert_data.append((int(user_id), list(embedding)))
+
+            psycopg2.extras.execute_values(
+                cursor,
+                """
+                INSERT INTO user_vectors (user_id, vector, updated_at) 
+                VALUES %s
+                ON CONFLICT (user_id) 
+                DO UPDATE SET 
+                    vector = EXCLUDED.vector,
+                    updated_at = NOW()
+                """,
+                insert_data,
+                template="(%s, %s, NOW())"
+            )
+
             self.postgres_client.commit()
-            print(f"Successfully saved user {user_id} embedding to PostgreSQL")
+            print(f"Successfully saved {len(user_embeddings)} user embeddings to PostgreSQL")
         except Exception as e:
-            print(f"ERROR: Failed to save user {user_id} embedding to PostgreSQL: {e}")
-            return
+            print(f"ERROR: Failed to save {len(user_embeddings)} user embeddings to PostgreSQL: {e}")
+            if self.postgres_client:
+                self.postgres_client.rollback()
+            raise
+        finally:
+            if cursor:
+                cursor.close()
 
     def compare_search_methods(self, recipe_embeddings, user_vector, top_k=50):
         print(f"--- Comparing Search Methods (Top-{top_k}) ---")
