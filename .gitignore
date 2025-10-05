@@ -35,3 +35,4 @@ services/web/gcs-credentials.json
 services/web/web-recommender-caller-key.json
 services/svd-training/svd-training-venv
 services/recommender/recommender-venv
+services/recompute/recompute-venv
