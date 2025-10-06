@@ -19,4 +19,10 @@ export const svd_metadata = pgTable('svd_metadata', {
 	created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
 });
 
-export const schema = { users, user_vectors, svd_metadata };
+export const recipe_vectors = pgTable('recipe_vectors', {
+	recipe_id: integer('recipe_id').primaryKey(),
+	vector: real('vector').array().notNull(),
+	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const schema = { users, user_vectors, svd_metadata, recipe_vectors };

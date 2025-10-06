@@ -29,6 +29,13 @@
       "when": 1759633373620,
       "tag": "0003_add_user_vectors_and_svd_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1759758414411,
+      "tag": "0004_special_deadpool",
+      "breakpoints": true
     }
   ]
 }
