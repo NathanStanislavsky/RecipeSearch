@@ -2,7 +2,19 @@ import base64
 import json
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request
+from dotenv import load_dotenv
+import os
+import psycopg2 as pg
+import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+load_dotenv()
 app = FastAPI()
 
 @app.post('/recompute')
@@ -61,7 +73,18 @@ def get_last_svd_completion_time():
     pass
 
 def get_user_vector(user_id: int):
-    pass
+    cursor = None
+    try:
+        cursor = connect_to_postgres().cursor()
+        cursor.execute("SELECT vector FROM user_vectors WHERE user_id = %s", (user_id,))
+        result = cursor.fetchone()
+        return result[0]
+    except Exception as e:
+        print(f"Error getting user vector: {e}")
+        return None
+    finally:
+        if cursor:
+            cursor.close()
 
 def get_recipe_vector(recipe_id: int):
     pass
@@ -71,7 +94,20 @@ def sgd_average(user_vector: list[float], recipe_vector: list[float], rating: fl
 
 def update_user_vector(user_id: int, new_user_vector: list[float]):
     pass
-    
+
+def connect_to_postgres(self):
+    logger.info("Connecting to PostgreSQL...")
+    if os.getenv("DATABASE_URL"):
+        try:
+            conn = pg.connect(os.getenv("DATABASE_URL"))
+            logger.info("Successfully connected to PostgreSQL")
+            return conn
+        except Exception as e:
+            logger.error(f"Could not connect to PostgreSQL: {e}")
+            raise
+    else:
+        logger.error("DATABASE_URL not found in environment variables")
+        raise ValueError("DATABASE_URL not found")
 
 @app.get("/health")
 def health():
