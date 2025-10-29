@@ -334,6 +334,45 @@ class Train:
             if cursor:
                 cursor.close()
 
+    def save_recipe_embeddings_to_postgres_batch(self, recipe_embeddings):
+        logger.info(f"Saving {len(recipe_embeddings)} recipe embeddings to PostgreSQL")
+        if not self.postgres_client:
+            logger.error("No PostgreSQL client found")
+            return
+        
+        cursor = None
+        try:
+            cursor = self.postgres_client.cursor()
+
+            cursor.execute("DELETE FROM recipe_vectors")
+            logger.info("Cleared existing recipe vectors")
+
+            insert_data = []
+            for recipe_id, recipe_embedding in recipe_embeddings.items():
+                insert_data.append((int(recipe_id), list(recipe_embedding)))
+
+            psycopg2.extras.execute_values(
+                cursor,
+                """
+                INSERT INTO recipe_vectors (recipe_id, vector, updated_id)
+                VALUES %s
+                """,
+                insert_data,
+                template="(%s, %s, NOW())",
+                page_size=1000
+            )
+
+            self.postgres_client.commit()
+            logger.info(f"Successfully saved {len(recipe_embeddings)} recipe embeddings to PostgreSQL")
+        except:
+            logger.error(f"Failed to save recipe embeddings to PostgreSQL: {e}")
+            if self.postgres_client:
+                self.postgres_client.rollback()
+            raise
+        finally:
+            if cursor:
+                cursor.close()
+
     def compare_search_methods(self, recipe_embeddings, user_vector, top_k=50):
         logger.info(f"Comparing search methods (Top-{top_k})")
         
