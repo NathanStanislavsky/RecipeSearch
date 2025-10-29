@@ -87,7 +87,28 @@ def get_user_vector(user_id: int):
             cursor.close()
 
 def get_recipe_vector(recipe_id: int):
-    pass
+    cursor = None
+    conn = None
+    try:
+        conn = connect_to_postgres()
+        cursor = conn.cursor()
+        cursor.execute("SELECT vector FROM recipe_vectors WHERE recipe_id = %s", (recipe_id,))
+        result = cursor.fetchone()
+
+        if result:
+            return result[0]
+        else:
+            print(f"Recipe vector not found for recipe_id: {recipe_id}")
+            return None
+    except Exception as e:
+        print(f"Error getting recipe vector: {e}")
+        return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 
 def sgd_average(user_vector: list[float], recipe_vector: list[float], rating: float):
     pass
@@ -95,7 +116,7 @@ def sgd_average(user_vector: list[float], recipe_vector: list[float], rating: fl
 def update_user_vector(user_id: int, new_user_vector: list[float]):
     pass
 
-def connect_to_postgres(self):
+def connect_to_postgres():
     logger.info("Connecting to PostgreSQL...")
     if os.getenv("DATABASE_URL"):
         try:
