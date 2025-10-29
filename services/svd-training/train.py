@@ -370,7 +370,7 @@ class Train:
 
             self.postgres_client.commit()
             logger.info(f"Successfully saved {len(recipe_embeddings)} recipe embeddings to PostgreSQL")
-        except:
+        except Exception as e:
             logger.error(f"Failed to save recipe embeddings to PostgreSQL: {e}")
             if self.postgres_client:
                 self.postgres_client.rollback()
