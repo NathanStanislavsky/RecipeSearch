@@ -129,6 +129,74 @@ def update_user_vector(user_id: int, new_user_vector: list[float]):
         if conn:
             conn.close()
 
+def get_user_vector_with_bias(user_id: int):
+    cursor = None
+    conn = None
+    try:
+        conn = connect_to_postgres()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT vector, bias FROM user_vectors WHERE user_id = %s", 
+            (user_id,)
+        )
+        result = cursor.fetchone()
+        
+        if result:
+            return result[0], result[1]  # vector, bias
+        return None, None
+    except Exception as e:
+        print(f"Error getting user vector and bias: {e}")
+        return None, None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+def get_recipe_vector_with_bias(recipe_id: int):
+    cursor = None
+    conn = None
+    try:
+        conn = connect_to_postgres()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT vector, bias FROM recipe_vectors WHERE recipe_id = %s", 
+            (recipe_id,)
+        )
+        result = cursor.fetchone()
+        
+        if result:
+            return result[0], result[1]  # vector, bias
+        return None, None
+    except Exception as e:
+        print(f"Error getting recipe vector and bias: {e}")
+        return None, None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+def get_global_mean():
+    cursor = None
+    conn = None
+    try:
+        conn = connect_to_postgres()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT global_mean FROM svd_metadata ORDER BY completion_time DESC LIMIT 1"
+        )
+        result = cursor.fetchone()
+        return result[0] if result else 3.0  # Default fallback
+    except Exception as e:
+        print(f"Error getting global mean: {e}")
+        return 3.0
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 def connect_to_postgres():
     logger.info("Connecting to PostgreSQL...")
     if os.getenv("DATABASE_URL"):
