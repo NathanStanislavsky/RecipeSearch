@@ -218,7 +218,7 @@ class Train:
         self.save_to_gcs("item_bias.json", recipe_bias)
 
         logger.info("Saving model biases to PostgreSQL")
-        self.save_bias_terms_to_postgres(self, user_bias, recipe_bias, global_mean)
+        self.save_bias_terms_to_postgres(user_bias, recipe_bias, global_mean)
 
         logger.info("Saving recipe embeddings to FAISS index")
         self.save_to_faiss(recipe_embeds)
@@ -387,7 +387,15 @@ class Train:
         try:
             cursor = self.postgres_client.cursor()
 
-            for user_id, bias in user_bias.items():
+            internal_user_bias = {
+                user_id: bias 
+                for user_id, bias in user_bias.items() 
+                if not str(user_id).startswith("ext_")
+            }
+            
+            logger.info(f"Filtered to {len(internal_user_bias)} internal user biases (excluded external users)")
+
+            for user_id, bias in internal_user_bias.items():
                 cursor.execute(
                     "UPDATE user_vectors SET bias = %s WHERE user_id = %s",
                     (float(bias), int(user_id))
@@ -395,13 +403,13 @@ class Train:
             
             for recipe_id, bias in recipe_bias.items():
                 cursor.execute(
-                    "UPDATE recipe_vectors SET bias = %s WHERE recipe_id %s",
+                    "UPDATE recipe_vectors SET bias = %s WHERE recipe_id = %s",
                     (float(bias), int(recipe_id))
                 )
             
             cursor.execute(
                 "INSERT INTO svd_metadata (completion_time, global_mean) VALUES (NOW(), %s)",
-                (float(global_mean))
+                (float(global_mean),)
             )
 
             self.postgres_client.commit()
