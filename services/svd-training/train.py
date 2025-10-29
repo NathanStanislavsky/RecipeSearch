@@ -192,7 +192,7 @@ class Train:
     def run_pipeline(self, ratings_df, run_comparison=False):
         logger.info("Starting training pipeline")
         
-        algo, trainset, global_mean, user_bias, item_bias = self.train_model(ratings_df)
+        algo, trainset, global_mean, user_bias, recipe_bias = self.train_model(ratings_df)
         user_embeds, recipe_embeds = self.extract_embeddings(algo, trainset)
 
         internal_user_embeddings = {
@@ -215,7 +215,10 @@ class Train:
         logger.info("Saving model biases to GCS")
         self.save_to_gcs("global_mean.json", {"global_mean": global_mean})
         self.save_to_gcs("user_bias.json", user_bias)
-        self.save_to_gcs("item_bias.json", item_bias)
+        self.save_to_gcs("item_bias.json", recipe_bias)
+
+        logger.info("Saving model biases to PostgreSQL")
+        self.save_bias_terms_to_postgres(self, user_bias, recipe_bias, global_mean)
 
         logger.info("Saving recipe embeddings to FAISS index")
         self.save_to_faiss(recipe_embeds)
@@ -372,6 +375,39 @@ class Train:
             logger.info(f"Successfully saved {len(recipe_embeddings)} recipe embeddings to PostgreSQL")
         except Exception as e:
             logger.error(f"Failed to save recipe embeddings to PostgreSQL: {e}")
+            if self.postgres_client:
+                self.postgres_client.rollback()
+            raise
+        finally:
+            if cursor:
+                cursor.close()
+
+    def save_bias_terms_to_postgres(self, user_bias, recipe_bias, global_mean):
+        cursor = None
+        try:
+            cursor = self.postgres_client.cursor()
+
+            for user_id, bias in user_bias.items():
+                cursor.execute(
+                    "UPDATE user_vectors SET bias = %s WHERE user_id = %s",
+                    (float(bias), int(user_id))
+                )
+            
+            for recipe_id, bias in recipe_bias.items():
+                cursor.execute(
+                    "UPDATE recipe_vectors SET bias = %s WHERE recipe_id %s",
+                    (float(bias), int(recipe_id))
+                )
+            
+            cursor.execute(
+                "INSERT INTO svd_metadata (completion_time, global_mean) VALUES (NOW(), %s)",
+                (float(global_mean))
+            )
+
+            self.postgres_client.commit()
+            logger.info("Successfully saved bias terms to PostgreSQL")
+        except Exception as e:
+            logger.error(f"Failed to save bias terms: {e}")
             if self.postgres_client:
                 self.postgres_client.rollback()
             raise
