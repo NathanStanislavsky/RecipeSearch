@@ -114,7 +114,20 @@ def sgd_average(user_vector: list[float], recipe_vector: list[float], rating: fl
     pass
 
 def update_user_vector(user_id: int, new_user_vector: list[float]):
-    pass
+    cursor = None
+    conn = None
+    try:
+        conn = connect_to_postgres()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE user_vectors SET vector = %s WHERE user_id = %s", (new_user_vector, user_id))
+    except Exception as e:
+        print(f"Error updating user vector: {e}")
+        return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 def connect_to_postgres():
     logger.info("Connecting to PostgreSQL...")
