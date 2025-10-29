@@ -206,6 +206,12 @@ class Train:
         self.save_user_embeddings_individually(internal_user_embeddings)
         self.save_user_embeddings_to_postgres_batch(internal_user_embeddings)
 
+        recipe_embeddings_dict = {
+            recipe_id: embed.tolist() 
+            for recipe_id, embed in recipe_embeds.items()
+        }
+        self.save_recipe_embeddings_to_postgres_batch(recipe_embeddings_dict)
+
         logger.info("Saving model biases to GCS")
         self.save_to_gcs("global_mean.json", {"global_mean": global_mean})
         self.save_to_gcs("user_bias.json", user_bias)
