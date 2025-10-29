@@ -387,6 +387,7 @@ class Train:
         try:
             cursor = self.postgres_client.cursor()
 
+            # Filter out external users
             internal_user_bias = {
                 user_id: bias 
                 for user_id, bias in user_bias.items() 
@@ -395,25 +396,45 @@ class Train:
             
             logger.info(f"Filtered to {len(internal_user_bias)} internal user biases (excluded external users)")
 
-            for user_id, bias in internal_user_bias.items():
-                cursor.execute(
-                    "UPDATE user_vectors SET bias = %s WHERE user_id = %s",
-                    (float(bias), int(user_id))
+            # Batch update user biases
+            if internal_user_bias:
+                user_bias_data = [(float(bias), int(user_id)) for user_id, bias in internal_user_bias.items()]
+                psycopg2.extras.execute_values(
+                    cursor,
+                    "UPDATE user_vectors SET bias = data.bias FROM (VALUES %s) AS data(bias, user_id) WHERE user_vectors.user_id = data.user_id",
+                    user_bias_data,
+                    template="(%s, %s)",
+                    page_size=1000
                 )
+                logger.info(f"Updated {len(internal_user_bias)} user biases")
+
+            # Batch update recipe biases
+            recipe_bias_data = [(float(bias), int(recipe_id)) for recipe_id, bias in recipe_bias.items()]
+            psycopg2.extras.execute_values(
+                cursor,
+                "UPDATE recipe_vectors SET bias = data.bias FROM (VALUES %s) AS data(bias, recipe_id) WHERE recipe_vectors.recipe_id = data.recipe_id",
+                recipe_bias_data,
+                template="(%s, %s)",
+                page_size=1000
+            )
+            logger.info(f"Updated {len(recipe_bias)} recipe biases")
             
-            for recipe_id, bias in recipe_bias.items():
-                cursor.execute(
-                    "UPDATE recipe_vectors SET bias = %s WHERE recipe_id = %s",
-                    (float(bias), int(recipe_id))
-                )
-            
+            # Insert global mean
             cursor.execute(
-                "INSERT INTO svd_metadata (completion_time, global_mean) VALUES (NOW(), %s)",
+                """
+                INSERT INTO svd_metadata (id, completion_time, global_mean) 
+                VALUES (1, NOW(), %s)
+                ON CONFLICT (id) 
+                DO UPDATE SET 
+                    completion_time = EXCLUDED.completion_time,
+                    global_mean = EXCLUDED.global_mean
+                """,
                 (float(global_mean),)
             )
-
+            
             self.postgres_client.commit()
-            logger.info("Successfully saved bias terms to PostgreSQL")
+            logger.info(f"Successfully saved bias terms and global mean to PostgreSQL")
+            
         except Exception as e:
             logger.error(f"Failed to save bias terms: {e}")
             if self.postgres_client:
