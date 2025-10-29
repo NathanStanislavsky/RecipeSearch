@@ -360,7 +360,7 @@ class Train:
             psycopg2.extras.execute_values(
                 cursor,
                 """
-                INSERT INTO recipe_vectors (recipe_id, vector, updated_id)
+                INSERT INTO recipe_vectors (recipe_id, vector, updated_at)
                 VALUES %s
                 """,
                 insert_data,
