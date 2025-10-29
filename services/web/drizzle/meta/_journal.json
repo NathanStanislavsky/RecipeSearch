@@ -36,6 +36,13 @@
       "when": 1759758414411,
       "tag": "0004_special_deadpool",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1761775794922,
+      "tag": "0005_dry_barracuda",
+      "breakpoints": true
     }
   ]
 }

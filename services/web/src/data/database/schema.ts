@@ -1,4 +1,6 @@
-import { pgTable, serial, text, timestamp, integer, real } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, integer, real, vector } from 'drizzle-orm/pg-core';
+
+const VECTOR_DIMENSIONS = 100;
 
 export const users = pgTable('users', {
 	id: serial('id').primaryKey(),
@@ -9,7 +11,7 @@ export const users = pgTable('users', {
 
 export const user_vectors = pgTable('user_vectors', {
 	user_id: integer('user_id').primaryKey().references(() => users.id),
-	vector: real('vector').array().notNull(),
+	vector: vector('vector', { dimensions: VECTOR_DIMENSIONS }).notNull(),
 	bias: real('bias').default(0.0).notNull(),
 	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
@@ -23,7 +25,7 @@ export const svd_metadata = pgTable('svd_metadata', {
 
 export const recipe_vectors = pgTable('recipe_vectors', {
 	recipe_id: integer('recipe_id').primaryKey(),
-	vector: real('vector').array().notNull(),
+	vector: vector('vector', { dimensions: VECTOR_DIMENSIONS }).notNull(),
 	bias: real('bias').default(0.0).notNull(),
 	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
