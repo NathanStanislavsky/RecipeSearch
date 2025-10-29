@@ -10,18 +10,21 @@ export const users = pgTable('users', {
 export const user_vectors = pgTable('user_vectors', {
 	user_id: integer('user_id').primaryKey().references(() => users.id),
 	vector: real('vector').array().notNull(),
+	bias: real('bias').default(0.0).notNull(),
 	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const svd_metadata = pgTable('svd_metadata', {
 	id: serial('id').primaryKey(),
 	completion_time: timestamp('completion_time', { withTimezone: true }).notNull(),
+	global_mean: real('global_mean').notNull(),
 	created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
 });
 
 export const recipe_vectors = pgTable('recipe_vectors', {
 	recipe_id: integer('recipe_id').primaryKey(),
 	vector: real('vector').array().notNull(),
+	bias: real('bias').default(0.0).notNull(),
 	updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
