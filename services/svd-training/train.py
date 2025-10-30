@@ -171,7 +171,42 @@ class Train:
         logger.info("Saving model biases to PostgreSQL")
         self.save_bias_terms_to_postgres(user_bias, recipe_bias, global_mean)
 
+        logger.info("Creating HNSW index for recipe vectors")
+        self.create_hnsw_index()
+
         logger.info("Training pipeline completed successfully")
+
+    def create_hnsw_index(self):
+        cursor = None
+        try:
+            cursor = self.postgres_client.cursor()
+            
+            cursor.execute("SHOW maintenance_work_mem")
+            memory_setting = cursor.fetchone()[0]
+            logger.info(f"Current maintenance_work_mem: {memory_setting}")
+
+            cursor.execute("SELECT COUNT(*) FROM recipe_vectors")
+            vector_count = cursor.fetchone()[0]
+            logger.info(f"Building HNSW index for {vector_count} recipe vectors")
+
+            cursor.execute("DROP INDEX IF EXISTS recipe_hnsw_idx")
+
+            cursor.execute("""
+                CREATE INDEX recipe_hnsw_idx ON recipe_vectors
+                USING hnsw (vector vector_cosine_ops)
+                WITH (m = 16, ef_construction = 64)
+            """)
+
+            self.postgres_client.commit()
+            logger.info("Successfully created HNSW index")
+        except Exception as e:
+            logger.error(f"Failed to create HNSW index: {e}")
+            if self.postgres_client:
+                self.postgres_client.rollback()
+            raise
+        finally:
+            if cursor:
+                cursor.close()
 
     def save_user_embeddings_to_postgres_batch(self, user_embeddings):
         logger.info(f"Saving {len(user_embeddings)} user embeddings to PostgreSQL")
