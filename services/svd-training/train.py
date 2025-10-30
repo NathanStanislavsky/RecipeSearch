@@ -1,19 +1,12 @@
 import os
-import pandas as pd
-import numpy as np
-import json
-import requests
 import logging
 from dotenv import load_dotenv
 import psycopg2 as pg
 from google.cloud import storage
 from datetime import datetime
 from surprise import SVD, Dataset, Reader
-import faiss
 from extract import Extract
-import tempfile
 from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 import psycopg2.extras
 
 # Configure logging
@@ -153,43 +146,7 @@ class Train:
         logger.info(f"Extracted embeddings - Users: {len(user_embeddings)}, Recipes: {len(recipe_embeddings)}")
         return user_embeddings, recipe_embeddings
 
-    def save_to_gcs(self, filename, data_dict):
-        logger.info(f"Uploading {filename} to GCS")
-        try:
-            bucket = self.storage_client.bucket(self.bucket_name)
-            blob = bucket.blob(filename)
-
-            json_data = json.dumps(data_dict)
-
-            blob.upload_from_string(json_data, content_type="application/json")
-            logger.info(f"Successfully uploaded {filename} to GCS")
-        except Exception as e:
-            logger.error(f"Failed to upload {filename} to GCS: {e}")
-
-    def save_user_embeddings_individually(self, user_embeddings):
-        logger.info(f"Uploading {len(user_embeddings)} individual user embeddings to GCS")
-        bucket = self.storage_client.bucket(self.bucket_name)
-
-        failed_uploads = 0
-        for user_id, embedding_array in user_embeddings.items():
-            filename = f"user_embeddings/{user_id}.json"
-            blob = bucket.blob(filename)
-
-            embedding_list = embedding_array
-            json_data = json.dumps(embedding_list)
-
-            try:
-                blob.upload_from_string(json_data, content_type="application/json")
-            except Exception as e:
-                logger.error(f"Failed to upload embedding for user {user_id}: {e}")
-                failed_uploads += 1
-                continue
-
-        if failed_uploads > 0:
-            logger.warning(f"Failed to upload {failed_uploads} user embeddings")
-        logger.info("Individual user embedding upload completed")
-
-    def run_pipeline(self, ratings_df, run_comparison=False):
+    def run_pipeline(self, ratings_df):
         logger.info("Starting training pipeline")
         
         algo, trainset, global_mean, user_bias, recipe_bias = self.train_model(ratings_df)
@@ -203,7 +160,6 @@ class Train:
         logger.info(f"Filtered to {len(internal_user_embeddings)} internal user embeddings (excluded external users)")
 
         logger.info("Saving artifacts to storage systems")
-        self.save_user_embeddings_individually(internal_user_embeddings)
         self.save_user_embeddings_to_postgres_batch(internal_user_embeddings)
 
         recipe_embeddings_dict = {
@@ -212,97 +168,10 @@ class Train:
         }
         self.save_recipe_embeddings_to_postgres_batch(recipe_embeddings_dict)
 
-        logger.info("Saving model biases to GCS")
-        self.save_to_gcs("global_mean.json", {"global_mean": global_mean})
-        self.save_to_gcs("user_bias.json", user_bias)
-        self.save_to_gcs("item_bias.json", recipe_bias)
-
         logger.info("Saving model biases to PostgreSQL")
         self.save_bias_terms_to_postgres(user_bias, recipe_bias, global_mean)
 
-        logger.info("Saving recipe embeddings to FAISS index")
-        self.save_to_faiss(recipe_embeds)
-
-        if run_comparison and internal_user_embeddings:
-            logger.info("Running search method comparison")
-            first_user_id = next(iter(internal_user_embeddings))
-            user_vector = np.array(internal_user_embeddings[first_user_id])
-            comparison_results = self.compare_search_methods(recipe_embeds, user_vector)
-            if comparison_results:
-                logger.info(f"Search comparison completed - Recall@50: {comparison_results['recall_at_k']:.3f}")
-
-        self.reload_recommender_index()
         logger.info("Training pipeline completed successfully")
-
-    def save_to_faiss(self, recipe_embeddings):
-        logger.info("Building FAISS index and uploading to GCS")
-
-        recipe_ids = list(recipe_embeddings.keys())
-        recipe_embeddings_array = np.array(
-            [recipe_embeddings[r] for r in recipe_ids], dtype="float32"
-        )
-        D = recipe_embeddings_array.shape[1]
-        M = 40
-
-        logger.info(f"Creating HNSW index with {len(recipe_ids)} recipes, dimension {D}")
-        index = faiss.IndexHNSWFlat(D, M, faiss.METRIC_INNER_PRODUCT)
-        index.hnsw.efConstruction = 400
-        index.hnsw.efSearch = 192
-
-        index.add(recipe_embeddings_array)
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".index") as temp_file:
-            faiss.write_index(index, temp_file.name)
-
-        try:
-            bucket = self.storage_client.bucket(self.bucket_name)
-            
-            # Upload FAISS index
-            blob = bucket.blob("faiss_index.index")
-            blob.upload_from_filename(
-                temp_file.name, content_type="application/octet-stream"
-            )
-            logger.info("Successfully uploaded FAISS index to GCS")
-
-            # Upload recipe IDs
-            np.save("/tmp/recipe_ids.npy", np.array(recipe_ids, dtype=object))
-            blob = bucket.blob("recipe_ids.npy")
-            blob.upload_from_filename("/tmp/recipe_ids.npy", content_type="application/octet-stream")
-            logger.info("Successfully uploaded recipe IDs to GCS")
-
-            # Upload recipe factors
-            np.save("/tmp/recipe_factors.npy", recipe_embeddings_array)
-            blob = bucket.blob("recipe_factors.npy")
-            blob.upload_from_filename("/tmp/recipe_factors.npy", content_type="application/octet-stream")
-            logger.info("Successfully uploaded recipe factors to GCS")
-
-        finally:
-            # Clean up temporary files
-            for temp_path in [temp_file.name, "/tmp/recipe_ids.npy", "/tmp/recipe_factors.npy"]:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
-            logger.debug("Temporary files cleaned up")
-
-    def reload_recommender_index(self):
-        if not RELOAD_URL:
-            logger.warning("RELOAD_URL not set, skipping index reload")
-            return
-        
-        logger.info("Reloading recommender index")
-        try:
-            request = Request()
-            token = id_token.fetch_id_token(request, RELOAD_URL)
-
-            headers = {"Authorization": f"Bearer {token}"}
-            response = requests.post(f"{RELOAD_URL}/admin/reload_index", headers=headers, timeout=60)
-            if response.status_code == 200:
-                result = response.json()
-                num_recipes = result.get('num_recipes', 'unknown')
-                logger.info(f"Successfully reloaded index with {num_recipes} recipes")
-            else:
-                logger.error(f"Failed to reload index: HTTP {response.status_code} - {response.text}")
-        except Exception as e:
-            logger.error(f"Unexpected error during index reload: {e}")
 
     def save_user_embeddings_to_postgres_batch(self, user_embeddings):
         logger.info(f"Saving {len(user_embeddings)} user embeddings to PostgreSQL")
@@ -444,96 +313,7 @@ class Train:
             if cursor:
                 cursor.close()
 
-    def compare_search_methods(self, recipe_embeddings, user_vector, top_k=50):
-        logger.info(f"Comparing search methods (Top-{top_k})")
-        
-        recipe_ids = list(recipe_embeddings.keys())
-        recipe_embeddings_array = np.array(
-            [recipe_embeddings[r] for r in recipe_ids], dtype="float32"
-        )
-        user_vector = user_vector.reshape(1, -1).astype("float32")
-        
-        logger.info("Running brute force search for baseline...")
-        dim = recipe_embeddings_array.shape[1]
-        index_flat = faiss.IndexFlatIP(dim)  # exact inner product
-        index_flat.add(recipe_embeddings_array)
-        
-        distances_exact, indices_exact = index_flat.search(user_vector, top_k)
-        exact_top_k = indices_exact[0].tolist()
-        exact_scores = distances_exact[0].tolist()
-        
-        logger.debug(f"Exact top-5 indices: {exact_top_k[:5]}")
-        logger.debug(f"Exact top-5 scores: {exact_scores[:5]}")
-        
-        logger.info("Running HNSW search...")
-        try:
-            bucket = self.storage_client.bucket(self.bucket_name)
-            
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".index") as temp_index:
-                blob = bucket.blob("faiss_index.index")
-                blob.download_to_filename(temp_index.name)
-                hnsw_index = faiss.read_index(temp_index.name)
-            
-            hnsw_index.hnsw.efSearch = 192
-            distances_hnsw, indices_hnsw = hnsw_index.search(user_vector, top_k)
-            hnsw_top_k = indices_hnsw[0].tolist()
-            hnsw_scores = distances_hnsw[0].tolist()
-            
-            logger.debug(f"HNSW top-5 indices: {hnsw_top_k[:5]}")
-            logger.debug(f"HNSW top-5 scores: {hnsw_scores[:5]}")
-            
-            overlap = len(set(exact_top_k) & set(hnsw_top_k))
-            recall_at_k = overlap / top_k
-            
-            mismatches = [i for i in hnsw_top_k if i not in exact_top_k]
-            missed = [i for i in exact_top_k if i not in hnsw_top_k]
-            
-            exact_recipe_ids = [recipe_ids[i] for i in exact_top_k[:5]]
-            hnsw_recipe_ids = [recipe_ids[i] for i in hnsw_top_k[:5]]
-            
-            results = {
-                "recall_at_k": recall_at_k,
-                "overlap_count": overlap,
-                "total_k": top_k,
-                "exact_top_5_recipe_ids": exact_recipe_ids,
-                "hnsw_top_5_recipe_ids": hnsw_recipe_ids,
-                "exact_top_5_scores": exact_scores[:5],
-                "hnsw_top_5_scores": hnsw_scores[:5],
-                "mismatches_count": len(mismatches),
-                "missed_count": len(missed)
-            }
-            
-            logger.info(f"Search comparison results:")
-            logger.info(f"  Recall@{top_k}: {recall_at_k:.3f}")
-            logger.info(f"  Overlap: {overlap}/{top_k}")
-            logger.info(f"  HNSW mismatches: {len(mismatches)}")
-            logger.info(f"  Exact results missed by HNSW: {len(missed)}")
-            logger.debug(f"  Exact top-5 recipe IDs: {exact_recipe_ids}")
-            logger.debug(f"  HNSW top-5 recipe IDs: {hnsw_recipe_ids}")
-            
-            return results
-            
-        except Exception as e:
-            logger.error(f"Failed to compare search methods: {e}")
-            return None
-        finally:
-            if 'temp_index' in locals() and os.path.exists(temp_index.name):
-                os.remove(temp_index.name)
-
 if __name__ == "__main__":
-    import sys
-    
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "train-with-comparison":
-            run_comparison = True
-        else:
-            logger.info("Usage:")
-            logger.info("  python train.py                    # Normal training pipeline")
-            logger.info("  python train.py train-with-comparison  # Training pipeline with comparison")
-            exit()
-    else:
-        run_comparison = False
-
     logger.info("Starting SVD training script")
     
     extractor = Extract()
@@ -553,5 +333,5 @@ if __name__ == "__main__":
         exit(1)
 
     trainer = Train()
-    trainer.run_pipeline(ratings_df, run_comparison=run_comparison)
+    trainer.run_pipeline(ratings_df)
     logger.info("SVD training script completed")
