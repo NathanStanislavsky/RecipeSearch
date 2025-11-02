@@ -6,17 +6,37 @@ export interface RatingEvent {
     rating: number;
 }
 
+interface GoogleCredentials {
+    type: string;
+    project_id?: string;
+    private_key_id?: string;
+    private_key?: string;
+    client_email?: string;
+    client_id?: string;
+    auth_uri?: string;
+    token_uri?: string;
+    auth_provider_x509_cert_url?: string;
+    client_x509_cert_url?: string;
+    universe_domain?: string;
+}
+
+interface PubSubConfig {
+    projectId?: string;
+    credentials?: GoogleCredentials;
+    keyFilename?: string;
+}
+
 export class PubSubService {
     private pubsub: PubSub;
     private topicName: string;
 
     constructor() {
-        const pubSubConfig: any = {
+        const pubSubConfig: PubSubConfig = {
             projectId: process.env.GOOGLE_CLOUD_PROJECT_ID
         };
         
         if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-            pubSubConfig.credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+            pubSubConfig.credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS) as GoogleCredentials;
         }
         
         this.pubsub = new PubSub(pubSubConfig);
