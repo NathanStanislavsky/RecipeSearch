@@ -11,13 +11,16 @@ export class PubSubService {
     private topicName: string;
 
     constructor() {
-        const keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS || '/app/gcs-credentials.json';
+        const pubSubConfig: any = {
+            projectId: process.env.GOOGLE_CLOUD_PROJECT_ID
+        };
         
-        this.pubsub = new PubSub({
-            projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
-            keyFilename: keyFilename
-        });
-        this.topicName = process.env.PUBSUB_TOPIC_NAME || 'rating-events';
+        if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+            pubSubConfig.credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+        }
+        
+        this.pubsub = new PubSub(pubSubConfig);
+        this.topicName = process.env.PUBSUB_TOPIC_NAME || 'user-rating-events';
         
         console.log(`PubSub initialized with project: ${process.env.GOOGLE_CLOUD_PROJECT_ID}, topic: ${this.topicName}`);
     }
