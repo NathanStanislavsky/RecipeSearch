@@ -1,215 +1,157 @@
 import base64
 import json
-from datetime import datetime
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from dotenv import load_dotenv
-import os
-import psycopg2 as pg
 import logging
+from pydantic import BaseModel, ValidationError
+import psycopg2
+import os
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
+
 app = FastAPI()
 
-@app.post('/recompute')
-async def handle_rating_event(request: Request):
-    try:
-        body = await request.json()
+class RatingEvent(BaseModel):
+    user_id: int
+    recipe_id: int
+    rating: float
+class PubSubMessage(BaseModel):
+    data: str
+    attributes: dict | None = None
+class PubSubPushRequest(BaseModel):
+    message: PubSubMessage
+    subscription: str
 
-        if 'message' not in body:
-            return {'status': 'no message'}
-        
-        message_data = body['message']
-        
-        if "data" in message_data:
-            base_64_data = message_data["data"]
-            decoded_data = base64.b64decode(base_64_data)
-            rating_event = json.loads(decoded_data)
-
-            await process_rating_event(rating_event)
-        
-        return {'status': 'success'}
-
-    except Exception as e:
-        print(f"Error recomputing: {str(e)}")
-        raise HTTPException(500, f"Error recomputing: {str(e)}")
-
-async def process_rating_event(rating_event: dict):
-    user_id = rating_event['user_id']
-    recipe_id = rating_event['recipe_id']
-    rating = rating_event['rating']
-    rating_timestamp = datetime.fromtimestamp(rating_event['timestamp'])
-
-    if not all([user_id, recipe_id, rating, rating_timestamp]):
-        print(f"Invalid rating event: {rating_event}")
-        return
+SGD_UPDATE_QUERY = """
+WITH constants AS (
+  -- Define ML parameters and received data
+  SELECT
+    %(learning_rate)s AS lambda,
+    %(regularization)s AS beta,
+    %(rating)s AS r_ui,
+    %(user_id)s AS user_id,
+    %(recipe_id)s AS recipe_id
+),
+vectors AS (
+  -- Get the current vectors, biases, and global mean
+  SELECT
+    uv.vector AS user_vector,
+    uv.bias AS user_bias,
+    rv.vector AS recipe_vector,
+    rv.bias AS recipe_bias,
+    (SELECT global_mean FROM svd_metadata ORDER BY completion_time DESC LIMIT 1) AS global_mean
+  FROM user_vectors uv
+  JOIN recipe_vectors rv ON rv.recipe_id = (SELECT recipe_id FROM constants)
+  WHERE uv.user_id = (SELECT user_id FROM constants)
+),
+prediction AS (
+  -- Calculate predicted rating (p_ui) and error (e)
+  SELECT
+    *,
+    -- p_ui = global_mean + user_bias + recipe_bias + dot(user_vector, recipe_vector)
+    -- pgvector's <#> operator is NEGATIVE inner product, so we subtract it.
+    (v.global_mean + v.user_bias + v.recipe_bias - (v.user_vector <#> v.recipe_vector)) AS p_ui,
     
-    # Retrieve the last SVD completion time and if the rating_timestamp is older than
-    # that, then we don't need to recompute since it's already been incorporated by SVD
-    # we sack the message and return
-    last_svd_completion_time = get_last_svd_completion_time()
-    if rating_timestamp < last_svd_completion_time:
-        print(f"Rating timestamp {rating_timestamp} is older than last SVD completion time {last_svd_completion_time}. Skipping recomputation.")
-        return
-
-    # If the timestamp check passes then we need to recompute the user vector by first
-    # getting the user vector from the PostgreSQL database and the recipe vector from GCS
-    user_vector = get_user_vector(user_id)
-    recipe_vector = get_recipe_vector(recipe_id)
+    -- e = r_ui - p_ui
+    ((SELECT r_ui FROM constants) - (v.global_mean + v.user_bias + v.recipe_bias - (v.user_vector <#> v.recipe_vector))) AS error
+  FROM vectors v, constants c
+),
+new_values AS (
+  -- Calculate the new user and recipe vectors and biases using the SGD update rules
+  SELECT
+    p.error,
+    p.user_vector,
+    p.recipe_vector,
     
-    # Then we apply the SGD average formula on the user vector
-    new_user_vector = sgd_average(user_vector, recipe_vector, rating)
+    -- uu,new = uu + λ * (e * vi - β * uu)
+    p.user_vector + (c.lambda * ( (p.error * p.recipe_vector) - (c.beta * p.user_vector) )) AS new_user_vector,
+    
+    -- bu,new = bu + λ * (e - β * bu)
+    p.user_bias + (c.lambda * (p.error - (c.beta * p.user_bias))) AS new_user_bias,
+    
+    -- vi,new = vi + λ * (e * uu - β * vi)
+    p.recipe_vector + (c.lambda * ( (p.error * p.user_vector) - (c.beta * p.recipe_vector) )) AS new_recipe_vector,
+    
+    -- bi,new = bi + λ * (e - β * bi)
+    p.recipe_bias + (c.lambda * (p.error - (c.beta * p.recipe_bias))) AS new_recipe_bias
+    
+  FROM prediction p, constants c
+),
+user_update AS (
+  -- Update the user_vectors table with the new values
+  UPDATE user_vectors uv
+  SET
+    vector = nv.new_user_vector,
+    bias = nv.new_user_bias,
+    updated_at = NOW()
+  FROM new_values nv, constants c
+  WHERE uv.user_id = c.user_id
+  RETURNING uv.user_id
+)
+-- Update the recipe_vectors table with the new values
+UPDATE recipe_vectors rv
+SET
+  vector = nv.new_recipe_vector,
+  bias = nv.new_recipe_bias,
+  updated_at = NOW()
+FROM new_values nv, constants c
+WHERE rv.recipe_id = c.recipe_id;
+"""
 
-    # Finally we update the user vector in the PostgreSQL database
-    update_user_vector(user_id, new_user_vector)
 
-def get_last_svd_completion_time():
-    pass
-
-def get_user_vector(user_id: int):
-    cursor = None
+@app.post("/pubsub/push")
+async def pubsub_push(body: PubSubPushRequest):
+    rating_event = None
     try:
-        cursor = connect_to_postgres().cursor()
-        cursor.execute("SELECT vector FROM user_vectors WHERE user_id = %s", (user_id,))
-        result = cursor.fetchone()
-        return result[0]
-    except Exception as e:
-        print(f"Error getting user vector: {e}")
-        return None
-    finally:
-        if cursor:
-            cursor.close()
+        data_str = base64.b64decode(body.message.data).decode("utf-8")
+        rating_event = RatingEvent.model_validate_json(data_str)
 
-def get_recipe_vector(recipe_id: int):
-    cursor = None
-    conn = None
+        params = {
+            "learning_rate": 0.01,
+            "regularization": 0.02,
+            "user_id": rating_event.user_id,
+            "recipe_id": rating_event.recipe_id,
+            "rating": rating_event.rating,
+        }
+
+    except (ValidationError, json.JSONDecodeError) as e:
+        logger.warning(f"Bad message format, discarding: {e}")
+        return "", 204 
+
     try:
-        conn = connect_to_postgres()
-        cursor = conn.cursor()
-        cursor.execute("SELECT vector FROM recipe_vectors WHERE recipe_id = %s", (recipe_id,))
-        result = cursor.fetchone()
+        with psycopg2.connect(DATABASE_URL) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT EXISTS(SELECT 1 FROM user_vectors WHERE user_id = %s)
+                    AND EXISTS(SELECT 1 FROM recipe_vectors WHERE recipe_id = %s)
+                """, (rating_event.user_id, rating_event.recipe_id))
+                
+                vectors_exist = cur.fetchone()[0]
+                if not vectors_exist:
+                    logger.warning(f"Missing vectors for user {rating_event.user_id} or recipe {rating_event.recipe_id}")
+                    return "", 204
+                
+                cur.execute(SGD_UPDATE_QUERY, params)
+                conn.commit()
 
-        if result:
-            return result[0]
-        else:
-            print(f"Recipe vector not found for recipe_id: {recipe_id}")
-            return None
+        logger.info(f"Successfully processed rating for user {rating_event.user_id}")
+        return "", 204
+
     except Exception as e:
-        print(f"Error getting recipe vector: {e}")
-        return None
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        logger.error(f"Error processing message: {e}")
+        raise HTTPException(status_code=500, detail="Error processing message")
 
-
-def sgd_average(user_vector: list[float], recipe_vector: list[float], rating: float):
-    pass
-
-def update_user_vector(user_id: int, new_user_vector: list[float]):
-    cursor = None
-    conn = None
-    try:
-        conn = connect_to_postgres()
-        cursor = conn.cursor()
-        cursor.execute("UPDATE user_vectors SET vector = %s WHERE user_id = %s", (new_user_vector, user_id))
-    except Exception as e:
-        print(f"Error updating user vector: {e}")
-        return None
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-def get_user_vector_with_bias(user_id: int):
-    cursor = None
-    conn = None
-    try:
-        conn = connect_to_postgres()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT vector, bias FROM user_vectors WHERE user_id = %s", 
-            (user_id,)
-        )
-        result = cursor.fetchone()
-        
-        if result:
-            return result[0], result[1]  # vector, bias
-        return None, None
-    except Exception as e:
-        print(f"Error getting user vector and bias: {e}")
-        return None, None
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-def get_recipe_vector_with_bias(recipe_id: int):
-    cursor = None
-    conn = None
-    try:
-        conn = connect_to_postgres()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT vector, bias FROM recipe_vectors WHERE recipe_id = %s", 
-            (recipe_id,)
-        )
-        result = cursor.fetchone()
-        
-        if result:
-            return result[0], result[1]  # vector, bias
-        return None, None
-    except Exception as e:
-        print(f"Error getting recipe vector and bias: {e}")
-        return None, None
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-def get_global_mean():
-    cursor = None
-    conn = None
-    try:
-        conn = connect_to_postgres()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT global_mean FROM svd_metadata ORDER BY completion_time DESC LIMIT 1"
-        )
-        result = cursor.fetchone()
-        return result[0] if result else 3.0  # Default fallback
-    except Exception as e:
-        print(f"Error getting global mean: {e}")
-        return 3.0
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-def connect_to_postgres():
-    logger.info("Connecting to PostgreSQL...")
-    if os.getenv("DATABASE_URL"):
-        try:
-            conn = pg.connect(os.getenv("DATABASE_URL"))
-            logger.info("Successfully connected to PostgreSQL")
-            return conn
-        except Exception as e:
-            logger.error(f"Could not connect to PostgreSQL: {e}")
-            raise
-    else:
-        logger.error("DATABASE_URL not found in environment variables")
-        raise ValueError("DATABASE_URL not found")
 
 @app.get("/health")
 def health():
