@@ -8,6 +8,8 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - GOOGLE_APPLICATION_CREDENTIALS=/app/gcs-credentials.json
+      - GOOGLE_CLOUD_PROJECT_ID=${GOOGLE_CLOUD_PROJECT_ID}
+      - PUBSUB_TOPIC_NAME=${PUBSUB_TOPIC_NAME}
     volumes:
       - ./services/web/gcs-credentials.json:/app/gcs-credentials.json:ro
 
@@ -22,21 +24,3 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/gcs-credentials.json
     volumes:
       - ./services/recompute/gcs-credentials.json:/app/gcs-credentials.json:ro
-
-  svd-training:
-    build:
-      context: ./services/svd-training
-      dockerfile: Dockerfile
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - MONGODB_DATABASE=${MONGODB_DATABASE}
-      - MONGODB_REVIEWS_COLLECTION=${MONGODB_REVIEWS_COLLECTION}
-      - MONGODB_EXTERNAL_REVIEWS_COLLECTION=${MONGODB_EXTERNAL_REVIEWS_COLLECTION}
-      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
-      - RELOAD_URL=${RELOAD_URL}
-      - GCR_ADMIN_API_KEY=${GCR_ADMIN_API_KEY}
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcs-credentials.json
-    env_file:
-      - .env
-    volumes:
-      - ./services/svd-training/gcs-credentials.json:/app/gcs-credentials.json:ro
