@@ -8,11 +8,13 @@ import type {
 import { ApiError } from '$utils/errors/AppError.js';
 import { postgres } from '../connections/index.js';
 import { sql } from 'drizzle-orm';
+import { PubSubService } from './PubSubService.ts';
 
 export class RecipeService {
 	constructor(
 		private recipeRepo = new RecipeRepository(),
-		private ratingRepo = new RatingRepository()
+		private ratingRepo = new RatingRepository(),
+		private pubsubService = new PubSubService()
 	) { }
 
 	/**
@@ -152,7 +154,20 @@ export class RecipeService {
 		}
 
 		// Create or update rating
-		return await this.ratingRepo.upsertRating(userId, recipeId, rating);
+		const result = await this.ratingRepo.upsertRating(userId, recipeId, rating);
+
+		// public event to pub/sub for real-time vector updates
+		try {
+			await this.pubsubService.publishRatingEvent({
+				user_id: userId,
+				recipe_id: recipeId,
+				rating: rating
+			});
+		} catch (error) {
+			console.error('Failed to publish rating event to Pub/Sub:', error);
+		}
+
+		return result;
 	}
 
 	/**
