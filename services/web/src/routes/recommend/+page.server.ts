@@ -1,57 +1,17 @@
 import type { PageServerLoad } from './$types.js';
 import type { Actions } from '@sveltejs/kit';
 import { fail } from '@sveltejs/kit';
-import { RECOMMEND_URL } from '$env/static/private';
 import { handleError } from '$utils/errors/AppError.js';
-import { GoogleAuth } from 'google-auth-library';
 import { RecipeService } from '../../data/services/RecipeService.js';
 
 const recipeService = new RecipeService();
-
-function loadServiceAccountCredentials() {
-	const b64 = process.env.SERVICE_ACCOUNT_KEY;
-	if (!b64) return null;
-	try {
-		const jsonKey = Buffer.from(b64, 'base64').toString('utf8');
-		return JSON.parse(jsonKey);
-	} catch (e) {
-		console.error('Failed to parse SERVICE_ACCOUNT_KEY:', e);
-		return null;
-	}
-}
-
-function getAuthClient() {
-	const creds = loadServiceAccountCredentials();
-	if (creds) {
-		return new GoogleAuth({
-			credentials: creds,
-			clientOptions: { subject: creds.client_email }
-		});
-	}
-	return new GoogleAuth();
-}
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		return { recommendations: [] };
 	}
 	try {
-		const auth = getAuthClient();
-		const client = await auth.getIdTokenClient(RECOMMEND_URL);
-
-		const response = await client.request<{ recipe_ids: number[] }>({
-			url: `${RECOMMEND_URL}/recommend`,
-			method: 'POST',
-			data: { user_id: String(locals.user.id) },
-			headers: { 'Content-Type': 'application/json' }
-		});
-		const data = response.data;
-
-		const recommendations = await recipeService.getRecipesByIdsWithUserRatings(
-			data.recipe_ids,
-			locals.user.id
-		);
-
+		const recommendations = await recipeService.getRecommendationsForUser(locals.user.id, 20);
 		return { recommendations };
 	} catch (error) {
 		console.error('Error getting recommendations:', error);

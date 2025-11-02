@@ -1,20 +1,48 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1740612487857,
-			"tag": "0000_brave_exodus",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1747618519615,
-			"tag": "0001_equal_bedlam",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1740612487857,
+      "tag": "0000_brave_exodus",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1747618519615,
+      "tag": "0001_equal_bedlam",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1758992034681,
+      "tag": "0002_rare_magneto",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1759633373620,
+      "tag": "0003_add_user_vectors_and_svd_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1759758414411,
+      "tag": "0004_special_deadpool",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1761775794922,
+      "tag": "0005_dry_barracuda",
+      "breakpoints": true
+    }
+  ]
 }

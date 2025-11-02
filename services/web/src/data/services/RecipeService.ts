@@ -6,12 +6,16 @@ import type {
 	RecipeSearchResult
 } from '../models/Recipe.js';
 import { ApiError } from '$utils/errors/AppError.js';
+import { postgres } from '../connections/index.js';
+import { sql } from 'drizzle-orm';
+import { PubSubService } from './PubSubService.ts';
 
 export class RecipeService {
 	constructor(
 		private recipeRepo = new RecipeRepository(),
-		private ratingRepo = new RatingRepository()
-	) {}
+		private ratingRepo = new RatingRepository(),
+		private pubsubService = new PubSubService()
+	) { }
 
 	/**
 	 * Search recipes with user ratings included
@@ -96,6 +100,40 @@ export class RecipeService {
 		return recipes;
 	}
 
+	async getRecommendationsForUser(userId: number, limit: number = 20): Promise<TransformedRecipe[]> {
+		const query = sql`
+			WITH user_data AS (
+				SELECT vector, bias FROM user_vectors WHERE user_id = ${userId}
+			),
+			recipe_similarities AS (
+				SELECT
+					rv.recipe_id,
+					rv.vector <=> ud.vector AS distance,
+					rv.bias,
+					ud.bias as user_bias,
+					sm.global_mean
+				FROM recipe_vectors rv
+				CROSS JOIN user_data ud
+				CROSS JOIN (
+					SELECT global_mean FROM svd_metadata 
+					ORDER BY completion_time DESC LIMIT 1
+				) sm
+				ORDER BY rv.vector <=> ud.vector
+				LIMIT ${limit}
+			)
+			SELECT 
+				rs.recipe_id,
+				rs.global_mean + rs.user_bias + rs.bias + (1 - rs.distance) as predicted_rating
+			FROM recipe_similarities rs
+			ORDER BY predicted_rating DESC
+		`;
+	
+		const result = await postgres.execute(query);
+		const recipeIds = result.rows.map((row) => row.recipe_id as number);
+	
+		return this.getRecipesByIdsWithUserRatings(recipeIds, userId);
+	}
+
 	/**
 	 * Rate a recipe
 	 */
@@ -116,7 +154,20 @@ export class RecipeService {
 		}
 
 		// Create or update rating
-		return await this.ratingRepo.upsertRating(userId, recipeId, rating);
+		const result = await this.ratingRepo.upsertRating(userId, recipeId, rating);
+
+		// public event to pub/sub for real-time vector updates
+		try {
+			await this.pubsubService.publishRatingEvent({
+				user_id: userId,
+				recipe_id: recipeId,
+				rating: rating
+			});
+		} catch (error) {
+			console.error('Failed to publish rating event to Pub/Sub:', error);
+		}
+
+		return result;
 	}
 
 	/**
