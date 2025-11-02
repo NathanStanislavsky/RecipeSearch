@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     build:
@@ -8,29 +6,29 @@ services:
     ports:
       - '5173:5173'
     environment:
-      - RECOMMEND_URL=http://recommender:8080
+      - DATABASE_URL=${DATABASE_URL}
       - GOOGLE_APPLICATION_CREDENTIALS=/app/gcs-credentials.json
     volumes:
       - ./services/web/gcs-credentials.json:/app/gcs-credentials.json:ro
-    depends_on:
-      - recommender
 
-  recommender:
+  recompute:
     build:
-      context: ./services/recommender
+      context: ./services/recompute
       dockerfile: Dockerfile
     ports:
-      - '8080:8080'
+      - '8081:8080'
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - GOOGLE_APPLICATION_CREDENTIALS=/app/gcs-credentials.json
     volumes:
-      - ./services/recommender/gcs-credentials.json:/app/gcs-credentials.json:ro
+      - ./services/recompute/gcs-credentials.json:/app/gcs-credentials.json:ro
 
   svd-training:
     build:
       context: ./services/svd-training
       dockerfile: Dockerfile
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - MONGODB_DATABASE=${MONGODB_DATABASE}
       - MONGODB_REVIEWS_COLLECTION=${MONGODB_REVIEWS_COLLECTION}
       - MONGODB_EXTERNAL_REVIEWS_COLLECTION=${MONGODB_EXTERNAL_REVIEWS_COLLECTION}
@@ -42,5 +40,3 @@ services:
       - .env
     volumes:
       - ./services/svd-training/gcs-credentials.json:/app/gcs-credentials.json:ro
-    depends_on:
-      - recommender
