@@ -59,6 +59,7 @@
 		"vitest": "^3.0.0"
 	},
 	"dependencies": {
+		"@google-cloud/pubsub": "^5.2.0",
 		"@google-cloud/storage": "^7.16.0",
 		"@neondatabase/serverless": "^0.10.4",
 		"@sveltejs/adapter-vercel": "^5.7.2",
