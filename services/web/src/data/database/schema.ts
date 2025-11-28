@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, real, vector, bigint, uuid, jsonb, decimal, index } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { sql, desc } from 'drizzle-orm';
 
 const VECTOR_DIMENSIONS = 100;
 
@@ -43,12 +43,13 @@ export const recipes = pgTable('recipes', {
     servings: bigint('servings', { mode: 'number' }),
     instructions: jsonb('instructions'),
     createdAt: timestamp('created_at').defaultNow(),
-}, (table) => {
-    return {
-        ratingIdx: index('idx_recipes_rating').on(table.rating.desc(), table.reviewCount.desc()),
-        ingredientsIdx: index('idx_recipes_ingredients_list').using('gin', table.ingredientsList)
-    };
 });
+
+export const recipesRatingIdx = index('idx_recipes_rating')
+    .on(desc(recipes.rating), desc(recipes.reviewCount));
+
+export const recipesIngredientsIdx = index('idx_recipes_ingredients_list')
+    .using('gin', recipes.ingredientsList);
 
 export const recipe_vectors = pgTable('recipe_vectors', {
     recipeId: uuid('recipe_id')
