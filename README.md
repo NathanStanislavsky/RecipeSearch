@@ -2,7 +2,7 @@
 
 PantryChef helps you discover recipes you can make with the ingredients you already have in your pantry! Enter your ingredients, and it fetches relevant recipes using this [Kaggle dataset](https://www.kaggle.com/datasets/shuyangli94/food-com-recipes-and-user-interactions). User's can also rate recipes they've tried and get personalized recommendations.
 
-Built with SvelteKit, Node.js, TypeScript, Neon Serverless PostgreSQL, and Tailwind CSS.
+Built with SvelteKit, Node.js, TypeScript, CockroachDB, and Tailwind CSS.
 
 ## Features
 
@@ -16,7 +16,7 @@ Built with SvelteKit, Node.js, TypeScript, Neon Serverless PostgreSQL, and Tailw
 - Frontend: SvelteKit, Tailwind CSS
 - Backend: Node.js (within SvelteKit endpoints), TypeScript,
 - Recommendation pipeline: Python, Pandas, NumPy, SciKit-Surprise, FAISS, Google Cloud SDK
-- Database: Neon Serverless PostgreSQL, MongoDB, Google Cloud Storage
+- Database: CockroachDB, MongoDB, Google Cloud Storage
 - Infrastructure: Docker, Google Cloud Run Services & Jobs, GitHub Actions
 
 ## Deployment
