@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, real, vector, bigint, uuid, jsonb, decimal, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, real, vector, bigint, uuid, jsonb, decimal, index, integer } from 'drizzle-orm/pg-core';
 import { sql, desc } from 'drizzle-orm';
 
 const VECTOR_DIMENSIONS = 100;
@@ -60,4 +60,21 @@ export const recipe_vectors = pgTable('recipe_vectors', {
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const schema = { users, user_vectors, svd_metadata, recipes, recipe_vectors };
+export const reviews = pgTable('reviews', {
+    id: bigint('id', { mode: 'number' }).primaryKey(),
+    recipeId: bigint('recipe_id', { mode: 'number' }).notNull(),
+    authorId: bigint('author_id', { mode: 'number' }),
+    authorName: text('author_name'),
+    rating: integer('rating'),
+    content: text('content'),
+    dateSubmitted: timestamp('date_submitted', { withTimezone: true }),
+    dateModified: timestamp('date_modified', { withTimezone: true }),
+});
+
+export const reviewsRecipeIdIdx = index('idx_reviews_recipe_id')
+    .on(reviews.recipeId);
+
+export const reviewsDateIdx = index('idx_reviews_date')
+    .on(desc(reviews.dateSubmitted));
+
+export const schema = { users, user_vectors, svd_metadata, recipes, recipe_vectors, reviews };
