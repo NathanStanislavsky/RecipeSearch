@@ -1,0 +1,11 @@
+{
+	"name": "@recipesearch/recompute",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"build": "echo \"No build needed for Python service\"",
+		"lint": "echo \"No linting configured for Python service\"",
+		"test": "echo \"No tests for Python service\""
+	}
+}
+
